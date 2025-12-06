@@ -1,0 +1,2 @@
+[console_scripts]
+mk8 = mk8.cli.main:main
