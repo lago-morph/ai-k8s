@@ -107,6 +107,15 @@ This project uses a three-phase methodology for feature development:
 .venv/bin/mypy mk8/                          # Type check
 ```
 
+**Git Operations**:
+```bash
+# IMPORTANT: Always disable git pager to avoid blocking
+git --no-pager log --oneline -10             # View recent commits
+git --no-pager status                        # Check status
+git --no-pager diff                          # View changes
+git --no-pager log --oneline --graph -10     # View commit graph
+```
+
 **Running CLI**:
 ```bash
 .venv/bin/mk8 --help                         # Via installed package
@@ -167,7 +176,6 @@ def test_secure_permissions(): ...
 # Phase 2: Run tests (all should fail)
 # Phase 3: Implement FileIO to pass all tests
 # Phase 4: Refactor if needed
-```
 
 ## Common Tasks
 
@@ -263,6 +271,14 @@ Based on current state, you'll probably work on:
 .venv/bin/flake8 mk8/ tests/
 .venv/bin/mypy mk8/
 
+# Git (ALWAYS use --no-pager to avoid blocking)
+git --no-pager status
+git --no-pager log --oneline -10
+git --no-pager diff
+git add <files>
+git commit -m "message"
+git push
+
 # Install/reinstall
 .venv/bin/pip install -e ".[dev]"
 
@@ -282,6 +298,25 @@ When starting a new session:
 - [ ] Check `.claude/specs/` for relevant feature specs
 - [ ] Run tests to verify environment: `.venv/bin/pytest tests/unit/ -v`
 - [ ] Understand current task from user or review spec tasks.md files
+
+## Critical Git Usage Rules
+
+**ALWAYS use `--no-pager` flag with git commands to prevent blocking:**
+
+```bash
+# ✅ CORRECT - Will not block
+git --no-pager log --oneline -10
+git --no-pager status
+git --no-pager diff
+git --no-pager log --oneline --graph -10
+
+# ❌ WRONG - Will block and cause issues
+git log --oneline -10
+git status
+git diff
+```
+
+This is critical because the pager (less/more) will block execution waiting for user input.
 
 ## Project Status Files
 
