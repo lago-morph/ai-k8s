@@ -64,16 +64,32 @@ tests/
 
 ### Current State
 - **CLI Framework**: ✅ Complete with 82.44% test coverage
+- **Installer MVP**: 🚧 In Progress (1/15 tasks complete, PrerequisiteResults implementation needed)
 - **Project Structure**: ✅ Complete
-- **Specs**: 4 features documented (1 implemented, 3 planned)
+- **Specs**: 10 features (1 complete, 1 in progress, 1 planned, 6 requirements-only, 1 deprecated)
 - **Virtual Environment**: `.venv/` (Python 3.12.3)
 
 ### Active Development
+- Following **Spec-Driven Development** (Requirements → Design → Tasks → Implementation)
 - Following **Test-Driven Development** (Red-Green-Refactor)
 - Using **Click** for CLI framework
 - Code style: **Black** (line-length=88)
 - Type checking: **mypy** (strict mode)
 - Coverage requirement: **80% minimum**
+
+### Spec-Driven Workflow
+This project uses a three-phase methodology for feature development:
+
+1. **Requirements Phase**: User stories with EARS format acceptance criteria
+2. **Design Phase**: Architecture, components, data models, Mermaid diagrams
+3. **Tasks Phase**: Numbered implementation tasks with requirement traceability
+
+**Key Rules**:
+- Never skip phases (Requirements → Design → Tasks)
+- Each phase requires explicit approval before proceeding
+- Tasks are executed one at a time with status tracking
+- All specs live in `.claude/specs/{feature-name}/`
+- Status files track progress for in-progress features
 
 ### Key Workflows
 
@@ -237,8 +253,33 @@ Based on current state, you'll probably work on:
 
 When starting a new session:
 - [ ] Read this file (AGENTS.md)
+- [ ] **Check project status**: Read `.claude/specs/SPECS-STATUS.md` to understand what's complete, in progress, and planned
+- [ ] **Check active work**: If a spec is in progress, read its `STATUS.md` file (e.g., `.claude/specs/installer/STATUS.md`)
 - [ ] Skim `.claude/steering/product.md` for project context
 - [ ] Skim `.claude/steering/tech.md` for coding standards
 - [ ] Check `.claude/specs/` for relevant feature specs
 - [ ] Run tests to verify environment: `.venv/bin/pytest tests/unit/ -v`
 - [ ] Understand current task from user or review spec tasks.md files
+
+## Project Status Files
+
+The project uses status tracking files to maintain context across sessions:
+
+### `.claude/specs/SPECS-STATUS.md`
+- **Purpose**: High-level overview of all feature specs
+- **Contains**: Completion status, task counts, implementation order
+- **When to read**: Start of every session to understand project state
+
+### `.claude/specs/{feature-name}/STATUS.md`
+- **Purpose**: Detailed status for in-progress features
+- **Contains**: Completed work, failing tests, next steps, file structure
+- **When to read**: When working on a specific feature
+- **Example**: `.claude/specs/installer/STATUS.md` tracks the installer MVP implementation
+
+### Status Indicators
+- ✅ **COMPLETE**: Feature fully implemented and tested
+- 🚧 **IN PROGRESS**: Active development with partial completion
+- 📋 **PLANNED**: Design and tasks complete, ready for implementation
+- 📝 **REQUIREMENTS ONLY**: Needs design and task planning
+- ⚠️ **INCOMPLETE**: Tests exist but implementation missing
+- ❌ **FAILING**: Tests failing, needs attention
