@@ -1,10 +1,10 @@
 """Main CLI entry point for mk8."""
+
 import sys
 import click
 import functools
 from dataclasses import dataclass
 import logging
-from typing import Optional
 
 from mk8.core.version import Version
 from mk8.core.errors import MK8Error, ExitCode
@@ -22,11 +22,11 @@ class CommandContext:
     output: OutputFormatter
 
 
-def safe_command_execution(func):
+def safe_command_execution(func):  # type: ignore[no-untyped-def]
     """Decorator for safe command execution with error handling."""
 
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args, **kwargs):  # type: ignore[no-untyped-def]
         try:
             return func(*args, **kwargs)
         except KeyboardInterrupt:
@@ -34,7 +34,6 @@ def safe_command_execution(func):
             sys.exit(ExitCode.KEYBOARD_INTERRUPT.value)
         except MK8Error as e:
             # Our custom errors - format nicely
-            output = OutputFormatter()
             click.echo(e.format_error(), err=True)
             sys.exit(ExitCode.COMMAND_ERROR.value)
         except click.ClickException:
@@ -54,6 +53,7 @@ def safe_command_execution(func):
     invoke_without_command=True,
     context_settings={
         "help_option_names": ["-h", "--help"],
+        "allow_interspersed_args": True,
     },
 )
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")

@@ -1,10 +1,17 @@
 """Tests for CLI error handling."""
+
 import pytest
 from click.testing import CliRunner
 import click
 
 from mk8.cli.main import cli, safe_command_execution
-from mk8.core.errors import MK8Error, PrerequisiteError, ValidationError, CommandError, ExitCode
+from mk8.core.errors import (
+    MK8Error,
+    PrerequisiteError,
+    ValidationError,
+    CommandError,
+    ExitCode,
+)
 
 
 class TestSafeCommandExecution:
@@ -76,7 +83,10 @@ class TestCLIErrorIntegration:
         result = runner.invoke(cli, ["nonexistent"])
 
         assert result.exit_code != 0
-        assert "error" in result.output.lower() or "no such command" in result.output.lower()
+        assert (
+            "error" in result.output.lower()
+            or "no such command" in result.output.lower()
+        )
 
     def test_invalid_option_error_message(self) -> None:
         """Test that invalid options show helpful error messages."""
@@ -84,4 +94,7 @@ class TestCLIErrorIntegration:
         result = runner.invoke(cli, ["--nonexistent-option"])
 
         assert result.exit_code != 0
-        assert "error" in result.output.lower() or "no such option" in result.output.lower()
+        assert (
+            "error" in result.output.lower()
+            or "no such option" in result.output.lower()
+        )

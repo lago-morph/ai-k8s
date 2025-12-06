@@ -1,4 +1,5 @@
 """Logging configuration for mk8."""
+
 import logging
 import sys
 from datetime import datetime
@@ -49,7 +50,7 @@ def setup_logging(verbose: bool = False) -> logging.Logger:
 
     # Set formatter based on verbose flag
     if verbose:
-        formatter = VerboseFormatter()
+        formatter: logging.Formatter = VerboseFormatter()
     else:
         formatter = logging.Formatter("%(message)s")
 

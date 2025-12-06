@@ -1,4 +1,5 @@
 """Version command implementation."""
+
 from mk8.core.version import Version
 
 

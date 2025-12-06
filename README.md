@@ -1,6 +1,12 @@
 # mk8 - Manage Kubernetes Infrastructure on AWS
 
+[![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
+[![Code Coverage](https://img.shields.io/badge/coverage-86%25-brightgreen)](htmlcov/index.html)
+
 mk8 is a command-line tool for managing Kubernetes infrastructure on AWS using a multi-tier cluster architecture with Crossplane.
+
+**Version:** 0.1.0 (Alpha)
 
 ## Architecture
 
@@ -34,18 +40,35 @@ pip install -e ".[dev]"
 ## Quick Start
 
 ```bash
-# Configure AWS credentials
+# Check version
+mk8 --version
+mk8 version
+
+# Get help
+mk8 --help
+mk8 bootstrap --help
+
+# Configure AWS credentials (coming soon)
 mk8 config
 
-# Create local bootstrap cluster
+# Create local bootstrap cluster (coming soon)
 mk8 bootstrap create
 
-# Check bootstrap cluster status
+# Check bootstrap cluster status (coming soon)
 mk8 bootstrap status
 
-# Delete bootstrap cluster when done
+# Delete bootstrap cluster when done (coming soon)
 mk8 bootstrap delete
 ```
+
+## CLI Features
+
+- **Hierarchical Commands**: Organized command structure with groups and subcommands
+- **Flexible Options**: Place options before or after commands (`mk8 --verbose version` or `mk8 version --verbose`)
+- **Comprehensive Help**: Context-sensitive help at every level (`--help` or `-h`)
+- **Clear Error Messages**: Actionable error messages with suggestions
+- **Verbose Mode**: Detailed output for troubleshooting (`--verbose` or `-v`)
+- **Exit Codes**: Consistent exit codes for scripting
 
 ## Development
 

@@ -1,4 +1,5 @@
 """Error handling and exception definitions for mk8."""
+
 from enum import Enum
 from typing import List, Optional
 

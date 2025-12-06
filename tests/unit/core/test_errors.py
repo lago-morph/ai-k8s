@@ -1,4 +1,5 @@
 """Tests for error handling module."""
+
 import pytest
 from mk8.core.errors import (
     ExitCode,
@@ -102,9 +103,7 @@ class TestValidationError:
 
     def test_validation_error_format(self) -> None:
         """Test formatting validation error."""
-        error = ValidationError(
-            "Invalid Kubernetes version", ["Use format: 1.28.0"]
-        )
+        error = ValidationError("Invalid Kubernetes version", ["Use format: 1.28.0"])
         formatted = error.format_error()
 
         assert "Error: Invalid Kubernetes version" in formatted

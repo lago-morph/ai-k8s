@@ -1,4 +1,5 @@
 """Tests for version module."""
+
 import pytest
 from mk8.core.version import Version
 

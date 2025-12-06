@@ -1,4 +1,5 @@
 """Tests for logging module."""
+
 import pytest
 import logging
 from mk8.core.logging import setup_logging, VerboseFormatter

@@ -1,4 +1,5 @@
 """Output formatting for the CLI."""
+
 import sys
 from typing import List, Optional
 

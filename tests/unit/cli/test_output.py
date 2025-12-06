@@ -1,4 +1,5 @@
 """Tests for output formatter."""
+
 import pytest
 from io import StringIO
 from unittest.mock import patch
