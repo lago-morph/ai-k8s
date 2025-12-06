@@ -27,17 +27,19 @@
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
   - **Status**: COMPLETE in `tests/unit/integrations/test_prerequisite_results.py` (14 tests passing)
 
-- [ ]* 2.2 Write property test for prerequisite check completeness
+- [x] 2.2 Write property test for prerequisite check completeness
   - **Feature: installer, Property 1: Prerequisite check completeness**
   - **Validates: Requirements 1.1, 1.3, 1.4, 4.2**
   - For any verification invocation, verify all three prerequisites are checked
   - _Requirements: 1.1, 1.3, 1.4, 4.2_
+  - **Status**: COMPLETE in `tests/unit/integrations/test_prerequisites_properties.py`
 
-- [ ]* 2.3 Write property test for missing prerequisite reporting
+- [x] 2.3 Write property test for missing prerequisite reporting
   - **Feature: installer, Property 3: Missing prerequisite reporting**
   - **Validates: Requirements 1.5**
   - For any subset of missing prerequisites, verify all are reported
   - _Requirements: 1.5_
+  - **Status**: COMPLETE in `tests/unit/integrations/test_prerequisites_properties.py`
 
 - [x] 3. Implement verification result model
   - Create `VerificationResult` dataclass with mk8_installed, prerequisites_ok, prerequisite_results, messages fields
@@ -51,11 +53,12 @@
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
   - **Status**: COMPLETE in `tests/unit/business/test_verification_models.py` (5 tests passing)
 
-- [ ]* 3.2 Write property test for verification failure reporting
+- [x] 3.2 Write property test for verification failure reporting
   - **Feature: installer, Property 6: Verification failure reporting**
   - **Validates: Requirements 4.3**
   - For any failed check, verify failure information is included in results
   - _Requirements: 4.3_
+  - **Status**: COMPLETE in `tests/unit/business/test_verification_result_properties.py`
 
 - [x] 4. Implement verification error class
   - Create `VerificationError` exception class extending `MK8Error`
@@ -68,11 +71,12 @@
   - _Requirements: 6.1, 6.2, 6.3_
   - **Status**: COMPLETE in `tests/unit/core/test_verification_error.py` (10 tests passing)
 
-- [ ]* 4.2 Write property test for error messages include suggestions
+- [x] 4.2 Write property test for error messages include suggestions
   - **Feature: installer, Property 7: Error messages include suggestions**
   - **Validates: Requirements 6.1, 6.2**
   - For any error condition, verify suggestions are included
   - _Requirements: 6.1, 6.2_
+  - **Status**: COMPLETE in `tests/unit/core/test_verification_error_properties.py`
 
 ## Prerequisite Checking
 
@@ -101,11 +105,12 @@
   - _Requirements: 1.2, 1.6_
   - **Status**: COMPLETE in `tests/unit/integrations/test_prerequisites.py`
 
-- [ ]* 6.2 Write property test for Docker daemon verification
+- [x] 6.2 Write property test for Docker daemon verification
   - **Feature: installer, Property 2: Docker daemon verification**
   - **Validates: Requirements 1.2**
   - For any Docker check when Docker is installed, verify daemon status is checked
   - _Requirements: 1.2_
+  - **Status**: COMPLETE in `tests/unit/integrations/test_prerequisites_properties.py`
 
 - [x] 7. Implement Docker prerequisite check
   - Implement `check_docker()` method that checks installation and daemon
@@ -158,11 +163,12 @@
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6_
   - **Status**: COMPLETE in `tests/unit/integrations/test_prerequisites.py`
 
-- [ ]* 10.2 Write property test for check idempotence
+- [x] 10.2 Write property test for check idempotence
   - **Feature: installer, Property 9: Check idempotence**
   - **Validates: Requirements 1.1, 1.2, 1.3, 1.4**
   - For any system state, verify running checks multiple times returns consistent results
   - _Requirements: 1.1, 1.2, 1.3, 1.4_
+  - **Status**: COMPLETE in `tests/unit/integrations/test_prerequisites_properties.py`
 
 ## Installation Instructions
 
@@ -181,17 +187,19 @@
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
   - **Status**: COMPLETE in `tests/unit/business/test_verification.py`
 
-- [ ]* 11.2 Write property test for installation instructions provision
+- [x] 11.2 Write property test for installation instructions provision
   - **Feature: installer, Property 4: Installation instructions provision**
   - **Validates: Requirements 2.1, 2.5**
   - For any missing prerequisite, verify instructions are provided
   - _Requirements: 2.1, 2.5_
+  - **Status**: COMPLETE in `tests/unit/business/test_verification_properties.py`
 
-- [ ]* 11.3 Write property test for failed checks include instructions
+- [x] 11.3 Write property test for failed checks include instructions
   - **Feature: installer, Property 8: Failed checks include instructions**
   - **Validates: Requirements 6.3**
   - For any failed prerequisite check, verify installation instructions are included
   - _Requirements: 6.3_
+  - **Status**: COMPLETE in `tests/unit/business/test_verification_properties.py`
 
 ## Verification
 
@@ -206,11 +214,12 @@
   - _Requirements: 3.2, 3.3, 4.1_
   - **Status**: COMPLETE in `tests/unit/business/test_verification.py`
 
-- [ ]* 12.2 Write property test for mk8 installation verification
+- [x] 12.2 Write property test for mk8 installation verification
   - **Feature: installer, Property 5: mk8 installation verification**
   - **Validates: Requirements 3.2, 3.3, 4.1**
   - For any verification invocation, verify mk8 PATH check is performed
   - _Requirements: 3.2, 3.3, 4.1_
+  - **Status**: COMPLETE in `tests/unit/business/test_verification_properties.py`
 
 - [x] 13. Implement complete verification flow
   - Implement `verify()` method that runs all verification checks
