@@ -15,18 +15,18 @@
 - **Implementation**: Full credential management with config file, env vars, Crossplane sync, validation
 
 ### ✅ installer (MVP)
-- **Status**: COMPLETE (15/15 core tasks + 2/11 optional tasks)
+- **Status**: COMPLETE (15/15 core tasks + 11/11 optional tasks)
 - **Files**: requirements.md, design.md, tasks.md, STATUS.md, IMPLEMENTATION-SUMMARY.md
 - **Description**: Basic prerequisite checking for Linux, `mk8 verify` command
-- **Implementation**: Fully implemented and tested
-- **Coverage**: 96.80% (42 installer tests passing)
+- **Implementation**: Fully implemented and tested with comprehensive property-based testing
+- **Coverage**: 96.80% (53 installer tests passing: 42 unit + 11 property tests)
 - **Features**:
   - PrerequisiteChecker for Docker, kind, kubectl
   - VerificationManager for complete verification flow
   - `mk8 verify` CLI command with verbose mode
   - Installation instructions for missing prerequisites
   - Optional unit tests for VerificationResult and VerificationError
-- **Optional Tasks Remaining**: 9 property-based tests (can be added later)
+  - All 9 correctness properties validated with property-based tests (100 examples each)
 
 ## In Progress Specs
 
