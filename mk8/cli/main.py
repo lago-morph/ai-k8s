@@ -11,6 +11,7 @@ from mk8.core.errors import MK8Error, ExitCode
 from mk8.core.logging import setup_logging
 from mk8.cli.output import OutputFormatter
 from mk8.cli.commands.version import VersionCommand
+from mk8.cli.commands.verify import verify
 
 
 @dataclass
@@ -108,6 +109,10 @@ def config(ctx: click.Context) -> None:
     output = ctx.obj.get("output", OutputFormatter())
     output.info("Config command - placeholder implementation")
     output.info("This will be implemented in the aws-credentials-management spec")
+
+
+# Add verify command
+cli.add_command(verify)
 
 
 def main() -> int:
