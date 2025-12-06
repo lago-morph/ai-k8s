@@ -8,17 +8,19 @@
 - **Description**: CLI framework with Click, command routing, error handling, logging, and version command
 - **Implementation**: Fully implemented and tested
 
-## In Progress Specs
-
-### 🚧 installer (MVP)
-- **Status**: IN PROGRESS (1/15 tasks complete, 1 in progress)
+### ✅ installer (MVP)
+- **Status**: COMPLETE (15/15 tasks)
 - **Files**: requirements.md, design.md, tasks.md, STATUS.md
 - **Description**: Basic prerequisite checking for Linux, `mk8 verify` command
-- **Next Steps**: Complete PrerequisiteResults implementation, then continue with VerificationManager
-- **Notes**: 
-  - PrerequisiteStatus model complete
-  - PrerequisiteResults tests written but implementation missing
-  - See STATUS.md for detailed implementation status
+- **Implementation**: Fully implemented and tested
+- **Coverage**: 96.80% (165 tests passing)
+- **Features**:
+  - PrerequisiteChecker for Docker, kind, kubectl
+  - VerificationManager for complete verification flow
+  - `mk8 verify` CLI command with verbose mode
+  - Installation instructions for missing prerequisites
+
+## In Progress Specs
 
 ### 📋 installer-future
 - **Status**: PLANNED (2/37 tasks complete)
@@ -84,8 +86,8 @@ These specs have requirements defined but need design and task planning:
 ## Summary Statistics
 
 - **Total Specs**: 10 (1 deprecated)
-- **Complete**: 1 (mk8-cli)
-- **In Progress**: 1 (installer)
+- **Complete**: 2 (mk8-cli, installer)
+- **In Progress**: 0
 - **Planned**: 1 (installer-future)
 - **Requirements Only**: 6
 - **Deprecated**: 1 (local-bootstrap-cluster)
@@ -93,7 +95,7 @@ These specs have requirements defined but need design and task planning:
 ## Recommended Implementation Order
 
 1. ✅ **mk8-cli** - COMPLETE
-2. 🚧 **installer** - IN PROGRESS (finish this first)
+2. ✅ **installer** - COMPLETE
 3. **aws-credentials-management** - Needed for AWS operations
 4. **kubeconfig-file-handling** - Needed for cluster management
 5. **local-kind-cluster** - Basic cluster operations
