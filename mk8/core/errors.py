@@ -71,3 +71,9 @@ class ConfigurationError(MK8Error):
     """Raised when configuration is invalid."""
 
     pass
+
+
+class VerificationError(MK8Error):
+    """Raised when verification fails."""
+
+    pass
