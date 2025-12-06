@@ -1,0 +1,110 @@
+# mk8 Specs Status Overview
+
+## Completed Specs
+
+### ✅ mk8-cli
+- **Status**: COMPLETE (63/63 tasks)
+- **Files**: requirements.md, design.md, tasks.md
+- **Description**: CLI framework with Click, command routing, error handling, logging, and version command
+- **Implementation**: Fully implemented and tested
+
+## In Progress Specs
+
+### 🚧 installer (MVP)
+- **Status**: IN PROGRESS (1/15 tasks complete, 1 in progress)
+- **Files**: requirements.md, design.md, tasks.md, STATUS.md
+- **Description**: Basic prerequisite checking for Linux, `mk8 verify` command
+- **Next Steps**: Complete PrerequisiteResults implementation, then continue with VerificationManager
+- **Notes**: 
+  - PrerequisiteStatus model complete
+  - PrerequisiteResults tests written but implementation missing
+  - See STATUS.md for detailed implementation status
+
+### 📋 installer-future
+- **Status**: PLANNED (2/37 tasks complete)
+- **Files**: requirements.md, design.md, tasks.md
+- **Description**: Advanced installer features (multi-platform, interactive, auto-install)
+- **Completed**: PlatformInfo model, PrerequisiteStatus version fields
+- **Notes**: Future enhancements after MVP installer is complete
+
+## Requirements-Only Specs (Design Phase)
+
+These specs have requirements defined but need design and task planning:
+
+### 📝 argocd-bootstrap
+- **Status**: REQUIREMENTS COMPLETE
+- **Files**: requirements.md
+- **Description**: ArgoCD installation and GitOps workflow setup
+- **Next Steps**: Create design.md and tasks.md
+
+### 📝 crossplane-bootstrap
+- **Status**: REQUIREMENTS COMPLETE
+- **Files**: requirements.md
+- **Description**: Crossplane installation and AWS provider setup
+- **Next Steps**: Create design.md and tasks.md
+
+### 📝 gitops-repository-setup
+- **Status**: REQUIREMENTS COMPLETE
+- **Files**: requirements.md
+- **Description**: Git repository structure for GitOps workflows
+- **Next Steps**: Create design.md and tasks.md
+
+### 📝 local-kind-cluster
+- **Status**: REQUIREMENTS COMPLETE
+- **Files**: requirements.md
+- **Description**: Local kind cluster lifecycle management
+- **Next Steps**: Create design.md and tasks.md
+
+### 📝 aws-credentials-management
+- **Status**: REQUIREMENTS COMPLETE
+- **Files**: requirements.md
+- **Description**: AWS credential handling and validation
+- **Next Steps**: Create design.md and tasks.md
+
+### 📝 kubeconfig-file-handling
+- **Status**: REQUIREMENTS COMPLETE
+- **Files**: requirements.md
+- **Description**: Safe kubeconfig merging and management
+- **Next Steps**: Create design.md and tasks.md
+
+### 📝 local-bootstrap-cluster (DEPRECATED)
+- **Status**: DEPRECATED
+- **Files**: requirements.md
+- **Description**: Original monolithic bootstrap spec
+- **Notes**: Split into 4 focused specs (local-kind-cluster, crossplane-bootstrap, gitops-repository-setup, argocd-bootstrap)
+- **See**: BOOTSTRAP-WORKFLOW.md for the complete workflow
+
+## Workflow Documentation
+
+### 📖 BOOTSTRAP-WORKFLOW.md
+- Documents the complete bootstrap workflow
+- Shows how the 4 bootstrap specs work together
+- Provides implementation order and dependencies
+
+## Summary Statistics
+
+- **Total Specs**: 10 (1 deprecated)
+- **Complete**: 1 (mk8-cli)
+- **In Progress**: 1 (installer)
+- **Planned**: 1 (installer-future)
+- **Requirements Only**: 6
+- **Deprecated**: 1 (local-bootstrap-cluster)
+
+## Recommended Implementation Order
+
+1. ✅ **mk8-cli** - COMPLETE
+2. 🚧 **installer** - IN PROGRESS (finish this first)
+3. **aws-credentials-management** - Needed for AWS operations
+4. **kubeconfig-file-handling** - Needed for cluster management
+5. **local-kind-cluster** - Basic cluster operations
+6. **crossplane-bootstrap** - Crossplane + AWS setup
+7. **gitops-repository-setup** - Git repo structure
+8. **argocd-bootstrap** - ArgoCD + GitOps workflow
+9. **installer-future** - Polish installer for external users
+
+## Notes
+
+- The installer spec was recently refactored to separate MVP from future enhancements
+- The local-bootstrap-cluster spec was split into 4 focused specs for better modularity
+- All requirements-only specs need design and task planning before implementation
+- See individual spec directories for detailed requirements and design documents
