@@ -10,7 +10,7 @@ The installer spec has been refactored into two separate specs:
 
 ### Data Models
 
-#### ✅ PrerequisiteStatus (installer task 1)
+#### ✅ PrerequisiteStatus (installer task 1 & 1.1)
 - **Location**: `mk8/integrations/prerequisite_models.py`
 - **Tests**: `tests/unit/integrations/test_prerequisite_models.py`
 - **Status**: COMPLETE with full test coverage
@@ -18,7 +18,7 @@ The installer spec has been refactored into two separate specs:
 
 #### ⚠️ PrerequisiteResults (installer task 2)
 - **Location**: Should be in `mk8/integrations/prerequisite_models.py`
-- **Tests**: `tests/unit/integrations/test_prerequisite_results.py` (WRITTEN)
+- **Tests**: `tests/unit/integrations/test_prerequisite_results.py` (WRITTEN - task 2.1)
 - **Status**: INCOMPLETE - Tests exist but implementation is missing
 - **Next Step**: Add the `PrerequisiteResults` class to `prerequisite_models.py`
 
@@ -35,15 +35,30 @@ The installer spec has been refactored into two separate specs:
 1. **Complete Task 2**: Implement `PrerequisiteResults` class
    - Add class to `mk8/integrations/prerequisite_models.py`
    - Implement `all_satisfied()`, `get_missing()`, and `get_status_summary()` methods
-   - Tests already exist and will pass once implemented
+   - Tests already exist (task 2.1) and will pass once implemented
+   - Optional: Property tests (tasks 2.2, 2.3)
 
 2. **Task 3**: Implement `VerificationResult` model
+   - Optional: Unit tests (task 3.1) and property tests (task 3.2)
+
 3. **Task 4**: Implement `VerificationError` exception
-4. **Task 5-10**: Implement `PrerequisiteChecker` class
-5. **Task 11**: Implement basic installation instructions
-6. **Task 12-13**: Implement `VerificationManager` class
+   - Optional: Unit tests (task 4.1) and property tests (task 4.2)
+
+4. **Tasks 5-10**: Implement `PrerequisiteChecker` class
+   - Optional: Unit tests (tasks 5.1, 6.1, 7.1, 8.1, 9.1, 10.1)
+   - Optional: Property tests (tasks 6.2, 10.2)
+
+5. **Task 11**: Implement basic installation instructions in `VerificationManager`
+   - Optional: Unit tests (task 11.1) and property tests (tasks 11.2, 11.3)
+
+6. **Tasks 12-13**: Complete `VerificationManager` class
+   - Optional: Unit tests (task 12.1) and property tests (task 12.2)
+   - Optional: Integration tests (task 13.1)
+
 7. **Task 14**: Implement `mk8 verify` CLI command
-8. **Task 15**: Integration tests
+   - Optional: Unit tests (task 14.1)
+
+8. **Task 15**: Final checkpoint - ensure all tests pass
 
 ### Future Enhancements (installer-future)
 
@@ -120,3 +135,6 @@ tests/unit/integrations/
 - The `PrerequisiteStatus` model was implemented with extra fields (version, version_ok, path) that are needed for the future spec. This is fine and won't affect the MVP.
 - The MVP installer focuses on Linux-only, basic checks, and simple instructions.
 - All advanced features (multi-platform, interactive mode, auto-install, etc.) are in the future spec.
+- **Testing approach**: Tasks marked with `*` are optional (primarily tests). Core implementation tasks are required. This allows for faster MVP delivery while maintaining the option for comprehensive testing.
+- **Property-based testing**: The design includes 9 correctness properties. Property tests are optional but recommended for verifying universal behaviors across all inputs.
+- **Test framework**: Property-based tests should use Hypothesis library with minimum 100 iterations per test.

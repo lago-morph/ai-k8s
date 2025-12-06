@@ -188,6 +188,46 @@ class VerificationResult:
         return self.mk8_installed and self.prerequisites_ok
 ```
 
+## Correctness Properties
+
+*A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+
+### Property 1: Prerequisite check completeness
+*For any* verification invocation, the system should check all three required prerequisites (Docker, kubectl, kind) and return results for each.
+**Validates: Requirements 1.1, 1.3, 1.4, 4.2**
+
+### Property 2: Docker daemon verification
+*For any* Docker check, if Docker is installed, the system should also verify whether the daemon is running.
+**Validates: Requirements 1.2**
+
+### Property 3: Missing prerequisite reporting
+*For any* subset of missing prerequisites, the system should report all missing tools in the results.
+**Validates: Requirements 1.5**
+
+### Property 4: Installation instructions provision
+*For any* missing prerequisite, the system should provide installation instructions for that tool.
+**Validates: Requirements 2.1, 2.5**
+
+### Property 5: mk8 installation verification
+*For any* verification invocation, the system should check whether mk8 is available in PATH.
+**Validates: Requirements 3.2, 3.3, 4.1**
+
+### Property 6: Verification failure reporting
+*For any* failed check (prerequisite or mk8), the system should include information about what failed in the verification result.
+**Validates: Requirements 4.3**
+
+### Property 7: Error messages include suggestions
+*For any* error condition, the system should include actionable suggestions for resolving the issue.
+**Validates: Requirements 6.1, 6.2**
+
+### Property 8: Failed checks include instructions
+*For any* failed prerequisite check, the system should provide installation instructions as part of the error information.
+**Validates: Requirements 6.3**
+
+### Property 9: Check idempotence
+*For any* system state, running prerequisite checks multiple times should return consistent results (checks are idempotent and don't modify state).
+**Validates: Requirements 1.1, 1.2, 1.3, 1.4**
+
 ## Error Handling
 
 ### Exception Hierarchy
@@ -212,6 +252,44 @@ class VerificationError(MK8Error):
 
 ## Testing Strategy
 
+### Dual Testing Approach
+
+This feature uses both unit tests and property-based tests to ensure comprehensive coverage:
+- **Unit tests** verify specific examples, edge cases, and error conditions
+- **Property tests** verify universal properties that should hold across all inputs
+- Together they provide complete coverage: unit tests catch concrete bugs, property tests verify general correctness
+
+### Property-Based Testing
+
+**Framework**: Hypothesis (Python property-based testing library)
+
+**Configuration**: Each property test should run a minimum of 100 iterations
+
+**Property Test Requirements**:
+- Each property-based test MUST be tagged with a comment referencing the correctness property from this design document
+- Tag format: `# Feature: installer, Property {number}: {property_text}`
+- Each correctness property MUST be implemented by a SINGLE property-based test
+
+**Test Organization**:
+```
+tests/unit/business/
+└── test_verification_properties.py    # Property tests for VerificationManager
+
+tests/unit/integrations/
+└── test_prerequisites_properties.py   # Property tests for PrerequisiteChecker
+```
+
+**Key Property Tests**:
+1. Property 1: Prerequisite check completeness
+2. Property 2: Docker daemon verification
+3. Property 3: Missing prerequisite reporting
+4. Property 4: Installation instructions provision
+5. Property 5: mk8 installation verification
+6. Property 6: Verification failure reporting
+7. Property 7: Error messages include suggestions
+8. Property 8: Failed checks include instructions
+9. Property 9: Check idempotence
+
 ### Unit Tests
 
 **Coverage Target**: 80%+
@@ -219,10 +297,10 @@ class VerificationError(MK8Error):
 **Test Organization**:
 ```
 tests/unit/business/
-└── test_verification.py           # VerificationManager tests
+└── test_verification.py           # VerificationManager unit tests
 
 tests/unit/integrations/
-└── test_prerequisites.py          # PrerequisiteChecker tests
+└── test_prerequisites.py          # PrerequisiteChecker unit tests
 
 tests/unit/cli/
 └── test_verify_command.py         # verify command tests

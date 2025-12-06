@@ -5,68 +5,147 @@
 - [x] 1. Implement prerequisite status data model
   - Create `PrerequisiteStatus` dataclass with name, installed, daemon_running, error fields
   - Implement `is_satisfied()` method to check if prerequisite is met
-  - Write unit tests for satisfaction logic
   - _Requirements: 1.1, 1.2, 1.5, 1.6_
-  - **Note**: Implementation includes version and path fields from future spec
+  - **Status**: COMPLETE in `mk8/integrations/prerequisite_models.py`
 
-- [~] 2. Implement prerequisite results aggregate model
+- [x] 1.1 Write unit tests for PrerequisiteStatus
+  - Test satisfaction logic for various states
+  - Test with daemon_running scenarios
+  - _Requirements: 1.1, 1.2, 1.5, 1.6_
+  - **Status**: COMPLETE in `tests/unit/integrations/test_prerequisite_models.py`
+
+- [ ] 2. Implement prerequisite results aggregate model
   - Create `PrerequisiteResults` dataclass with docker, kind, kubectl fields
   - Implement `all_satisfied()` method to check all prerequisites
   - Implement `get_missing()` method to return list of missing tool names
-  - Write unit tests for aggregate logic
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
-  - **Status**: Tests written but implementation missing in `mk8/integrations/prerequisite_models.py`
+  - **Status**: Tests exist but implementation missing in `mk8/integrations/prerequisite_models.py`
+
+- [ ]* 2.1 Write unit tests for PrerequisiteResults
+  - Test aggregate satisfaction logic
+  - Test get_missing() with various combinations
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
+
+- [ ]* 2.2 Write property test for prerequisite check completeness
+  - **Feature: installer, Property 1: Prerequisite check completeness**
+  - **Validates: Requirements 1.1, 1.3, 1.4, 4.2**
+  - For any verification invocation, verify all three prerequisites are checked
+  - _Requirements: 1.1, 1.3, 1.4, 4.2_
+
+- [ ]* 2.3 Write property test for missing prerequisite reporting
+  - **Feature: installer, Property 3: Missing prerequisite reporting**
+  - **Validates: Requirements 1.5**
+  - For any subset of missing prerequisites, verify all are reported
+  - _Requirements: 1.5_
 
 - [ ] 3. Implement verification result model
   - Create `VerificationResult` dataclass with mk8_installed, prerequisites_ok, prerequisite_results, messages fields
   - Implement `is_verified()` method
-  - Write unit tests for data model
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
+
+- [ ]* 3.1 Write unit tests for VerificationResult
+  - Test is_verified() logic
+  - Test with various result combinations
+  - _Requirements: 4.1, 4.2, 4.3, 4.4_
+
+- [ ]* 3.2 Write property test for verification failure reporting
+  - **Feature: installer, Property 6: Verification failure reporting**
+  - **Validates: Requirements 4.3**
+  - For any failed check, verify failure information is included in results
+  - _Requirements: 4.3_
 
 - [ ] 4. Implement verification error class
   - Create `VerificationError` exception class extending `MK8Error`
-  - Write unit tests for error formatting with suggestions
   - _Requirements: 6.1, 6.2, 6.3_
+
+- [ ]* 4.1 Write unit tests for VerificationError
+  - Test error formatting with suggestions
+  - Test inheritance from MK8Error
+  - _Requirements: 6.1, 6.2, 6.3_
+
+- [ ]* 4.2 Write property test for error messages include suggestions
+  - **Feature: installer, Property 7: Error messages include suggestions**
+  - **Validates: Requirements 6.1, 6.2**
+  - For any error condition, verify suggestions are included
+  - _Requirements: 6.1, 6.2_
 
 ## Prerequisite Checking
 
 - [ ] 5. Implement tool executable checking
   - Create `PrerequisiteChecker` class in `mk8/integrations/prerequisites.py`
   - Implement helper method to check if tool exists in PATH using `shutil.which()`
-  - Write unit tests mocking `shutil.which()` for found and not found scenarios
+  - _Requirements: 1.1, 1.3, 1.4_
+
+- [ ]* 5.1 Write unit tests for tool executable checking
+  - Mock `shutil.which()` for found and not found scenarios
+  - Test PATH detection logic
   - _Requirements: 1.1, 1.3, 1.4_
 
 - [ ] 6. Implement Docker daemon check
   - Implement `is_docker_daemon_running()` method using `docker info` command
   - Check exit code to determine if daemon is accessible
   - Handle timeout scenarios
-  - Write unit tests mocking subprocess for running and not running daemon
   - _Requirements: 1.2, 1.6_
+
+- [ ]* 6.1 Write unit tests for Docker daemon check
+  - Mock subprocess for running and not running daemon
+  - Test timeout handling
+  - _Requirements: 1.2, 1.6_
+
+- [ ]* 6.2 Write property test for Docker daemon verification
+  - **Feature: installer, Property 2: Docker daemon verification**
+  - **Validates: Requirements 1.2**
+  - For any Docker check when Docker is installed, verify daemon status is checked
+  - _Requirements: 1.2_
 
 - [ ] 7. Implement Docker prerequisite check
   - Implement `check_docker()` method that checks installation and daemon
   - Return `PrerequisiteStatus` with all relevant fields populated
   - Include suggestions in error field when checks fail
-  - Write unit tests for: installed with daemon running, installed without daemon, not installed
+  - _Requirements: 1.1, 1.2, 1.5, 1.6_
+
+- [ ]* 7.1 Write unit tests for Docker prerequisite check
+  - Test: installed with daemon running
+  - Test: installed without daemon
+  - Test: not installed
   - _Requirements: 1.1, 1.2, 1.5, 1.6_
 
 - [ ] 8. Implement kind prerequisite check
   - Implement `check_kind()` method that checks installation
   - Return `PrerequisiteStatus` with relevant fields
-  - Write unit tests for: installed, not installed
+  - _Requirements: 1.4, 1.5_
+
+- [ ]* 8.1 Write unit tests for kind prerequisite check
+  - Test: installed
+  - Test: not installed
   - _Requirements: 1.4, 1.5_
 
 - [ ] 9. Implement kubectl prerequisite check
   - Implement `check_kubectl()` method that checks installation
   - Return `PrerequisiteStatus` with relevant fields
-  - Write unit tests for: installed, not installed
+  - _Requirements: 1.3, 1.5_
+
+- [ ]* 9.1 Write unit tests for kubectl prerequisite check
+  - Test: installed
+  - Test: not installed
   - _Requirements: 1.3, 1.5_
 
 - [ ] 10. Implement aggregate prerequisite checking
   - Implement `check_all()` method that runs all prerequisite checks
   - Return `PrerequisiteResults` with all check results
-  - Write unit tests for: all satisfied, some missing, all missing
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6_
+
+- [ ]* 10.1 Write unit tests for aggregate checking
+  - Test: all satisfied
+  - Test: some missing
+  - Test: all missing
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6_
+
+- [ ]* 10.2 Write property test for check idempotence
+  - **Feature: installer, Property 9: Check idempotence**
+  - **Validates: Requirements 1.1, 1.2, 1.3, 1.4**
+  - For any system state, verify running checks multiple times returns consistent results
+  - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
 ## Installation Instructions
 
@@ -76,14 +155,40 @@
   - Provide Docker installation link
   - Provide kind installation command for Linux
   - Provide kubectl installation link
-  - Write unit tests for instruction generation
   - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+
+- [ ]* 11.1 Write unit tests for installation instructions
+  - Test instruction generation for each tool
+  - Test instructions contain commands or links
+  - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+
+- [ ]* 11.2 Write property test for installation instructions provision
+  - **Feature: installer, Property 4: Installation instructions provision**
+  - **Validates: Requirements 2.1, 2.5**
+  - For any missing prerequisite, verify instructions are provided
+  - _Requirements: 2.1, 2.5_
+
+- [ ]* 11.3 Write property test for failed checks include instructions
+  - **Feature: installer, Property 8: Failed checks include instructions**
+  - **Validates: Requirements 6.3**
+  - For any failed prerequisite check, verify installation instructions are included
+  - _Requirements: 6.3_
 
 ## Verification
 
 - [ ] 12. Implement mk8 installation check
   - Implement `verify_mk8_installed()` method using `shutil.which("mk8")`
-  - Write unit tests for: command found, command not in PATH
+  - _Requirements: 3.2, 3.3, 4.1_
+
+- [ ]* 12.1 Write unit tests for mk8 installation check
+  - Test: command found
+  - Test: command not in PATH
+  - _Requirements: 3.2, 3.3, 4.1_
+
+- [ ]* 12.2 Write property test for mk8 installation verification
+  - **Feature: installer, Property 5: mk8 installation verification**
+  - **Validates: Requirements 3.2, 3.3, 4.1**
+  - For any verification invocation, verify mk8 PATH check is performed
   - _Requirements: 3.2, 3.3, 4.1_
 
 - [ ] 13. Implement complete verification flow
@@ -91,7 +196,12 @@
   - Check if mk8 is installed
   - Check prerequisites using `PrerequisiteChecker`
   - Return complete `VerificationResult` with all check results
-  - Write integration tests for full verification flow
+  - _Requirements: 4.1, 4.2, 4.3, 4.4_
+
+- [ ]* 13.1 Write integration tests for verification flow
+  - Test scenario: all prerequisites satisfied, mk8 installed
+  - Test scenario: missing prerequisites
+  - Test scenario: mk8 not installed
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
 ## CLI Integration
@@ -104,15 +214,19 @@
   - Display results using `OutputFormatter`
   - Show installation instructions for missing prerequisites
   - Exit with appropriate exit code based on results
-  - Write unit tests using CliRunner
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 6.1, 6.2, 6.3_
 
-## Integration Testing
+- [ ]* 14.1 Write unit tests for verify command
+  - Test command with all checks passing
+  - Test command with missing prerequisites
+  - Test --verbose flag behavior
+  - Test exit codes
+  - _Requirements: 4.1, 4.2, 4.3, 4.4, 6.1, 6.2, 6.3_
 
-- [ ] 15. Implement end-to-end verification test
-  - Create integration test that runs full verification flow
-  - Mock all external dependencies (subprocess, shutil.which)
-  - Test scenario: all prerequisites satisfied, mk8 installed
-  - Test scenario: missing prerequisites
-  - Verify correct `VerificationResult` is returned
-  - _Requirements: 4.1, 4.2, 4.3, 4.4_
+## Final Integration Testing
+
+- [ ] 15. Checkpoint - Ensure all tests pass
+  - Run full test suite
+  - Verify 80%+ code coverage
+  - Ensure all tests pass, ask the user if questions arise
+  - _Requirements: All_
