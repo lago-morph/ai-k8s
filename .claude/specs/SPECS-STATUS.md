@@ -36,19 +36,6 @@
 ### ✅ kubeconfig-file-handling
 - **Status**: COMPLETE (4/4 phases, 49 tests, 100% coverage)
 - **Files**: requirements.md, design.md, tasks.md, STATUS.md
-- **Description**: Safe kubeconfig merging and management with atomic updates and backups
-- **Implementation**: KubeconfigManager with atomic writes, backups, and conflict resolution
-- **Features**:
-  - Atomic file updates with validation
-  - Automatic timestamped backups (5 max retention)
-  - Secure permissions (0o700 dir, 0o600 file)
-  - Conflict resolution with numeric suffixes
-  - Cascading removal and context management
-  - All 17 correctness properties validated (100+ examples each)
-
-### ✅ kubeconfig-file-handling
-- **Status**: COMPLETE (4/4 phases, 49 tests, 100% coverage)
-- **Files**: requirements.md, design.md, tasks.md, STATUS.md
 - **Description**: Safe kubeconfig merging and management
 - **Implementation**: Full kubeconfig management with atomic updates, backups, conflict resolution
 - **Features**:
@@ -61,34 +48,35 @@
   - All 17 correctness properties validated with property-based tests (100 examples each)
 
 ### ✅ local-kind-cluster
-- **Status**: COMPLETE (4/4 phases, implementation-first approach)
+- **Status**: COMPLETE (4/4 phases, 915 lines)
 - **Files**: requirements.md, design.md, tasks.md, STATUS.md
 - **Description**: Local bootstrap cluster management with kind
 - **Implementation**: Complete cluster lifecycle with safety-first design
 - **Features**:
-  - KindClient with hardcoded cluster name (mk8-bootstrap)
-  - BootstrapManager orchestration with prerequisite validation
-  - CLI commands: bootstrap create/delete/status
+  - KindClient with hardcoded cluster name (mk8-bootstrap) - 415 lines
+  - BootstrapManager orchestration with prerequisite validation - 309 lines
+  - CLI commands: bootstrap create/delete/status - 220 lines
   - Kubeconfig integration and cleanup
   - Force recreate and Kubernetes version selection
   - All 20 correctness properties addressed in implementation
 
-### ✅ crossplane-bootstrap
-- **Status**: COMPLETE (3/3 phases, 1,180 lines)
-- **Files**: requirements.md, design.md, tasks.md, STATUS.md
-- **Description**: Crossplane installation and AWS provider setup on bootstrap cluster
-- **Implementation**: Complete Crossplane lifecycle with Helm-based installation
-- **Features**:
-  - HelmClient for Helm chart operations
-  - CrossplaneInstaller orchestration with AWS provider setup
-  - CLI commands: crossplane install/uninstall/status
-  - AWS credential configuration and ProviderConfig creation
-  - Version selection and resilient cleanup
-  - All 15 correctness properties addressed in implementation
-
 ## In Progress Specs
 
-None currently in progress.
+### 🚧 crossplane-bootstrap
+- **Status**: IN PROGRESS (2/3 phases complete, 67%)
+- **Files**: requirements.md, design.md, tasks.md, STATUS.md
+- **Description**: Crossplane installation and AWS provider setup on bootstrap cluster
+- **Implementation**: Phases 1-2 complete, Phase 3 (CLI) pending
+- **Completed Features**:
+  - HelmClient for Helm chart operations - 284 lines
+  - CrossplaneInstaller orchestration with AWS provider setup - 520 lines
+- **Pending Features**:
+  - CLI commands: crossplane install/uninstall/status - ~280 lines
+  - AWS credential configuration and ProviderConfig creation
+  - Version selection and resilient cleanup
+- **Next Steps**: Implement Phase 3 CLI integration
+
+
 
 ## Planned Specs (Ready for Implementation)
 
@@ -134,10 +122,10 @@ These specs have requirements defined but need design and task planning:
 ## Summary Statistics
 
 - **Total Specs**: 10 (1 deprecated)
-- **Complete**: 6 (mk8-cli, installer, aws-credentials-management, kubeconfig-file-handling, local-kind-cluster, crossplane-bootstrap)
-- **In Progress**: 0
+- **Complete**: 6 (mk8-cli, installer, aws-credentials-management, kubeconfig-file-handling, local-kind-cluster)
+- **In Progress**: 1 (crossplane-bootstrap - 67% complete)
 - **Planned**: 1 (installer-future)
-- **Requirements Only**: 2
+- **Requirements Only**: 2 (argocd-bootstrap, gitops-repository-setup)
 - **Deprecated**: 1 (local-bootstrap-cluster)
 
 ## Recommended Implementation Order
@@ -147,7 +135,7 @@ These specs have requirements defined but need design and task planning:
 3. ✅ **aws-credentials-management** - COMPLETE
 4. ✅ **kubeconfig-file-handling** - COMPLETE
 5. ✅ **local-kind-cluster** - COMPLETE
-6. ✅ **crossplane-bootstrap** - COMPLETE
+6. 🚧 **crossplane-bootstrap** - IN PROGRESS (67% complete, CLI pending)
 7. **gitops-repository-setup** - Git repo structure
 8. **argocd-bootstrap** - ArgoCD + GitOps workflow
 9. **installer-future** - Polish installer for external users
