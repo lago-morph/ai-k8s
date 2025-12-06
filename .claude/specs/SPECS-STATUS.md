@@ -28,6 +28,20 @@
   - Optional unit tests for VerificationResult and VerificationError
   - All 9 correctness properties validated with property-based tests (100 examples each)
 
+### ✅ kubeconfig-file-handling
+- **Status**: COMPLETE (4/4 phases, 49 tests, 100% coverage)
+- **Files**: requirements.md, design.md, tasks.md, STATUS.md
+- **Description**: Safe kubeconfig merging and management
+- **Implementation**: Full kubeconfig management with atomic updates, backups, conflict resolution
+- **Features**:
+  - Atomic file updates with validation
+  - Automatic timestamped backups (max 5 retained)
+  - Secure permissions (0o700 dir, 0o600 file)
+  - Naming conflict resolution with numeric suffixes
+  - Cascading removal (cluster, context, user)
+  - Smart context switching and restoration
+  - All 17 correctness properties validated with property-based tests (100 examples each)
+
 ## In Progress Specs
 
 None currently in progress.
@@ -95,9 +109,9 @@ These specs have requirements defined but need design and task planning:
 ## Summary Statistics
 
 - **Total Specs**: 10 (1 deprecated)
-- **Complete**: 3 (mk8-cli, installer, aws-credentials-management)
+- **Complete**: 4 (mk8-cli, installer, aws-credentials-management, kubeconfig-file-handling)
 - **In Progress**: 0
-- **Planned**: 2 (kubeconfig-file-handling, installer-future)
+- **Planned**: 1 (installer-future)
 - **Requirements Only**: 4
 - **Deprecated**: 1 (local-bootstrap-cluster)
 
@@ -106,7 +120,8 @@ These specs have requirements defined but need design and task planning:
 1. ✅ **mk8-cli** - COMPLETE
 2. ✅ **installer** - COMPLETE
 3. ✅ **aws-credentials-management** - COMPLETE
-4. 📋 **kubeconfig-file-handling** - PLANNED (ready to start)
+4. ✅ **kubeconfig-file-handling** - COMPLETE
+5. 📋 **local-kind-cluster** - DESIGN COMPLETE (ready to start)
 5. **local-kind-cluster** - Basic cluster operations
 6. **crossplane-bootstrap** - Crossplane + AWS setup
 7. **gitops-repository-setup** - Git repo structure
