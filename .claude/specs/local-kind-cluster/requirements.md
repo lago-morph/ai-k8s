@@ -30,7 +30,19 @@ The kind cluster created by this feature uses a deterministic name ("mk8-bootstr
 4. WHEN the user executes `mk8 bootstrap status` THEN the system SHALL display the current state of the bootstrap cluster
 5. WHEN the user requests help for any bootstrap subcommand THEN the system SHALL display contextual help for that specific subcommand
 
-### Requirement 2: Prerequisites Validation
+### Requirement 2: Cluster Isolation and Safety
+
+**User Story:** As a platform engineer, I want mk8 to only operate on clusters it created, so that I never accidentally affect my other Kubernetes clusters.
+
+#### Acceptance Criteria
+
+1. WHEN mk8 performs any cluster operation THEN the system SHALL only operate on clusters with the name "mk8-bootstrap"
+2. WHEN mk8 reads kubeconfig THEN the system SHALL only interact with contexts created by mk8
+3. WHEN mk8 performs kubectl operations THEN the system SHALL explicitly specify the context to prevent using the current context
+4. IF mk8 detects a manually modified mk8-managed context THEN the system SHALL warn the user before proceeding
+5. WHEN mk8 deletes resources THEN the system SHALL verify the target cluster name before deletion
+
+### Requirement 3: Prerequisites Validation
 
 **User Story:** As a platform engineer, I want comprehensive prerequisite checking before bootstrap operations begin, so that I receive clear guidance on what needs to be installed or configured.
 
@@ -43,7 +55,7 @@ The kind cluster created by this feature uses a deterministic name ("mk8-bootstr
 5. IF the Docker daemon is not running THEN the system SHALL provide platform-specific instructions to start Docker
 6. WHEN all prerequisites are satisfied THEN the system SHALL proceed with the requested operation
 
-### Requirement 3: Bootstrap Cluster Creation
+### Requirement 4: Bootstrap Cluster Creation
 
 **User Story:** As a platform engineer, I want to create a local kind cluster optimized for infrastructure management, so that I have a reliable bootstrap environment.
 
@@ -56,31 +68,27 @@ The kind cluster created by this feature uses a deterministic name ("mk8-bootstr
 5. WHEN cluster creation succeeds THEN the system SHALL set the kubectl context to the new bootstrap cluster
 6. WHEN cluster creation completes THEN the system SHALL display a success message with the cluster name and context
 
-### Requirement 4: Cluster Already Exists Handling
+### Requirement 5: Cluster Already Exists Handling
 
 **User Story:** As a platform engineer, I want the system to handle cases where a bootstrap cluster already exists, so that I can safely re-run commands without causing errors.
 
 #### Acceptance Criteria
 
 1. WHEN `mk8 bootstrap create` is executed and the cluster already exists THEN the system SHALL detect this condition
-2. WHEN the cluster already exists THEN the system SHALL inform the user and offer options to skip or recreate
-3. WHEN offering to recreate THEN the system SHALL prompt the user for confirmation before deleting the existing cluster
-4. WHEN the user confirms recreation THEN the system SHALL delete the existing cluster and create a new one
-5. WHEN the user declines recreation THEN the system SHALL exit gracefully without making changes
+2. WHEN the user provides a force-recreate flag THEN the system SHALL delete the existing cluster and create a new one
 
-### Requirement 5: kubeconfig File Management
+### Requirement 6: kubeconfig File Management
 
 **User Story:** As a platform engineer, I want the bootstrap cluster context safely merged into my kubeconfig, so that I can access the cluster without disrupting my existing kubectl configurations.
 
 #### Acceptance Criteria
 
 1. WHEN the bootstrap cluster is created THEN the system SHALL merge the cluster context into the default kubeconfig file
-2. WHEN merging kubeconfig THEN the system SHALL preserve all existing contexts and clusters
-3. WHEN merging kubeconfig THEN the system SHALL set the current context to the bootstrap cluster
-4. IF the kubeconfig file does not exist THEN the system SHALL create it with appropriate permissions
-5. WHEN kubeconfig operations fail THEN the system SHALL display clear error messages with suggestions
+2. WHEN merging kubeconfig THEN the system SHALL set the current context to the bootstrap cluster
 
-### Requirement 6: Bootstrap Status Reporting
+Note: Kubeconfig preservation, creation, and error handling are delegated to the kubeconfig-file-handling spec.
+
+### Requirement 7: Bootstrap Status Reporting
 
 **User Story:** As a platform engineer, I want to check the status of my bootstrap cluster at any time, so that I can verify it's functioning correctly.
 
@@ -93,7 +101,7 @@ The kind cluster created by this feature uses a deterministic name ("mk8-bootstr
 5. WHEN the cluster is running THEN the system SHALL display basic cluster information including Kubernetes version
 6. IF the cluster exists but is not healthy THEN the system SHALL highlight the issue and suggest remediation steps
 
-### Requirement 7: Resource Cleanup
+### Requirement 8: Resource Cleanup
 
 **User Story:** As a platform engineer, I want to cleanly remove the bootstrap cluster when it's no longer needed, so that I don't leave behind orphaned resources.
 
@@ -107,29 +115,14 @@ The kind cluster created by this feature uses a deterministic name ("mk8-bootstr
 6. IF cleanup encounters errors THEN the system SHALL log the errors but continue with remaining cleanup steps
 7. WHEN cleanup completes THEN the system SHALL provide a summary of what was removed
 
-### Requirement 8: Error Detection and Diagnosis
+### Requirement 9: Error Detection and Diagnosis
 
 **User Story:** As a platform engineer, I want detailed error messages with actionable suggestions when things go wrong, so that I can quickly resolve issues.
 
 #### Acceptance Criteria
 
-1. WHEN any operation fails THEN the system SHALL display a clear, human-readable error message describing what went wrong
+1. WHEN any operation fails THEN the system SHALL display a clear error message describing what went wrong
 2. WHEN displaying errors THEN the system SHALL include one or more specific suggestions for resolving the issue
-3. IF a kind cluster operation fails THEN the system SHALL include kind-specific diagnostics including Docker status and port availability
-4. WHEN network connectivity issues are detected THEN the system SHALL provide appropriate diagnostic information
-5. WHEN operations time out THEN the system SHALL provide timeout context and suggest checking underlying issues
-
-### Requirement 9: Progressive Status Display
-
-**User Story:** As a platform engineer, I want to see progress updates during long-running operations, so that I know the system is working.
-
-#### Acceptance Criteria
-
-1. WHEN creating the bootstrap cluster THEN the system SHALL display progress messages for major steps
-2. WHEN waiting for nodes to be ready THEN the system SHALL display periodic status updates
-3. WHEN operations take longer than expected THEN the system SHALL inform the user that the operation is still in progress
-4. WHEN verbose mode is enabled THEN the system SHALL display detailed progress including node events
-5. WHEN operations complete THEN the system SHALL provide a clear success message with next steps
 
 ### Requirement 10: Cluster Configuration Options
 
@@ -137,11 +130,44 @@ The kind cluster created by this feature uses a deterministic name ("mk8-bootstr
 
 #### Acceptance Criteria
 
-1. WHEN creating the bootstrap cluster THEN the system SHALL support optional flags for customization including Kubernetes version
-2. IF no customization flags are provided THEN the system SHALL use sensible defaults
-3. WHEN custom Kubernetes version is specified THEN the system SHALL validate it is supported by kind
-4. IF invalid options are provided THEN the system SHALL display an error with valid options
-5. WHEN custom options are used THEN the system SHALL display what configuration is being applied
+1. WHEN creating the bootstrap cluster THEN the system SHALL support optional Kubernetes version specification
+2. IF no Kubernetes version is specified THEN the system SHALL use kind's default version
+3. WHEN custom Kubernetes version is specified THEN the system SHALL validate it before attempting creation
+
+### Requirement 11: User Experience Guidelines
+
+**User Story:** As a platform engineer, I want clear feedback and guidance during bootstrap operations, so that I understand what's happening and can troubleshoot issues.
+
+#### Implementation Guidelines (Not Testable)
+
+These are user experience requirements that guide implementation but are not automatically testable:
+
+1. **Help and Documentation**
+   - Provide help messages for all commands and subcommands
+   - Display contextual help for specific subcommands
+
+2. **Progress Feedback**
+   - Display progress messages during cluster creation
+   - Show periodic status updates while waiting for nodes
+   - Inform user when operations take longer than expected
+   - Provide detailed progress in verbose mode
+
+3. **Interactive Prompts**
+   - Prompt for confirmation before deleting clusters
+   - Offer options when cluster already exists (skip or recreate)
+   - Allow graceful exit when user declines actions
+
+4. **Success Messages**
+   - Display cluster name and context after creation
+   - Provide summary of removed resources after deletion
+   - Include next steps in success messages
+
+5. **Error Context**
+   - Include kind-specific diagnostics for kind failures
+   - Provide timeout context for long-running operations
+   - Display what configuration is being applied for custom options
+
+Note: These guidelines inform implementation but are verified through manual testing and user feedback rather than automated tests.
 
 ## Edge Cases and Constraints
 
