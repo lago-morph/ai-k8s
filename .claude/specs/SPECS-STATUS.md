@@ -8,25 +8,43 @@
 - **Description**: CLI framework with Click, command routing, error handling, logging, and version command
 - **Implementation**: Fully implemented and tested
 
-### ✅ aws-credentials-management
-- **Status**: COMPLETE (9/9 phases, 121 tests, 100% coverage)
-- **Files**: requirements.md, design.md, tasks.md, STATUS.md
-- **Description**: AWS credential handling and validation
-- **Implementation**: Full credential management with config file, env vars, Crossplane sync, validation
-
 ### ✅ installer (MVP)
 - **Status**: COMPLETE (15/15 core tasks + 11/11 optional tasks)
 - **Files**: requirements.md, design.md, tasks.md, STATUS.md, IMPLEMENTATION-SUMMARY.md
 - **Description**: Basic prerequisite checking for Linux, `mk8 verify` command
 - **Implementation**: Fully implemented and tested with comprehensive property-based testing
-- **Coverage**: 96.80% (53 installer tests passing: 42 unit + 11 property tests)
+- **Coverage**: 96.80% (53 tests: 42 unit + 11 property tests)
 - **Features**:
   - PrerequisiteChecker for Docker, kind, kubectl
   - VerificationManager for complete verification flow
   - `mk8 verify` CLI command with verbose mode
   - Installation instructions for missing prerequisites
-  - Optional unit tests for VerificationResult and VerificationError
-  - All 9 correctness properties validated with property-based tests (100 examples each)
+  - All 9 correctness properties validated (100 examples each)
+
+### ✅ aws-credentials-management
+- **Status**: COMPLETE (9/9 phases, 121 tests, 100% coverage)
+- **Files**: requirements.md, design.md, tasks.md, STATUS.md
+- **Description**: AWS credential handling, validation, and Crossplane synchronization
+- **Implementation**: Full credential management with config file, env vars, Crossplane sync, validation
+- **Features**:
+  - Priority-based credential acquisition (file → env → manual)
+  - AWS credential validation via STS
+  - Crossplane secret synchronization
+  - `mk8 config` CLI command
+  - 16 property-based tests validating correctness
+
+### ✅ kubeconfig-file-handling
+- **Status**: COMPLETE (4/4 phases, 49 tests, 100% coverage)
+- **Files**: requirements.md, design.md, tasks.md, STATUS.md
+- **Description**: Safe kubeconfig merging and management with atomic updates and backups
+- **Implementation**: KubeconfigManager with atomic writes, backups, and conflict resolution
+- **Features**:
+  - Atomic file updates with validation
+  - Automatic timestamped backups (5 max retention)
+  - Secure permissions (0o700 dir, 0o600 file)
+  - Conflict resolution with numeric suffixes
+  - Cascading removal and context management
+  - All 17 correctness properties validated (100+ examples each)
 
 ### ✅ kubeconfig-file-handling
 - **Status**: COMPLETE (4/4 phases, 49 tests, 100% coverage)
@@ -48,14 +66,14 @@ None currently in progress.
 
 ## Planned Specs (Ready for Implementation)
 
-### 📋 kubeconfig-file-handling
+### 📋 local-kind-cluster
 - **Status**: PLANNED (design complete, ready for implementation)
 - **Files**: requirements.md, design.md, tasks.md
-- **Description**: Safe kubeconfig merging and management with atomic updates and backups
-- **Implementation**: Single KubeconfigManager class with 17 correctness properties
-- **Testing**: Property-based testing with Hypothesis (batched TDD approach)
-- **Tasks**: 10 implementation phases with comprehensive testing
-- **Next Steps**: Begin implementation with Phase 1 (Foundation and File Operations)
+- **Description**: Local kind cluster lifecycle management with safety-first design
+- **Implementation**: KindClusterManager with comprehensive validation and error handling
+- **Testing**: Property-based testing approach with 15 correctness properties
+- **Tasks**: 10 implementation phases
+- **Next Steps**: Begin implementation with Phase 1 (Foundation and Validation)
 
 ### 📋 installer-future
 - **Status**: PLANNED (2/37 tasks complete)
@@ -86,11 +104,7 @@ These specs have requirements defined but need design and task planning:
 - **Description**: Git repository structure for GitOps workflows
 - **Next Steps**: Create design.md and tasks.md
 
-### 📝 local-kind-cluster
-- **Status**: DESIGN COMPLETE
-- **Files**: requirements.md, design.md
-- **Description**: Local kind cluster lifecycle management
-- **Next Steps**: Create tasks.md and begin implementation
+
 
 ### 📝 local-bootstrap-cluster (DEPRECATED)
 - **Status**: DEPRECATED
@@ -111,8 +125,8 @@ These specs have requirements defined but need design and task planning:
 - **Total Specs**: 10 (1 deprecated)
 - **Complete**: 4 (mk8-cli, installer, aws-credentials-management, kubeconfig-file-handling)
 - **In Progress**: 0
-- **Planned**: 1 (installer-future)
-- **Requirements Only**: 4
+- **Planned**: 2 (local-kind-cluster, installer-future)
+- **Requirements Only**: 3
 - **Deprecated**: 1 (local-bootstrap-cluster)
 
 ## Recommended Implementation Order
@@ -121,8 +135,7 @@ These specs have requirements defined but need design and task planning:
 2. ✅ **installer** - COMPLETE
 3. ✅ **aws-credentials-management** - COMPLETE
 4. ✅ **kubeconfig-file-handling** - COMPLETE
-5. 📋 **local-kind-cluster** - DESIGN COMPLETE (ready to start)
-5. **local-kind-cluster** - Basic cluster operations
+5. 📋 **local-kind-cluster** - PLANNED (ready to start)
 6. **crossplane-bootstrap** - Crossplane + AWS setup
 7. **gitops-repository-setup** - Git repo structure
 8. **argocd-bootstrap** - ArgoCD + GitOps workflow
