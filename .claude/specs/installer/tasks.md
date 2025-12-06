@@ -45,10 +45,11 @@
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
   - **Status**: COMPLETE in `mk8/business/verification_models.py`
 
-- [ ]* 3.1 Write unit tests for VerificationResult
+- [x] 3.1 Write unit tests for VerificationResult
   - Test is_verified() logic
   - Test with various result combinations
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
+  - **Status**: COMPLETE in `tests/unit/business/test_verification_models.py` (5 tests passing)
 
 - [ ]* 3.2 Write property test for verification failure reporting
   - **Feature: installer, Property 6: Verification failure reporting**
@@ -61,10 +62,11 @@
   - _Requirements: 6.1, 6.2, 6.3_
   - **Status**: COMPLETE in `mk8/core/errors.py`
 
-- [ ]* 4.1 Write unit tests for VerificationError
+- [x] 4.1 Write unit tests for VerificationError
   - Test error formatting with suggestions
   - Test inheritance from MK8Error
   - _Requirements: 6.1, 6.2, 6.3_
+  - **Status**: COMPLETE in `tests/unit/core/test_verification_error.py` (10 tests passing)
 
 - [ ]* 4.2 Write property test for error messages include suggestions
   - **Feature: installer, Property 7: Error messages include suggestions**
