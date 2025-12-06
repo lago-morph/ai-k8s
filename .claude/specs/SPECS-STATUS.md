@@ -8,6 +8,12 @@
 - **Description**: CLI framework with Click, command routing, error handling, logging, and version command
 - **Implementation**: Fully implemented and tested
 
+### ✅ aws-credentials-management
+- **Status**: COMPLETE (9/9 phases, 121 tests, 100% coverage)
+- **Files**: requirements.md, design.md, tasks.md, STATUS.md
+- **Description**: AWS credential handling and validation
+- **Implementation**: Full credential management with config file, env vars, Crossplane sync, validation
+
 ### ✅ installer (MVP)
 - **Status**: COMPLETE (15/15 tasks)
 - **Files**: requirements.md, design.md, tasks.md, STATUS.md
@@ -22,11 +28,11 @@
 
 ## In Progress Specs
 
-### 🚧 aws-credentials-management
-- **Status**: IN PROGRESS (5/9 phases complete)
+### ✅ aws-credentials-management
+- **Status**: COMPLETE (9/9 phases, 121 tests, 100% coverage)
 - **Files**: requirements.md, design.md, tasks.md, STATUS.md
 - **Description**: AWS credential handling and validation
-- **Next Steps**: Complete CrossplaneManager, ConfigCommand, and CLI integration
+- **Implementation**: Full credential management with config file, env vars, Crossplane sync, validation
 
 ## Planned Specs (Ready for Implementation)
 
@@ -90,8 +96,8 @@ These specs have requirements defined but need design and task planning:
 ## Summary Statistics
 
 - **Total Specs**: 10 (1 deprecated)
-- **Complete**: 2 (mk8-cli, installer)
-- **In Progress**: 1 (aws-credentials-management)
+- **Complete**: 3 (mk8-cli, installer, aws-credentials-management)
+- **In Progress**: 0
 - **Planned**: 2 (kubeconfig-file-handling, installer-future)
 - **Requirements Only**: 4
 - **Deprecated**: 1 (local-bootstrap-cluster)
@@ -100,7 +106,7 @@ These specs have requirements defined but need design and task planning:
 
 1. ✅ **mk8-cli** - COMPLETE
 2. ✅ **installer** - COMPLETE
-3. 🚧 **aws-credentials-management** - IN PROGRESS
+3. ✅ **aws-credentials-management** - COMPLETE
 4. 📋 **kubeconfig-file-handling** - PLANNED (ready to start)
 5. **local-kind-cluster** - Basic cluster operations
 6. **crossplane-bootstrap** - Crossplane + AWS setup

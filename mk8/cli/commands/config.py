@@ -17,7 +17,50 @@ from mk8.core.logging import setup_logging
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.pass_context
 def config(ctx: click.Context, verbose: bool) -> None:
-    """Configure AWS credentials for mk8."""
+    """
+    Configure AWS credentials for mk8.
+    
+    This command configures AWS credentials used by mk8 for provisioning
+    infrastructure. Credentials are stored in ~/.config/mk8 and automatically
+    synchronized with Crossplane in managed clusters.
+    
+    \b
+    Credential Sources (in priority order):
+      1. MK8_AWS_* environment variables (auto-configured)
+      2. AWS_* environment variables (with user prompt)
+      3. Interactive entry (manual input)
+    
+    \b
+    Environment Variables:
+      MK8_AWS_ACCESS_KEY_ID       AWS access key ID (auto-configured)
+      MK8_AWS_SECRET_ACCESS_KEY   AWS secret access key (auto-configured)
+      MK8_AWS_DEFAULT_REGION      AWS default region (auto-configured)
+      
+      AWS_ACCESS_KEY_ID           Standard AWS access key ID (prompted)
+      AWS_SECRET_ACCESS_KEY       Standard AWS secret access key (prompted)
+      AWS_DEFAULT_REGION          Standard AWS default region (prompted)
+    
+    \b
+    Examples:
+      # Configure credentials interactively
+      $ mk8 config
+      
+      # Auto-configure from MK8_* environment variables
+      $ export MK8_AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE
+      $ export MK8_AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      $ export MK8_AWS_DEFAULT_REGION=us-east-1
+      $ mk8 config
+      
+      # Configure with verbose output
+      $ mk8 config --verbose
+    
+    \b
+    Notes:
+      - Credentials are stored in ~/.config/mk8 with secure permissions (0600)
+      - If a Crossplane cluster exists, credentials are automatically synced
+      - Credentials are validated using AWS STS GetCallerIdentity
+      - Running this command will overwrite existing credentials
+    """
     # Setup logging and output
     if ctx.obj and ctx.obj.get("verbose", False):
         verbose = True
