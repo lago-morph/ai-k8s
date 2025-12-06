@@ -57,11 +57,11 @@ These specs have requirements defined but need design and task planning:
 - **Description**: Local kind cluster lifecycle management
 - **Next Steps**: Create design.md and tasks.md
 
-### 📝 aws-credentials-management
-- **Status**: REQUIREMENTS COMPLETE
-- **Files**: requirements.md
+### � aws-ccredentials-management
+- **Status**: IN PROGRESS (5/9 phases complete)
+- **Files**: requirements.md, design.md, tasks.md, STATUS.md
 - **Description**: AWS credential handling and validation
-- **Next Steps**: Create design.md and tasks.md
+- **Next Steps**: Complete CrossplaneManager, ConfigCommand, and CLI integration
 
 ### 📝 kubeconfig-file-handling
 - **Status**: REQUIREMENTS COMPLETE
