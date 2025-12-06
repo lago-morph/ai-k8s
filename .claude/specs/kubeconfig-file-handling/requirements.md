@@ -27,17 +27,16 @@ kubectl uses the kubeconfig file to store cluster connection information, authen
 3. WHEN merging configurations THEN the system SHALL preserve all existing context entries
 4. WHEN merging configurations THEN the system SHALL preserve all existing user entries
 5. WHEN merging configurations THEN the system SHALL ensure the resulting file remains valid YAML
-6. IF a merge conflict occurs (duplicate names) THEN the system SHALL handle it gracefully by either renaming or prompting the user
+6. IF a merge conflict occurs (duplicate names) THEN the system SHALL automatically rename the new cluster with a numeric suffix
 
 ### Requirement 3: Create Configuration if Missing
 **User Story:** As a platform engineer new to kubectl, I want mk8 to create a kubeconfig file if one doesn't exist, so that I don't need to manually set up the file structure.
 
 #### Acceptance Criteria
 1. IF the `~/.kube/config` file does not exist THEN the system SHALL create it with the new cluster configuration
-2. WHEN creating the kubeconfig file THEN the system SHALL ensure the `~/.kube` directory exists and has appropriate permissions
-3. WHEN creating the kubeconfig file THEN the system SHALL set restrictive permissions (readable/writable only by the owner)
+2. WHEN creating the kubeconfig file THEN the system SHALL ensure the `~/.kube` directory exists with mode 0o700
+3. WHEN creating the kubeconfig file THEN the system SHALL set file permissions to mode 0o600
 4. WHEN creating a new kubeconfig file THEN the system SHALL use the standard kubeconfig structure with clusters, contexts, and users sections
-5. WHEN the file is created THEN the system SHALL inform the user that a new kubeconfig file was created
 
 ### Requirement 4: Set Current Context
 **User Story:** As a platform engineer, I want mk8 to set the kubectl context to the newly created cluster, so that I can immediately start using it without manual context switching.
@@ -45,8 +44,6 @@ kubectl uses the kubeconfig file to store cluster connection information, authen
 #### Acceptance Criteria
 1. WHEN a new cluster is created THEN the system SHALL set the current-context in kubeconfig to the new cluster
 2. WHEN setting the current context THEN the system SHALL store the previous context value for potential restoration later
-3. WHEN the current context is changed THEN the system SHALL inform the user which context is now active
-4. IF setting the context fails THEN the system SHALL report the error but continue with cluster creation
 
 ### Requirement 5: Remove Cluster Configuration
 **User Story:** As a platform engineer, I want mk8 to cleanly remove cluster entries when I delete a cluster, so that my kubeconfig stays clean and up-to-date.
@@ -64,8 +61,6 @@ kubectl uses the kubeconfig file to store cluster connection information, authen
 #### Acceptance Criteria
 1. WHEN removing a cluster that was the current context THEN the system SHALL restore the previous context if it still exists
 2. IF the previous context no longer exists THEN the system SHALL select another valid context or clear the current-context field
-3. WHEN restoring context THEN the system SHALL inform the user which context is now active
-4. IF no valid contexts remain THEN the system SHALL inform the user that no contexts are available
 
 ### Requirement 7: Atomic File Updates
 **User Story:** As a platform engineer, I want kubeconfig file updates to be atomic, so that I never end up with a corrupted configuration if an operation is interrupted.
@@ -77,48 +72,31 @@ kubectl uses the kubeconfig file to store cluster connection information, authen
 4. IF the write or validation fails THEN the system SHALL keep the original file unchanged
 5. WHEN the operation completes THEN the system SHALL remove any temporary files
 
-### Requirement 8: Concurrent Access Handling
-**User Story:** As a platform engineer, I want mk8 to handle concurrent access to the kubeconfig file, so that I don't get errors if multiple tools modify it simultaneously.
-
-#### Acceptance Criteria
-1. WHEN modifying the kubeconfig file THEN the system SHALL use file locking or similar mechanisms to prevent concurrent modifications
-2. IF the file is locked by another process THEN the system SHALL wait briefly and retry
-3. IF the file remains locked THEN the system SHALL display an error indicating the file is in use
-4. WHEN the operation completes THEN the system SHALL release any locks held
-
-### Requirement 9: Backup and Recovery
+### Requirement 8: Backup and Recovery
 **User Story:** As a platform engineer, I want mk8 to create backups before modifying kubeconfig, so that I can recover if something goes wrong.
 
 #### Acceptance Criteria
 1. WHEN modifying an existing kubeconfig file THEN the system SHALL create a backup copy first
 2. WHEN creating a backup THEN the system SHALL use a timestamped filename (e.g., `config.backup.2024-12-06T12:34:56`)
-3. WHEN the modification succeeds THEN the system SHOULD keep the backup for a reasonable period
-4. WHEN multiple backups exist THEN the system SHOULD clean up old backups (e.g., keep only the last 5)
-5. IF the modification fails THEN the system SHALL inform the user that the backup can be used for recovery
+3. WHEN multiple backups exist THEN the system SHALL clean up old backups keeping only the last 5
 
-### Requirement 10: Error Reporting
+### Requirement 9: Error Reporting
 **User Story:** As a platform engineer, I want clear error messages when kubeconfig operations fail, so that I can understand and fix the problem.
 
 #### Acceptance Criteria
 1. WHEN kubeconfig operations fail THEN the system SHALL display a clear error message describing what went wrong
 2. WHEN displaying errors THEN the system SHALL include one or more specific suggestions for resolving the issue
-3. IF the file has permission issues THEN the system SHALL suggest checking file permissions
-4. IF the file has syntax errors THEN the system SHALL indicate the location of the error if possible
-5. WHEN doing something unexpected for a reason that might not be obvious THEN the system SHALL inform the user of the action and the reason
 
 ## Edge Cases and Constraints
 
 ### Edge Cases
 - Kubeconfig file is corrupted or contains invalid YAML
-- Kubeconfig file has incorrect permissions (world-readable or not writable)
-- Multiple processes attempt to modify kubeconfig simultaneously
+- Kubeconfig file has incorrect permissions
 - Disk is full when trying to write kubeconfig updates
 - User manually deletes clusters outside of mk8, leaving stale kubeconfig entries
-- Kubeconfig file is a symlink to another location
 - Kubeconfig contains clusters with names that conflict with mk8 naming conventions
 - User has set KUBECONFIG environment variable to a different location
 - ~/.kube directory doesn't exist and can't be created (permissions issue)
-- Backup directory fills up with old backup files
 
 ### Constraints
 - The tool assumes kubeconfig location is `~/.kube/config` unless KUBECONFIG environment variable is set
