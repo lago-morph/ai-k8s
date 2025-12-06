@@ -54,7 +54,6 @@ def safe_command_execution(func):
     invoke_without_command=True,
     context_settings={
         "help_option_names": ["-h", "--help"],
-        "allow_interspersed_args": True,
     },
 )
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
@@ -78,19 +77,27 @@ def cli(ctx: click.Context, verbose: bool, version: bool) -> None:
         click.echo(ctx.get_help())
 
 
-@cli.command(context_settings={"allow_interspersed_args": True})
+@cli.command()
+@click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.pass_context
-def version(ctx: click.Context) -> None:
+def version(ctx: click.Context, verbose: bool) -> None:
     """Show version information."""
+    # Use command-level verbose if provided, otherwise use parent verbose
+    if verbose or ctx.obj.get("verbose", False):
+        ctx.obj["verbose"] = True
+        ctx.obj["logger"] = setup_logging(True)
+        ctx.obj["output"] = OutputFormatter(True)
     exit_code = VersionCommand.execute()
     ctx.exit(exit_code)
 
 
-@cli.group()
+@cli.group(invoke_without_command=True)
 @click.pass_context
 def bootstrap(ctx: click.Context) -> None:
     """Manage local bootstrap cluster."""
-    pass
+    # If no subcommand, show help
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
 
 
 @cli.command()

@@ -82,6 +82,70 @@ class TestCLICommands:
         assert "config" in result.output.lower()
 
 
+class TestCommandRouting:
+    """Tests for command routing infrastructure."""
+
+    def test_commands_properly_registered(self) -> None:
+        """Test that all commands are properly registered in the CLI."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--help"])
+
+        assert result.exit_code == 0
+        # Verify all expected commands are listed
+        assert "version" in result.output
+        assert "bootstrap" in result.output
+        assert "config" in result.output
+
+    def test_version_command_routes_correctly(self) -> None:
+        """Test that version command routes to version handler."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["version"])
+
+        assert result.exit_code == 0
+        assert "mk8 version 0.1.0" in result.output
+
+    def test_config_command_routes_correctly(self) -> None:
+        """Test that config command routes to config handler."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["config"])
+
+        assert result.exit_code == 0
+        # Config is a placeholder, just verify it runs
+        assert "placeholder" in result.output.lower() or "config" in result.output.lower()
+
+    def test_bootstrap_group_routes_correctly(self) -> None:
+        """Test that bootstrap group routes correctly."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["bootstrap"])
+
+        # Bootstrap group without subcommand should show help
+        assert result.exit_code == 0
+        assert "bootstrap" in result.output.lower()
+
+    def test_invalid_command_shows_error(self) -> None:
+        """Test that invalid command shows appropriate error."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["invalid-command"])
+
+        assert result.exit_code != 0
+        assert "error" in result.output.lower() or "no such command" in result.output.lower()
+
+    def test_invalid_option_shows_error(self) -> None:
+        """Test that invalid option shows appropriate error."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["--invalid-option"])
+
+        assert result.exit_code != 0
+        assert "error" in result.output.lower() or "no such option" in result.output.lower()
+
+    def test_command_with_invalid_option_shows_error(self) -> None:
+        """Test that command with invalid option shows error."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["version", "--invalid-option"])
+
+        assert result.exit_code != 0
+
+
 class TestFlexibleOptionPlacement:
     """Tests for flexible option placement."""
 
