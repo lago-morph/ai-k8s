@@ -1,6 +1,19 @@
 # Requirements Document
 
-## Introduction
+## ⚠️ DEPRECATED - This Spec Has Been Split
+
+This specification has been broken down into smaller, more manageable specs for easier implementation and testing:
+
+1. **local-kind-cluster** - Basic kind cluster lifecycle (create, delete, status) + kubeconfig handling
+2. **crossplane-bootstrap** - Crossplane + AWS provider installation, credential configuration, and AWS connectivity testing
+3. **gitops-repository-setup** - Create/configure Git repository with proper structure for GitOps
+4. **argocd-bootstrap** - Install ArgoCD in bootstrap cluster and configure it to manage management cluster provisioning via GitOps
+
+Please refer to these individual specs instead of this document.
+
+---
+
+## Original Introduction (For Reference)
 
 The local-bootstrap-cluster feature creates a temporary local Kubernetes cluster running in kind that serves as a bootstrap environment for provisioning infrastructure on AWS using Crossplane. This bootstrap cluster is a critical first step in a multi-tier cluster architecture where infrastructure is managed as code through Kubernetes custom resources.
 
