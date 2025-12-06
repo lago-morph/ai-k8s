@@ -1,4 +1,5 @@
 """Tests for prerequisite status data models."""
+
 import pytest
 from mk8.integrations.prerequisite_models import PrerequisiteStatus
 
@@ -122,8 +123,10 @@ class TestPrerequisiteStatus:
 
         assert status.is_satisfied() is False
 
-    def test_is_satisfied_returns_true_when_daemon_running_is_none(self) -> None:
-        """Test is_satisfied() returns True when daemon_running is None (not applicable)."""
+    def test_is_satisfied_returns_true_when_daemon_running_is_none(
+        self,
+    ) -> None:
+        """Test is_satisfied() when daemon_running is None."""
         status = PrerequisiteStatus(
             name="kind",
             installed=True,
@@ -174,7 +177,7 @@ class TestPrerequisiteStatus:
         assert status1 == status2
 
     def test_prerequisite_status_inequality(self) -> None:
-        """Test that two PrerequisiteStatus instances with different values are not equal."""
+        """Test PrerequisiteStatus instances with different values."""
         status1 = PrerequisiteStatus(
             name="docker",
             installed=True,

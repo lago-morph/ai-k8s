@@ -1,4 +1,5 @@
 """Tests for platform detection data models."""
+
 import pytest
 from mk8.integrations.platform_models import PlatformInfo
 

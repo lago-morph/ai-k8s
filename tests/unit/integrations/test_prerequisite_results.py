@@ -1,4 +1,5 @@
 """Tests for prerequisite results aggregate model."""
+
 import pytest
 from mk8.integrations.prerequisite_models import PrerequisiteStatus, PrerequisiteResults
 
@@ -451,7 +452,9 @@ class TestPrerequisiteResults:
 
         assert "docker" in summary.lower()
         assert "24.0.5" in summary
-        assert "✓" in summary or "ok" in summary.lower() or "satisfied" in summary.lower()
+        assert (
+            "✓" in summary or "ok" in summary.lower() or "satisfied" in summary.lower()
+        )
         assert "kind" in summary.lower()
         assert "0.20.0" in summary
         assert "kubectl" in summary.lower()
