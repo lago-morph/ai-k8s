@@ -22,6 +22,22 @@
 
 ## In Progress Specs
 
+### 🚧 aws-credentials-management
+- **Status**: IN PROGRESS (5/9 phases complete)
+- **Files**: requirements.md, design.md, tasks.md, STATUS.md
+- **Description**: AWS credential handling and validation
+- **Next Steps**: Complete CrossplaneManager, ConfigCommand, and CLI integration
+
+## Planned Specs (Ready for Implementation)
+
+### 📋 kubeconfig-file-handling
+- **Status**: PLANNED (0/10 tasks complete)
+- **Files**: requirements.md, design.md, tasks.md
+- **Description**: Safe kubeconfig merging and management with atomic updates and backups
+- **Implementation**: Single KubeconfigManager class with 17 correctness properties
+- **Testing**: Property-based testing with Hypothesis (batched TDD approach)
+- **Next Steps**: Begin implementation with Phase 1 (Foundation and File Operations)
+
 ### 📋 installer-future
 - **Status**: PLANNED (2/37 tasks complete)
 - **Files**: requirements.md, design.md, tasks.md
@@ -57,18 +73,6 @@ These specs have requirements defined but need design and task planning:
 - **Description**: Local kind cluster lifecycle management
 - **Next Steps**: Create design.md and tasks.md
 
-### � aws-ccredentials-management
-- **Status**: IN PROGRESS (5/9 phases complete)
-- **Files**: requirements.md, design.md, tasks.md, STATUS.md
-- **Description**: AWS credential handling and validation
-- **Next Steps**: Complete CrossplaneManager, ConfigCommand, and CLI integration
-
-### 📝 kubeconfig-file-handling
-- **Status**: REQUIREMENTS COMPLETE
-- **Files**: requirements.md
-- **Description**: Safe kubeconfig merging and management
-- **Next Steps**: Create design.md and tasks.md
-
 ### 📝 local-bootstrap-cluster (DEPRECATED)
 - **Status**: DEPRECATED
 - **Files**: requirements.md
@@ -87,17 +91,17 @@ These specs have requirements defined but need design and task planning:
 
 - **Total Specs**: 10 (1 deprecated)
 - **Complete**: 2 (mk8-cli, installer)
-- **In Progress**: 0
-- **Planned**: 1 (installer-future)
-- **Requirements Only**: 6
+- **In Progress**: 1 (aws-credentials-management)
+- **Planned**: 2 (kubeconfig-file-handling, installer-future)
+- **Requirements Only**: 4
 - **Deprecated**: 1 (local-bootstrap-cluster)
 
 ## Recommended Implementation Order
 
 1. ✅ **mk8-cli** - COMPLETE
 2. ✅ **installer** - COMPLETE
-3. **aws-credentials-management** - Needed for AWS operations
-4. **kubeconfig-file-handling** - Needed for cluster management
+3. 🚧 **aws-credentials-management** - IN PROGRESS
+4. 📋 **kubeconfig-file-handling** - PLANNED (ready to start)
 5. **local-kind-cluster** - Basic cluster operations
 6. **crossplane-bootstrap** - Crossplane + AWS setup
 7. **gitops-repository-setup** - Git repo structure
@@ -108,5 +112,6 @@ These specs have requirements defined but need design and task planning:
 
 - The installer spec was recently refactored to separate MVP from future enhancements
 - The local-bootstrap-cluster spec was split into 4 focused specs for better modularity
+- The kubeconfig-file-handling spec is complete and ready for implementation
 - All requirements-only specs need design and task planning before implementation
 - See individual spec directories for detailed requirements and design documents

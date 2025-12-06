@@ -12,6 +12,7 @@ from mk8.core.logging import setup_logging
 from mk8.cli.output import OutputFormatter
 from mk8.cli.commands.version import VersionCommand
 from mk8.cli.commands.verify import verify
+from mk8.cli.commands.config import config as config_command
 
 
 @dataclass
@@ -101,18 +102,9 @@ def bootstrap(ctx: click.Context) -> None:
         click.echo(ctx.get_help())
 
 
-@cli.command()
-@click.pass_context
-def config(ctx: click.Context) -> None:
-    """Configure AWS credentials."""
-    # Placeholder implementation
-    output = ctx.obj.get("output", OutputFormatter())
-    output.info("Config command - placeholder implementation")
-    output.info("This will be implemented in the aws-credentials-management spec")
-
-
-# Add verify command
+# Add commands
 cli.add_command(verify)
+cli.add_command(config_command, name="config")
 
 
 def main() -> int:
