@@ -15,33 +15,32 @@
 - **Implementation**: Full credential management with config file, env vars, Crossplane sync, validation
 
 ### ✅ installer (MVP)
-- **Status**: COMPLETE (15/15 tasks)
-- **Files**: requirements.md, design.md, tasks.md, STATUS.md
+- **Status**: COMPLETE (15/15 core tasks + 2/11 optional tasks)
+- **Files**: requirements.md, design.md, tasks.md, STATUS.md, IMPLEMENTATION-SUMMARY.md
 - **Description**: Basic prerequisite checking for Linux, `mk8 verify` command
 - **Implementation**: Fully implemented and tested
-- **Coverage**: 96.80% (165 tests passing)
+- **Coverage**: 96.80% (42 installer tests passing)
 - **Features**:
   - PrerequisiteChecker for Docker, kind, kubectl
   - VerificationManager for complete verification flow
   - `mk8 verify` CLI command with verbose mode
   - Installation instructions for missing prerequisites
+  - Optional unit tests for VerificationResult and VerificationError
+- **Optional Tasks Remaining**: 9 property-based tests (can be added later)
 
 ## In Progress Specs
 
-### ✅ aws-credentials-management
-- **Status**: COMPLETE (9/9 phases, 121 tests, 100% coverage)
-- **Files**: requirements.md, design.md, tasks.md, STATUS.md
-- **Description**: AWS credential handling and validation
-- **Implementation**: Full credential management with config file, env vars, Crossplane sync, validation
+None currently in progress.
 
 ## Planned Specs (Ready for Implementation)
 
 ### 📋 kubeconfig-file-handling
-- **Status**: PLANNED (0/10 tasks complete)
+- **Status**: PLANNED (design complete, ready for implementation)
 - **Files**: requirements.md, design.md, tasks.md
 - **Description**: Safe kubeconfig merging and management with atomic updates and backups
 - **Implementation**: Single KubeconfigManager class with 17 correctness properties
 - **Testing**: Property-based testing with Hypothesis (batched TDD approach)
+- **Tasks**: 10 implementation phases with comprehensive testing
 - **Next Steps**: Begin implementation with Phase 1 (Foundation and File Operations)
 
 ### 📋 installer-future
@@ -74,10 +73,10 @@ These specs have requirements defined but need design and task planning:
 - **Next Steps**: Create design.md and tasks.md
 
 ### 📝 local-kind-cluster
-- **Status**: REQUIREMENTS COMPLETE
-- **Files**: requirements.md
+- **Status**: DESIGN COMPLETE
+- **Files**: requirements.md, design.md
 - **Description**: Local kind cluster lifecycle management
-- **Next Steps**: Create design.md and tasks.md
+- **Next Steps**: Create tasks.md and begin implementation
 
 ### 📝 local-bootstrap-cluster (DEPRECATED)
 - **Status**: DEPRECATED
