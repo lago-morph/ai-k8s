@@ -52,10 +52,27 @@ mk8/
 ## Development Guidelines
 
 ### Test-Driven Development (TDD)
-**Always follow Red-Green-Refactor cycle**:
-1. **Red**: Write failing test first
-2. **Green**: Write minimal code to pass
-3. **Refactor**: Improve code while keeping tests green
+
+**Token-Efficient Batched TDD**:
+To optimize AI agent token usage while maintaining TDD rigor:
+
+1. **Batch Test Creation**: Write all tests for a component/layer at once
+2. **Red Phase**: Run tests to verify they all fail
+3. **Green Phase**: Implement component to make all tests pass
+4. **Refactor**: Clean up code while keeping tests green
+
+**Benefits**:
+- Reduces context switching between test and implementation
+- Allows seeing full test suite structure upfront
+- Minimizes redundant file reads and explanations
+- Maintains TDD benefits (tests first, fail-pass cycle)
+- Significantly more efficient token usage
+
+**Implementation Strategy**:
+- Group by architectural layer: data models → integrations → business logic → CLI
+- Complete one component fully before moving to next
+- Use property-based tests to replace many unit tests (one property = dozens of examples)
+- Defer integration tests to checkpoints between major phases
 
 **Coverage Requirements**:
 - Minimum 80% overall coverage (enforced by pytest)

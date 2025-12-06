@@ -134,17 +134,39 @@ raise PrerequisiteError(
 )
 ```
 
-### Testing Pattern
+### Testing Pattern - Token-Efficient TDD
+
+**Batched Test-Driven Development**:
+To optimize token usage while maintaining TDD rigor, follow this approach:
+
+1. **Batch Test Creation**: Write all tests for a component/layer at once
+2. **Red Phase**: Run tests to verify they all fail
+3. **Green Phase**: Implement component to make all tests pass
+4. **Refactor**: Clean up code while keeping tests green
+
+**Why This Works**:
+- Reduces context switching between test and implementation
+- Allows seeing full test suite structure upfront
+- Minimizes file reads and redundant explanations
+- Maintains TDD benefits (tests first, fail-pass cycle)
+- More efficient token usage without sacrificing correctness
+
+**Implementation Order**:
+- Group by architectural layer (data models → integrations → business logic → CLI)
+- Complete one component fully before moving to next
+- Property tests can replace many unit tests (one property = dozens of examples)
+- Defer integration tests to checkpoints between major phases
+
+**Example**:
 ```python
-# 1. RED: Write failing test
-def test_feature():
-    assert feature.method() == expected
+# Phase 1: Write all tests for FileIO
+def test_read_config_file(): ...
+def test_write_config_file(): ...
+def test_secure_permissions(): ...
 
-# 2. GREEN: Implement to pass
-def method():
-    return expected
-
-# 3. REFACTOR: Improve while keeping green
+# Phase 2: Run tests (all should fail)
+# Phase 3: Implement FileIO to pass all tests
+# Phase 4: Refactor if needed
 ```
 
 ## Common Tasks
