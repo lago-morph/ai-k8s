@@ -13,6 +13,7 @@ from mk8.cli.output import OutputFormatter
 from mk8.cli.commands.version import VersionCommand
 from mk8.cli.commands.verify import verify
 from mk8.cli.commands.config import config as config_command
+from mk8.cli.commands.bootstrap import bootstrap
 
 
 @dataclass
@@ -93,18 +94,10 @@ def version(ctx: click.Context, verbose: bool) -> None:
     ctx.exit(exit_code)
 
 
-@cli.group(invoke_without_command=True)
-@click.pass_context
-def bootstrap(ctx: click.Context) -> None:
-    """Manage local bootstrap cluster."""
-    # If no subcommand, show help
-    if ctx.invoked_subcommand is None:
-        click.echo(ctx.get_help())
-
-
 # Add commands
 cli.add_command(verify)
 cli.add_command(config_command, name="config")
+cli.add_command(bootstrap)
 
 
 def main() -> int:

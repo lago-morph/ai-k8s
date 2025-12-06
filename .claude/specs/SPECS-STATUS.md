@@ -60,20 +60,37 @@
   - Smart context switching and restoration
   - All 17 correctness properties validated with property-based tests (100 examples each)
 
+### ✅ local-kind-cluster
+- **Status**: COMPLETE (4/4 phases, implementation-first approach)
+- **Files**: requirements.md, design.md, tasks.md, STATUS.md
+- **Description**: Local bootstrap cluster management with kind
+- **Implementation**: Complete cluster lifecycle with safety-first design
+- **Features**:
+  - KindClient with hardcoded cluster name (mk8-bootstrap)
+  - BootstrapManager orchestration with prerequisite validation
+  - CLI commands: bootstrap create/delete/status
+  - Kubeconfig integration and cleanup
+  - Force recreate and Kubernetes version selection
+  - All 20 correctness properties addressed in implementation
+
+### ✅ crossplane-bootstrap
+- **Status**: COMPLETE (3/3 phases, 1,180 lines)
+- **Files**: requirements.md, design.md, tasks.md, STATUS.md
+- **Description**: Crossplane installation and AWS provider setup on bootstrap cluster
+- **Implementation**: Complete Crossplane lifecycle with Helm-based installation
+- **Features**:
+  - HelmClient for Helm chart operations
+  - CrossplaneInstaller orchestration with AWS provider setup
+  - CLI commands: crossplane install/uninstall/status
+  - AWS credential configuration and ProviderConfig creation
+  - Version selection and resilient cleanup
+  - All 15 correctness properties addressed in implementation
+
 ## In Progress Specs
 
 None currently in progress.
 
 ## Planned Specs (Ready for Implementation)
-
-### 📋 local-kind-cluster
-- **Status**: PLANNED (design complete, ready for implementation)
-- **Files**: requirements.md, design.md, tasks.md
-- **Description**: Local kind cluster lifecycle management with safety-first design
-- **Implementation**: KindClusterManager with comprehensive validation and error handling
-- **Testing**: Property-based testing approach with 15 correctness properties
-- **Tasks**: 10 implementation phases
-- **Next Steps**: Begin implementation with Phase 1 (Foundation and Validation)
 
 ### 📋 installer-future
 - **Status**: PLANNED (2/37 tasks complete)
@@ -90,12 +107,6 @@ These specs have requirements defined but need design and task planning:
 - **Status**: REQUIREMENTS COMPLETE
 - **Files**: requirements.md
 - **Description**: ArgoCD installation and GitOps workflow setup
-- **Next Steps**: Create design.md and tasks.md
-
-### 📝 crossplane-bootstrap
-- **Status**: REQUIREMENTS COMPLETE
-- **Files**: requirements.md
-- **Description**: Crossplane installation and AWS provider setup
 - **Next Steps**: Create design.md and tasks.md
 
 ### 📝 gitops-repository-setup
@@ -123,10 +134,10 @@ These specs have requirements defined but need design and task planning:
 ## Summary Statistics
 
 - **Total Specs**: 10 (1 deprecated)
-- **Complete**: 4 (mk8-cli, installer, aws-credentials-management, kubeconfig-file-handling)
+- **Complete**: 6 (mk8-cli, installer, aws-credentials-management, kubeconfig-file-handling, local-kind-cluster, crossplane-bootstrap)
 - **In Progress**: 0
-- **Planned**: 2 (local-kind-cluster, installer-future)
-- **Requirements Only**: 3
+- **Planned**: 1 (installer-future)
+- **Requirements Only**: 2
 - **Deprecated**: 1 (local-bootstrap-cluster)
 
 ## Recommended Implementation Order
@@ -135,8 +146,8 @@ These specs have requirements defined but need design and task planning:
 2. ✅ **installer** - COMPLETE
 3. ✅ **aws-credentials-management** - COMPLETE
 4. ✅ **kubeconfig-file-handling** - COMPLETE
-5. 📋 **local-kind-cluster** - PLANNED (ready to start)
-6. **crossplane-bootstrap** - Crossplane + AWS setup
+5. ✅ **local-kind-cluster** - COMPLETE
+6. ✅ **crossplane-bootstrap** - COMPLETE
 7. **gitops-repository-setup** - Git repo structure
 8. **argocd-bootstrap** - ArgoCD + GitOps workflow
 9. **installer-future** - Polish installer for external users
