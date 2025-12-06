@@ -14,17 +14,18 @@
   - _Requirements: 1.1, 1.2, 1.5, 1.6_
   - **Status**: COMPLETE in `tests/unit/integrations/test_prerequisite_models.py`
 
-- [ ] 2. Implement prerequisite results aggregate model
+- [x] 2. Implement prerequisite results aggregate model
   - Create `PrerequisiteResults` dataclass with docker, kind, kubectl fields
   - Implement `all_satisfied()` method to check all prerequisites
   - Implement `get_missing()` method to return list of missing tool names
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
-  - **Status**: Tests exist but implementation missing in `mk8/integrations/prerequisite_models.py`
+  - **Status**: COMPLETE in `mk8/integrations/prerequisite_models.py`
 
-- [ ]* 2.1 Write unit tests for PrerequisiteResults
+- [x] 2.1 Write unit tests for PrerequisiteResults
   - Test aggregate satisfaction logic
   - Test get_missing() with various combinations
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
+  - **Status**: COMPLETE in `tests/unit/integrations/test_prerequisite_results.py` (14 tests passing)
 
 - [ ]* 2.2 Write property test for prerequisite check completeness
   - **Feature: installer, Property 1: Prerequisite check completeness**
@@ -38,10 +39,11 @@
   - For any subset of missing prerequisites, verify all are reported
   - _Requirements: 1.5_
 
-- [ ] 3. Implement verification result model
+- [x] 3. Implement verification result model
   - Create `VerificationResult` dataclass with mk8_installed, prerequisites_ok, prerequisite_results, messages fields
   - Implement `is_verified()` method
   - _Requirements: 4.1, 4.2, 4.3, 4.4_
+  - **Status**: COMPLETE in `mk8/business/verification_models.py`
 
 - [ ]* 3.1 Write unit tests for VerificationResult
   - Test is_verified() logic
