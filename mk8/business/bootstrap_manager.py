@@ -7,7 +7,6 @@ import click
 from mk8.integrations.kind_client import (
     KindClient,
     ClusterExistsError,
-    ClusterNotFoundError,
 )
 from mk8.integrations.kubeconfig import KubeconfigManager
 from mk8.integrations.prerequisites import PrerequisiteChecker
@@ -48,9 +47,12 @@ class BootstrapManager:
         Initialize the bootstrap manager.
 
         Args:
-            kind_client: Client for kind operations (created if not provided)
-            kubeconfig_manager: Manager for kubeconfig operations (created if not provided)
-            prerequisite_checker: Checker for prerequisites (created if not provided)
+            kind_client: Client for kind operations
+                (created if not provided)
+            kubeconfig_manager: Manager for kubeconfig operations
+                (created if not provided)
+            prerequisite_checker: Checker for prerequisites
+                (created if not provided)
             output: Output formatter for user feedback
         """
         self.kind_client = kind_client or KindClient()
@@ -88,7 +90,8 @@ class BootstrapManager:
                     self.output.info("Continuing with creation...")
             else:
                 raise ClusterExistsError(
-                    f"Bootstrap cluster '{self.kind_client.CLUSTER_NAME}' already exists",
+                    f"Bootstrap cluster '{self.kind_client.CLUSTER_NAME}' "
+                    "already exists",
                     suggestions=[
                         "Use 'mk8 bootstrap delete' to remove the existing cluster",
                         "Use --force-recreate flag to automatically recreate",
@@ -141,11 +144,11 @@ class BootstrapManager:
 
         # Display success
         context_name = f"kind-{self.kind_client.CLUSTER_NAME}"
-        self.output.success(f"✓ Bootstrap cluster created successfully")
+        self.output.success("✓ Bootstrap cluster created successfully")
         self.output.info(f"  Cluster: {self.kind_client.CLUSTER_NAME}")
         self.output.info(f"  Context: {context_name}")
-        self.output.info(f"\nNext steps:")
-        self.output.info(f"  • Verify cluster: mk8 bootstrap status")
+        self.output.info("\nNext steps:")
+        self.output.info("  • Verify cluster: mk8 bootstrap status")
         self.output.info(f"  • Use kubectl: kubectl get nodes --context {context_name}")
 
     def delete_cluster(self, skip_confirmation: bool = False) -> None:
@@ -206,7 +209,7 @@ class BootstrapManager:
             self.output.info(f"  Removed: {', '.join(cleaned_up)}")
 
         if errors:
-            self.output.warning(f"\nSome cleanup steps failed:")
+            self.output.warning("\nSome cleanup steps failed:")
             for error in errors:
                 self.output.warning(f"  • {error}")
 
@@ -275,12 +278,15 @@ class BootstrapManager:
             raise MK8Error(
                 "Docker is not installed",
                 suggestions=[
-                    "Install Docker Desktop: https://www.docker.com/products/docker-desktop",
+                    (
+                        "Install Docker Desktop: "
+                        "https://www.docker.com/products/docker-desktop"
+                    ),
                     "On Linux: Install Docker Engine",
                     "Verify installation: docker --version",
                 ],
             )
-        if not docker_result.running:
+        if not docker_result.daemon_running:
             raise MK8Error(
                 "Docker daemon is not running",
                 suggestions=[
@@ -296,7 +302,10 @@ class BootstrapManager:
             raise MK8Error(
                 "kind is not installed",
                 suggestions=[
-                    "Install kind: https://kind.sigs.k8s.io/docs/user/quick-start/#installation",
+                    (
+                        "Install kind: "
+                        "https://kind.sigs.k8s.io/docs/user/quick-start/#installation"
+                    ),
                     "On macOS: brew install kind",
                     "On Linux: Download from GitHub releases",
                     "Verify installation: kind version",
