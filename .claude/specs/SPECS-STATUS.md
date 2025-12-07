@@ -1,5 +1,27 @@
 # mk8 Specs Status Overview
 
+## Recommended Implementation Order
+
+This section tracks the roadmap and implementation priority. The order may be manually adjusted to reflect current priorities.
+
+1. ✅ **mk8-cli** - COMPLETE
+2. ✅ **installer** - COMPLETE
+3. ✅ **aws-credentials-management** - COMPLETE
+4. ✅ **kubeconfig-file-handling** - COMPLETE
+5. ✅ **local-kind-cluster** - COMPLETE
+6. ✅ **crossplane-bootstrap** - COMPLETE
+7. **tutorial-01-create-s3-bucket** - Requirements complete, needs design (NEXT)
+8. **gitops-repository-setup** - Design complete, needs tasks
+9. **argocd-bootstrap** - Requirements only, needs design
+10. **argocd-gitops-promotion** - Design complete, needs tasks (Phase 1)
+11. **argocd-crd-basic-static** - Draft, needs refinement (Phase 2)
+12. **workload-cluster-gitops** - Draft, needs refinement (Phase 3)
+13. **argocd-crd-advanced-static** - Draft, needs refinement (Phase 4)
+14. **documentation-site** - Requirements incomplete, needs completion
+15. **installer-future** - Polish installer for external users
+
+---
+
 ## Completed Specs
 
 ### ✅ mk8-cli
@@ -74,8 +96,6 @@
   - Version selection and resilient cleanup
   - Comprehensive error handling with suggestions
 
-
-
 ## In Progress Specs
 
 (None currently in progress)
@@ -89,9 +109,16 @@
 - **Completed**: PlatformInfo model, PrerequisiteStatus version fields
 - **Notes**: Future enhancements after MVP installer is complete
 
-## Requirements-Only Specs (Design Phase)
+## Requirements-Only Specs (Design Phase Needed)
 
 These specs have requirements defined but need design and task planning:
+
+### 📝 tutorial-01-create-s3-bucket
+- **Status**: REQUIREMENTS COMPLETE
+- **Files**: requirements.md, design-notes.md
+- **Description**: Tutorial demonstrating S3 bucket creation using mk8 and Crossplane on bootstrap cluster
+- **Scope**: Bootstrap cluster only, no management cluster, no GitOps
+- **Next Steps**: Create design.md and tasks.md
 
 ### 📝 argocd-bootstrap
 - **Status**: REQUIREMENTS COMPLETE
@@ -99,18 +126,26 @@ These specs have requirements defined but need design and task planning:
 - **Description**: ArgoCD installation and GitOps workflow setup
 - **Next Steps**: Create design.md and tasks.md
 
-### 📝 gitops-repository-setup
+### 📝 documentation-site
+- **Status**: REQUIREMENTS INCOMPLETE
+- **Files**: requirements.md
+- **Description**: Documentation site generation framework for mk8 tutorials and docs
+- **Next Steps**: Complete requirements, then create design.md and tasks.md
+
+## Design-Complete Specs (Tasks Phase Needed)
+
+### 📋 gitops-repository-setup
 - **Status**: DESIGN COMPLETE
-- **Files**: requirements.md, design.md
+- **Files**: requirements.md, design.md, tasks.md
 - **Description**: Git repository structure for GitOps workflows (Helm-based)
-- **Next Steps**: Create tasks.md
+- **Next Steps**: Review tasks.md and begin implementation
 
 ## ArgoCD CRD Testing Specs (4-Phase Implementation)
 
 These specs implement safe testing and promotion of ArgoCD CRD changes. See `.claude/architecture/` for ADRs explaining the approach.
 
-### ✅ argocd-gitops-promotion (Phase 1)
-- **Status**: READY FOR IMPLEMENTATION
+### 📋 argocd-gitops-promotion (Phase 1)
+- **Status**: DESIGN COMPLETE
 - **Files**: requirements.md, design.md
 - **Description**: Management cluster namespaced environments (dev/staging/prod)
 - **Next Steps**: Create tasks.md and implement
@@ -136,7 +171,7 @@ These specs implement safe testing and promotion of ArgoCD CRD changes. See `.cl
 - **Prerequisite**: Phases 1, 2, and 3 complete
 - **Next Steps**: Refine requirements and design before implementation
 
-
+## Deprecated Specs
 
 ### 📝 local-bootstrap-cluster (DEPRECATED)
 - **Status**: DEPRECATED
@@ -154,13 +189,12 @@ These specs implement safe testing and promotion of ArgoCD CRD changes. See `.cl
 
 ## Summary Statistics
 
-- **Total Specs**: 14 (1 deprecated)
+- **Total Specs**: 16 (1 deprecated)
 - **Complete**: 6 (mk8-cli, installer, aws-credentials-management, kubeconfig-file-handling, local-kind-cluster, crossplane-bootstrap)
-- **Ready for Implementation**: 1 (argocd-gitops-promotion)
+- **Design Complete**: 2 (gitops-repository-setup, argocd-gitops-promotion)
+- **Requirements Complete**: 3 (tutorial-01-create-s3-bucket, argocd-bootstrap, documentation-site incomplete)
 - **Draft (Needs Refinement)**: 3 (argocd-crd-basic-static, workload-cluster-gitops, argocd-crd-advanced-static)
-- **Design Complete**: 1 (gitops-repository-setup)
 - **Planned**: 1 (installer-future)
-- **Requirements Only**: 1 (argocd-bootstrap)
 - **Deprecated**: 1 (local-bootstrap-cluster)
 
 ## Architecture Decision Records
@@ -169,26 +203,11 @@ See `.claude/architecture/` for cross-cutting architectural decisions:
 - **ADR-001**: ArgoCD Testing Approaches Analysis
 - **ADR-002**: ArgoCD Testing Implementation Strategy
 
-## Recommended Implementation Order
-
-1. ✅ **mk8-cli** - COMPLETE
-2. ✅ **installer** - COMPLETE
-3. ✅ **aws-credentials-management** - COMPLETE
-4. ✅ **kubeconfig-file-handling** - COMPLETE
-5. ✅ **local-kind-cluster** - COMPLETE
-6. ✅ **crossplane-bootstrap** - COMPLETE
-7. **gitops-repository-setup** - Git repo structure (design complete, needs tasks)
-8. **argocd-gitops-promotion** - Phase 1: Namespaced environments (ready for implementation)
-9. **argocd-crd-basic-static** - Phase 2: Basic static analysis (needs refinement)
-10. **workload-cluster-gitops** - Phase 3: Canary deployment (needs refinement)
-11. **argocd-crd-advanced-static** - Phase 4: Advanced analysis (needs refinement)
-12. **argocd-bootstrap** - ArgoCD + GitOps workflow (needs design)
-13. **installer-future** - Polish installer for external users
-
 ## Notes
 
 - The installer spec was recently refactored to separate MVP from future enhancements
 - The local-bootstrap-cluster spec was split into 4 focused specs for better modularity
-- The kubeconfig-file-handling spec is complete and ready for implementation
-- All requirements-only specs need design and task planning before implementation
+- All completed specs have 100% test coverage and comprehensive property-based testing
+- tutorial-01-create-s3-bucket is the next priority for end-to-end manual testing
 - See individual spec directories for detailed requirements and design documents
+- **IMPORTANT**: This file must be updated whenever specs are added, deleted, moved, worked on, or completed

@@ -326,6 +326,7 @@ The project uses status tracking files to maintain context across sessions:
 - **Purpose**: High-level overview of all feature specs
 - **Contains**: Completion status, task counts, implementation order
 - **When to read**: Start of every session to understand project state
+- **CRITICAL**: Must be updated whenever specs are added, deleted, moved, worked on, or completed
 
 ### `.claude/specs/{feature-name}/STATUS.md`
 - **Purpose**: Detailed status for in-progress features
@@ -340,3 +341,22 @@ The project uses status tracking files to maintain context across sessions:
 - 📝 **REQUIREMENTS ONLY**: Needs design and task planning
 - ⚠️ **INCOMPLETE**: Tests exist but implementation missing
 - ❌ **FAILING**: Tests failing, needs attention
+
+### Maintaining SPECS-STATUS.md
+
+**IMPORTANT**: Whenever you work on specs, you MUST update `.claude/specs/SPECS-STATUS.md`:
+
+**Update when:**
+- Adding a new spec (add to appropriate section)
+- Completing a phase (requirements → design → tasks → implementation)
+- Starting work on a spec (move to "In Progress" section)
+- Completing a spec (move to "Completed Specs" section)
+- Deprecating or removing a spec (update or remove entry)
+- Changing spec status or task counts
+
+**What to update:**
+- Spec status and phase completion
+- Task counts (completed/total)
+- File listings (requirements.md, design.md, tasks.md, STATUS.md)
+- Summary statistics at the bottom
+- Implementation order if priorities change
