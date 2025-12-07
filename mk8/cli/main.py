@@ -14,6 +14,7 @@ from mk8.cli.commands.version import VersionCommand
 from mk8.cli.commands.verify import verify
 from mk8.cli.commands.config import config as config_command
 from mk8.cli.commands.bootstrap import bootstrap
+from mk8.cli.commands.crossplane import crossplane
 
 
 @dataclass
@@ -98,6 +99,7 @@ def version(ctx: click.Context, verbose: bool) -> None:
 cli.add_command(verify)
 cli.add_command(config_command, name="config")
 cli.add_command(bootstrap)
+cli.add_command(crossplane)
 
 
 def main() -> int:
