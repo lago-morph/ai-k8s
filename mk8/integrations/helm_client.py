@@ -1,7 +1,6 @@
 """Helm client for package management operations."""
 
 import subprocess
-import time
 import yaml
 from typing import Dict, Any, List, Optional
 
@@ -272,7 +271,8 @@ class HelmClient:
         """
         args = ["status", release_name, "--namespace", namespace, "--output", "json"]
         output = self._run_helm_command(args)
-        return yaml.safe_load(output)
+        data: Dict[str, Any] = yaml.safe_load(output)
+        return data
 
     def release_exists(self, release_name: str, namespace: str) -> bool:
         """
