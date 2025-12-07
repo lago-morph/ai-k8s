@@ -316,13 +316,99 @@ Based on current state, you'll probably work on:
 - ⚠️ Must maintain 80% coverage minimum
 - ⚠️ Must pass all quality checks (black, flake8, mypy)
 
+## ⚠️ MANDATORY QUALITY REQUIREMENTS FOR AI AGENTS
+
+**CRITICAL: These are non-negotiable requirements. Failure to follow these will result in broken code in the repository.**
+
+### Before ANY Commit to Git
+
+You MUST run and pass ALL of the following checks:
+
+1. **Black Formatting** (MANDATORY)
+   ```bash
+   .venv/bin/black mk8/ tests/
+   ```
+   - **Requirement**: NO output (all files already formatted)
+   - **Action**: If files are reformatted, commit the formatting changes separately
+   - **Never commit**: Unformatted Python code
+
+2. **Flake8 Linting** (MANDATORY)
+   ```bash
+   .venv/bin/flake8 mk8/ tests/
+   ```
+   - **Requirement**: ZERO warnings or errors
+   - **Action**: Fix ALL issues before committing
+   - **Never commit**: Code with linting violations
+
+3. **Mypy Type Checking** (MANDATORY)
+   ```bash
+   .venv/bin/mypy mk8/
+   ```
+   - **Requirement**: ZERO type errors
+   - **Action**: Fix ALL type errors before committing
+   - **Never commit**: Code with type errors
+
+4. **Pytest Unit Tests** (MANDATORY)
+   ```bash
+   .venv/bin/pytest tests/unit/ -v
+   ```
+   - **Requirement**: ALL tests must PASS
+   - **Requirement**: Coverage must be ≥80% (currently 95%+)
+   - **Action**: Fix ALL failing tests before committing
+   - **Never commit**: Code that breaks existing tests
+
+### Workflow for AI Agents
+
+**EVERY TIME you modify Python code:**
+
+```bash
+# Step 1: Format code
+.venv/bin/black mk8/ tests/
+
+# Step 2: Check linting
+.venv/bin/flake8 mk8/ tests/
+
+# Step 3: Check types
+.venv/bin/mypy mk8/
+
+# Step 4: Run tests
+.venv/bin/pytest tests/unit/ -v
+
+# Step 5: Only if ALL checks pass, then commit
+git add <files>
+git commit -m "message"
+```
+
+**If ANY check fails:**
+- ❌ DO NOT commit
+- ❌ DO NOT push
+- ✅ Fix the issues first
+- ✅ Re-run all checks
+- ✅ Only commit when everything passes
+
+### Why This Matters
+
+- **Black**: Ensures consistent code style across the project
+- **Flake8**: Catches common bugs, style issues, and code smells
+- **Mypy**: Prevents type-related bugs and improves code quality
+- **Pytest**: Ensures code works correctly and doesn't break existing functionality
+
+**Breaking these rules breaks the build for everyone and wastes time.**
+
 ## Quick Command Reference
 
 ```bash
+# MANDATORY: Run before EVERY commit (in this order)
+.venv/bin/black mk8/ tests/          # 1. Format code
+.venv/bin/flake8 mk8/ tests/         # 2. Check linting (must be zero issues)
+.venv/bin/mypy mk8/                  # 3. Check types (must be zero errors)
+.venv/bin/pytest tests/unit/ -v     # 4. Run tests (must all pass)
+
 # Testing
 .venv/bin/pytest tests/unit/ -v
+.venv/bin/pytest --cov=mk8 --cov-report=html
 
-# Code quality
+# Code quality (individual checks)
 .venv/bin/black mk8/ tests/
 .venv/bin/flake8 mk8/ tests/
 .venv/bin/mypy mk8/
