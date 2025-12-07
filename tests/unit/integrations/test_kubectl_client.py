@@ -1,5 +1,6 @@
 """Tests for KubectlClient integration layer."""
 
+import json
 import pytest
 from unittest.mock import Mock, patch, call
 from hypothesis import given, strategies as st
@@ -123,35 +124,34 @@ class TestKubectlClientGetResource:
     """Tests for KubectlClient.get_resource()."""
 
     @patch("mk8.integrations.kubectl_client.subprocess.run")
-    def test_get_resource_returns_true_when_exists(
+    def test_get_resource_returns_dict_when_exists(
         self, mock_run: Mock, kubectl_client: KubectlClient
     ) -> None:
-        """Test get_resource returns True when resource exists."""
-        mock_run.return_value = Mock(
-            returncode=0, stdout="providerconfig.aws.crossplane.io/default"
-        )
+        """Test get_resource returns dict when resource exists."""
+        mock_data = {"kind": "ProviderConfig", "metadata": {"name": "default"}}
+        mock_run.return_value = Mock(returncode=0, stdout=json.dumps(mock_data))
 
         result = kubectl_client.get_resource("providerconfig", "default")
 
-        assert result is True
+        assert result == mock_data
 
     @patch("mk8.integrations.kubectl_client.subprocess.run")
-    def test_get_resource_returns_false_when_not_found(
+    def test_get_resource_raises_when_not_found(
         self, mock_run: Mock, kubectl_client: KubectlClient
     ) -> None:
-        """Test get_resource returns False when resource not found."""
+        """Test get_resource raises CommandError when resource not found."""
         mock_run.return_value = Mock(returncode=1, stderr="not found")
 
-        result = kubectl_client.get_resource("providerconfig", "default")
-
-        assert result is False
+        with pytest.raises(CommandError, match="not found"):
+            kubectl_client.get_resource("providerconfig", "default")
 
     @patch("mk8.integrations.kubectl_client.subprocess.run")
     def test_get_resource_uses_correct_namespace(
         self, mock_run: Mock, kubectl_client: KubectlClient
     ) -> None:
         """Test get_resource uses specified namespace."""
-        mock_run.return_value = Mock(returncode=0)
+        mock_data = {"kind": "Secret", "metadata": {"name": "aws-credentials"}}
+        mock_run.return_value = Mock(returncode=0, stdout=json.dumps(mock_data))
 
         kubectl_client.get_resource(
             "secret", "aws-credentials", namespace="crossplane-system"

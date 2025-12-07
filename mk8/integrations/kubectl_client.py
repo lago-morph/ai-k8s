@@ -66,7 +66,10 @@ class KubectlClient:
                     f"Failed to apply secret: {result.stderr}",
                     suggestions=[
                         "Verify kubectl is configured correctly",
-                        "Check if you have permissions to create secrets in the cluster",
+                        (
+                            "Check if you have permissions to create secrets "
+                            "in the cluster"
+                        ),
                         "Ensure the cluster is running: kubectl cluster-info",
                     ],
                 )
@@ -124,9 +127,10 @@ class KubectlClient:
                     f"Resource {resource_type}/{resource_name} not found"
                 )
 
-            return json.loads(result.stdout)
+            data: Dict[str, Any] = json.loads(result.stdout)
+            return data
         except json.JSONDecodeError:
-            raise CommandError(f"Failed to parse resource data")
+            raise CommandError("Failed to parse resource data")
         except subprocess.TimeoutExpired:
             raise CommandError("kubectl get timed out")
         except FileNotFoundError:
@@ -315,7 +319,8 @@ stringData:
         conditions = pod.get("status", {}).get("conditions", [])
         for condition in conditions:
             if condition.get("type") == "Ready":
-                return condition.get("status") == "True"
+                status: bool = condition.get("status") == "True"
+                return status
         return False
 
     def _build_secret_yaml(
