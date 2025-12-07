@@ -12,7 +12,6 @@ from mk8.business.credential_models import (
 from mk8.integrations.file_io import FileIO
 from mk8.integrations.aws_client import AWSClient
 from mk8.cli.output import OutputFormatter
-from mk8.core.errors import ConfigurationError
 
 
 class CredentialManager:
@@ -242,7 +241,8 @@ class CredentialManager:
         click.echo("Options:")
         if allow_env_option:
             click.echo(
-                "  1. Use existing AWS_* environment variables and save to config (disabled - not all variables set)"
+                "  1. Use existing AWS_* environment variables and save to "
+                "config (disabled - not all variables set)"
             )
         click.echo("  1. Enter credentials manually and save to config")
         click.echo("  2. Exit without configuring\n")

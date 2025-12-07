@@ -251,8 +251,8 @@ class TestCredentialManagerUpdateCredentials:
 
         # Should inform user of change
         assert any(
-            "updated" in str(call).lower() or "changed" in str(call).lower()
-            for call in mock_output.info.call_args_list
+            "updated" in str(c).lower() or "changed" in str(c).lower()
+            for c in mock_output.info.call_args_list
         )
 
     def test_update_credentials_reports_no_change(
@@ -277,8 +277,8 @@ class TestCredentialManagerUpdateCredentials:
 
         # Should inform user no change
         assert any(
-            "up to date" in str(call).lower() or "unchanged" in str(call).lower()
-            for call in mock_output.info.call_args_list
+            "up to date" in str(c).lower() or "unchanged" in str(c).lower()
+            for c in mock_output.info.call_args_list
         )
 
 
@@ -422,10 +422,10 @@ class TestCredentialManagerProperties:
         credential_manager.get_credentials()
 
         # Should warn about incomplete config
-        warning_calls = [str(call) for call in mock_output.warning.call_args_list]
+        warning_calls = [str(c) for c in mock_output.warning.call_args_list]
         assert any(
-            "incomplete" in call.lower() or "missing" in call.lower()
-            for call in warning_calls
+            "incomplete" in c.lower() or "missing" in c.lower()
+            for c in warning_calls
         )
 
     def test_property_credentials_always_saved_after_acquisition(
