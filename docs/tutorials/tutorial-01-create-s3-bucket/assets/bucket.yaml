@@ -1,0 +1,30 @@
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: Bucket
+metadata:
+  # Replace <unique-suffix> with a random string (e.g., your initials + date)
+  # Example: mk8-tutorial-bucket-jm-20231206
+  name: mk8-tutorial-bucket-<unique-suffix>
+  annotations:
+    # Annotation to identify this as a tutorial resource
+    tutorial: "mk8-tutorial-01"
+spec:
+  forProvider:
+    # AWS region where the bucket will be created
+    # You can change this to your preferred region (e.g., us-west-2, eu-west-1)
+    region: us-east-1
+    
+    # Access Control List - 'private' means only the bucket owner has access
+    # Other options: public-read, public-read-write (not recommended for production)
+    acl: private
+    
+    # Tags help identify and organize your AWS resources
+    # These tags will be visible in the AWS Console
+    tags:
+      Environment: tutorial
+      ManagedBy: crossplane
+      Tutorial: mk8-tutorial-01
+  
+  # Reference to the ProviderConfig that contains AWS credentials
+  # The 'default' ProviderConfig is created by mk8 during Crossplane installation
+  providerConfigRef:
+    name: default

@@ -10,7 +10,7 @@ This section tracks the roadmap and implementation priority. The order may be ma
 4. ✅ **kubeconfig-file-handling** - COMPLETE
 5. ✅ **local-kind-cluster** - COMPLETE
 6. ✅ **crossplane-bootstrap** - COMPLETE
-7. **tutorial-01-create-s3-bucket** - Design complete, ready for implementation (NEXT)
+7. **tutorial-01-create-s3-bucket** - Content complete, ready for testing (NEXT)
 8. **gitops-repository-setup** - Design complete, needs tasks
 9. **argocd-bootstrap** - Requirements only, needs design
 10. **argocd-gitops-promotion** - Design complete, needs tasks (Phase 1)
@@ -98,7 +98,12 @@ This section tracks the roadmap and implementation priority. The order may be ma
 
 ## In Progress Specs
 
-(None currently in progress)
+### 🚧 tutorial-01-create-s3-bucket
+- **Status**: READY FOR TESTING (21/25 tasks, 84%)
+- **Files**: requirements.md, design.md, design-notes.md, tasks.md, STATUS.md
+- **Description**: Tutorial demonstrating S3 bucket creation using mk8 and Crossplane on bootstrap cluster
+- **Implementation**: Tutorial content complete, needs testing
+- **Next Steps**: End-to-end testing, error scenario testing, quality review
 
 ## Planned Specs (Ready for Implementation)
 
@@ -127,12 +132,13 @@ These specs have requirements defined but need design and task planning:
 
 ## Design-Complete Specs (Ready for Implementation)
 
-### 📋 tutorial-01-create-s3-bucket
-- **Status**: DESIGN COMPLETE (0/25 tasks)
-- **Files**: requirements.md, design.md, design-notes.md, tasks.md
+### 🚧 tutorial-01-create-s3-bucket
+- **Status**: READY FOR TESTING (24/25 tasks, 96%)
+- **Files**: requirements.md, design.md, design-notes.md, tasks.md, STATUS.md
 - **Description**: Tutorial demonstrating S3 bucket creation using mk8 and Crossplane on bootstrap cluster
 - **Scope**: Bootstrap cluster only, no management cluster, no GitOps
-- **Next Steps**: Begin implementation (write tutorial content)
+- **Implementation**: Tutorial content complete (index.md, README.md, bucket.yaml)
+- **Next Steps**: End-to-end testing, error scenario testing, quality review
 
 ### 📋 gitops-repository-setup
 - **Status**: DESIGN COMPLETE
