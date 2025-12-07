@@ -33,7 +33,8 @@ class KubeconfigManager:
         Initialize the kubeconfig manager.
 
         Args:
-            config_path: Path to kubeconfig file (defaults to ~/.kube/config or KUBECONFIG)
+            config_path: Path to kubeconfig file
+                (defaults to ~/.kube/config or KUBECONFIG)
             max_backups: Maximum number of backup files to retain
         """
         if config_path is None:
