@@ -231,20 +231,20 @@ class TestCrossplaneManagerVerifyProviderConfig:
         self, crossplane_manager: CrossplaneManager, mock_kubectl_client: Mock
     ) -> None:
         """Test verify_provider_config checks for default ProviderConfig."""
-        mock_kubectl_client.get_resource.return_value = True
+        mock_kubectl_client.resource_exists.return_value = True
 
         result = crossplane_manager.verify_provider_config()
 
         assert result is True
-        mock_kubectl_client.get_resource.assert_called_once_with(
-            "providerconfig", "default"
+        mock_kubectl_client.resource_exists.assert_called_once_with(
+            "providerconfig", "default", "crossplane-system"
         )
 
     def test_verify_provider_config_returns_false_when_not_found(
         self, crossplane_manager: CrossplaneManager, mock_kubectl_client: Mock
     ) -> None:
         """Test verify_provider_config returns False when not found."""
-        mock_kubectl_client.get_resource.return_value = False
+        mock_kubectl_client.resource_exists.return_value = False
 
         result = crossplane_manager.verify_provider_config()
 

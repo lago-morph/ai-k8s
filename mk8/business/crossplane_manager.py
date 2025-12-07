@@ -78,7 +78,8 @@ class CrossplaneManager:
 
         if validation_result.success:
             self.output.success(
-                f"Credentials validated successfully (Account: {validation_result.account_id})"
+                f"Credentials validated successfully "
+                f"(Account: {validation_result.account_id})"
             )
         else:
             self.output.warning(
@@ -133,4 +134,6 @@ class CrossplaneManager:
         Returns:
             True if ProviderConfig exists, False otherwise
         """
-        return self.kubectl_client.get_resource("providerconfig", name)
+        return self.kubectl_client.resource_exists(
+            "providerconfig", name, "crossplane-system"
+        )
