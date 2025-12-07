@@ -424,8 +424,7 @@ class TestCredentialManagerProperties:
         # Should warn about incomplete config
         warning_calls = [str(c) for c in mock_output.warning.call_args_list]
         assert any(
-            "incomplete" in c.lower() or "missing" in c.lower()
-            for c in warning_calls
+            "incomplete" in c.lower() or "missing" in c.lower() for c in warning_calls
         )
 
     def test_property_credentials_always_saved_after_acquisition(

@@ -80,9 +80,7 @@ class TestFileIOReadConfigFile:
 
         assert result is not None
         assert len(result) == 2
-        assert result["AWS_ACCESS_KEY_ID"] == (
-            "AKIAIOSFODNN7EXAMPLE"
-        )
+        assert result["AWS_ACCESS_KEY_ID"] == ("AKIAIOSFODNN7EXAMPLE")
         assert result["AWS_SECRET_ACCESS_KEY"] == "secret"
 
     def test_read_config_file_with_whitespace(self, temp_config_file: Path) -> None:
@@ -321,8 +319,7 @@ class TestFileIOProperties:
                 min_size=1,
                 max_size=50,
                 alphabet=st.characters(
-                    whitelist_categories=("Lu", "Ll", "Nd"),
-                    whitelist_characters="_"
+                    whitelist_categories=("Lu", "Ll", "Nd"), whitelist_characters="_"
                 ),
             ),
             values=st.text(
