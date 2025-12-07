@@ -6,6 +6,8 @@ from typing import Optional, List, Dict, Any
 
 from mk8.integrations.helm_client import HelmClient, HelmError
 from mk8.integrations.kubectl_client import KubectlClient
+from mk8.integrations.file_io import FileIO
+from mk8.integrations.aws_client import AWSClient
 from mk8.business.credential_manager import CredentialManager
 from mk8.business.credential_models import AWSCredentials
 from mk8.cli.output import OutputFormatter
@@ -58,8 +60,12 @@ class CrossplaneInstaller:
         """
         self.helm = helm_client or HelmClient()
         self.kubectl = kubectl_client or KubectlClient()
-        self.credential_manager = credential_manager or CredentialManager()
         self.output = output or OutputFormatter(verbose=False)
+        self.credential_manager = credential_manager or CredentialManager(
+            file_io=FileIO(),
+            aws_client=AWSClient(),
+            output=self.output,
+        )
 
     def install_crossplane(
         self, version: Optional[str] = None, timeout: int = 600
@@ -78,13 +84,15 @@ class CrossplaneInstaller:
 
         try:
             # Add Crossplane repository
-            self.output.verbose("Adding Crossplane Helm repository...")
+            if self.output.verbose:
+                self.output.info("Adding Crossplane Helm repository...")
             self.helm.add_repository(
                 self.CROSSPLANE_REPO_NAME, self.CROSSPLANE_REPO_URL, force=True
             )
 
             # Update repositories
-            self.output.verbose("Updating Helm repositories...")
+            if self.output.verbose:
+                self.output.info("Updating Helm repositories...")
             self.helm.update_repositories()
 
             # Prepare chart name
@@ -143,7 +151,8 @@ class CrossplaneInstaller:
         try:
             # Create Provider resource
             provider_yaml = self._get_aws_provider_yaml()
-            self.output.verbose("Creating Provider resource...")
+            if self.output.verbose:
+                self.output.info("Creating Provider resource...")
             self._apply_yaml_resource(provider_yaml)
 
             # Wait for provider to be ready
@@ -157,7 +166,10 @@ class CrossplaneInstaller:
                 f"Failed to install AWS provider: {e}",
                 suggestions=[
                     "Check Crossplane is installed: mk8 crossplane status",
-                    "Check provider logs: kubectl logs -n crossplane-system -l pkg.crossplane.io/provider=provider-aws",
+                    (
+                        "Check provider logs: kubectl logs -n crossplane-system "
+                        "-l pkg.crossplane.io/provider=provider-aws"
+                    ),
                     "Try with verbose mode: --verbose",
                 ],
             )
@@ -179,15 +191,18 @@ class CrossplaneInstaller:
         try:
             # Get credentials if not provided
             if not credentials:
-                self.output.verbose("Retrieving AWS credentials...")
+                if self.output.verbose:
+                    self.output.info("Retrieving AWS credentials...")
                 credentials = self.credential_manager.get_credentials()
 
             # Create AWS secret
-            self.output.verbose("Creating AWS credentials secret...")
+            if self.output.verbose:
+                self.output.info("Creating AWS credentials secret...")
             self._create_aws_secret(credentials)
 
             # Create ProviderConfig
-            self.output.verbose("Creating ProviderConfig...")
+            if self.output.verbose:
+                self.output.info("Creating ProviderConfig...")
             provider_config_yaml = self._get_provider_config_yaml()
             self._apply_yaml_resource(provider_config_yaml)
 
@@ -218,7 +233,8 @@ class CrossplaneInstaller:
 
         # Delete ProviderConfig
         try:
-            self.output.verbose("Deleting ProviderConfig...")
+            if self.output.verbose:
+                self.output.info("Deleting ProviderConfig...")
             self._delete_resource(
                 "providerconfig.aws.upbound.io",
                 self.PROVIDER_CONFIG_NAME,
@@ -230,7 +246,8 @@ class CrossplaneInstaller:
 
         # Delete Provider
         try:
-            self.output.verbose("Deleting Provider...")
+            if self.output.verbose:
+                self.output.info("Deleting Provider...")
             self._delete_resource(
                 "provider.pkg.crossplane.io",
                 self.AWS_PROVIDER_NAME,
@@ -242,7 +259,8 @@ class CrossplaneInstaller:
 
         # Uninstall Helm release
         try:
-            self.output.verbose("Uninstalling Helm release...")
+            if self.output.verbose:
+                self.output.info("Uninstalling Helm release...")
             self.helm.uninstall_release(
                 self.CROSSPLANE_RELEASE, self.CROSSPLANE_NAMESPACE, wait=True
             )
@@ -252,7 +270,8 @@ class CrossplaneInstaller:
 
         # Delete namespace
         try:
-            self.output.verbose("Deleting namespace...")
+            if self.output.verbose:
+                self.output.info("Deleting namespace...")
             self.kubectl.delete_namespace(self.CROSSPLANE_NAMESPACE)
         except Exception as e:
             errors.append(f"Namespace deletion: {e}")
@@ -374,9 +393,6 @@ spec:
 aws_access_key_id = {credentials.access_key_id}
 aws_secret_access_key = {credentials.secret_access_key}
 """
-        if credentials.session_token:
-            credentials_content += f"aws_session_token = {credentials.session_token}\n"
-
         self.kubectl.create_secret(
             name=self.AWS_SECRET_NAME,
             namespace=self.CROSSPLANE_NAMESPACE,
