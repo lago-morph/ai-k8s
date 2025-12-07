@@ -13,9 +13,9 @@ This feature supports two workflows: creating a new Git repository with the prop
 - **GitOps**: A methodology where Git is the single source of truth for declarative infrastructure and applications
 - **Infrastructure Repository**: A Git repository containing Kubernetes manifests and infrastructure definitions
 - **Crossplane Manifest**: A YAML file defining cloud infrastructure resources using Crossplane custom resources
-- **Kustomize**: A Kubernetes configuration management tool that uses overlays and patches
-- **Base Configuration**: Common Kubernetes manifests shared across environments
-- **Overlay**: Environment-specific customizations applied to base configurations
+- **Helm**: A Kubernetes package manager that uses charts and values files
+- **Helm Chart**: A collection of Kubernetes manifests packaged together
+- **Values File**: Environment-specific configuration values for Helm charts
 - **Management Cluster**: The AWS EKS cluster that will be provisioned using GitOps
 
 ## Requirements
@@ -68,17 +68,17 @@ This feature supports two workflows: creating a new Git repository with the prop
 4. WHEN creating templates THEN the system SHALL include placeholder values that need to be customized
 5. WHEN templates are created THEN the system SHALL include comments explaining each resource and required customizations
 
-### Requirement 5: Kustomize Configuration
+### Requirement 5: Helm Chart Configuration
 
-**User Story:** As a platform engineer, I want Kustomize configurations set up, so that I can manage environment-specific variations.
+**User Story:** As a platform engineer, I want Helm charts set up, so that I can manage environment-specific variations.
 
 #### Acceptance Criteria
 
-1. WHEN setting up GitOps structure THEN the system SHALL create a kustomization.yaml file in the base directory
-2. WHEN creating kustomization files THEN the system SHALL list all base manifests as resources
-3. WHEN creating overlays THEN the system SHALL create kustomization.yaml files for each environment
-4. WHEN creating overlay kustomizations THEN the system SHALL reference the base directory
-5. WHEN Kustomize configuration is complete THEN the system SHALL validate the kustomization files are syntactically correct
+1. WHEN setting up GitOps structure THEN the system SHALL create a Chart.yaml file defining the Helm chart
+2. WHEN creating Helm charts THEN the system SHALL create a templates directory for Kubernetes manifests
+3. WHEN creating Helm charts THEN the system SHALL create a values.yaml file with default configuration
+4. WHEN creating environment-specific configurations THEN the system SHALL create values files for each environment
+5. WHEN Helm configuration is complete THEN the system SHALL validate the Chart.yaml and values files are syntactically correct
 
 ### Requirement 6: ArgoCD Application Manifests
 
@@ -147,7 +147,7 @@ This feature supports two workflows: creating a new Git repository with the prop
 #### Acceptance Criteria
 
 1. WHEN GitOps setup completes THEN the system SHALL validate all required directories exist
-2. WHEN validating THEN the system SHALL verify all kustomization.yaml files are syntactically correct
+2. WHEN validating THEN the system SHALL verify all Helm Chart.yaml and values files are syntactically correct
 3. WHEN validating THEN the system SHALL verify all Crossplane manifests are valid YAML
 4. WHEN validating THEN the system SHALL verify ArgoCD Application manifests are properly formatted
 5. IF validation fails THEN the system SHALL display specific errors with file paths and line numbers
@@ -200,14 +200,14 @@ This feature supports two workflows: creating a new Git repository with the prop
 - Repository path contains special characters or spaces
 - Git operations interrupted mid-process leaving partial state
 - Remote repository URL is invalid or inaccessible
-- Kustomize or YAML syntax errors in generated files
+- Helm Chart.yaml or values file syntax errors in generated files
 
 ### Constraints
 - Git must be installed and accessible in the system PATH
 - User must have write permissions to the target directory
 - Repository structure follows a specific convention required by ArgoCD
 - Crossplane manifests must be valid Kubernetes YAML
-- Kustomize version compatibility must be maintained
+- Helm version 3.x must be installed and accessible
 - Remote repository access requires appropriate authentication
 - The system does not manage Git credentials (relies on user's Git configuration)
 - Only one GitOps repository can be configured per mk8 installation
