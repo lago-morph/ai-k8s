@@ -5,6 +5,8 @@ import click
 
 from mk8.business.crossplane_installer import CrossplaneInstaller
 from mk8.business.credential_manager import CredentialManager
+from mk8.integrations.file_io import FileIO
+from mk8.integrations.aws_client import AWSClient
 from mk8.cli.output import OutputFormatter
 from mk8.core.errors import MK8Error, ExitCode
 from mk8.core.logging import setup_logging
@@ -54,7 +56,11 @@ def install(ctx: click.Context, verbose: bool, version: str) -> None:
     try:
         # Get AWS credentials
         output.info("Validating AWS credentials...")
-        credential_manager = CredentialManager(output=output)
+        credential_manager = CredentialManager(
+            file_io=FileIO(),
+            aws_client=AWSClient(),
+            output=output,
+        )
         credentials = credential_manager.get_credentials()
 
         # Validate credentials
@@ -212,7 +218,7 @@ def status(ctx: click.Context, verbose: bool) -> None:
             sys.exit(ExitCode.SUCCESS.value)
 
         # Display status
-        output.info(f"Crossplane: Installed")
+        output.info("Crossplane: Installed")
         if crossplane_status.version:
             output.info(f"Version: {crossplane_status.version}")
 
@@ -245,10 +251,12 @@ def status(ctx: click.Context, verbose: bool) -> None:
 
             output.info("\nSuggestions:")
             output.info(
-                "  • Check pod logs: kubectl logs -n crossplane-system -l app=crossplane"
+                "  • Check pod logs: kubectl logs -n crossplane-system "
+                "-l app=crossplane"
             )
             output.info(
-                "  • Check provider logs: kubectl logs -n crossplane-system -l pkg.crossplane.io/provider=provider-aws"
+                "  • Check provider logs: kubectl logs -n crossplane-system "
+                "-l pkg.crossplane.io/provider=provider-aws"
             )
             output.info(
                 "  • Reinstall: mk8 crossplane uninstall && mk8 crossplane install"
