@@ -42,7 +42,7 @@ class KindClient:
 
     CLUSTER_NAME = "mk8-bootstrap"
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the kind client."""
         pass
 
@@ -84,7 +84,10 @@ class KindClient:
             raise KindError(
                 "kind command not found",
                 suggestions=[
-                    "Install kind: https://kind.sigs.k8s.io/docs/user/quick-start/#installation",
+                    (
+                        "Install kind: "
+                        "https://kind.sigs.k8s.io/docs/user/quick-start/#installation"
+                    ),
                     "Ensure kind is in your PATH",
                     "Verify installation: kind version",
                 ],
@@ -242,7 +245,10 @@ class KindClient:
                 f"Invalid Kubernetes version: {version}",
                 suggestions=[
                     "Version should start with 'v' (e.g., v1.28.0)",
-                    "Check available versions: https://github.com/kubernetes-sigs/kind/releases",
+                    (
+                        "Check available versions: "
+                        "https://github.com/kubernetes-sigs/kind/releases"
+                    ),
                 ],
             )
 
@@ -253,7 +259,10 @@ class KindClient:
                 f"Invalid Kubernetes version format: {version}",
                 suggestions=[
                     "Use format: v<major>.<minor>.<patch> (e.g., v1.28.0)",
-                    "Check available versions: https://github.com/kubernetes-sigs/kind/releases",
+                    (
+                        "Check available versions: "
+                        "https://github.com/kubernetes-sigs/kind/releases"
+                    ),
                 ],
             )
 
