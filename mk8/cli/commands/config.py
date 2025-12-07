@@ -92,11 +92,13 @@ def config(ctx: click.Context, verbose: bool) -> None:
             if sync_result.validation_result:
                 if sync_result.validation_result.success:
                     output.success(
-                        f"✓ Credentials validated (Account: {sync_result.validation_result.account_id})"
+                        f"✓ Credentials validated "
+                        f"(Account: {sync_result.validation_result.account_id})"
                     )
                 else:
                     output.warning(
-                        f"⚠ Credential validation failed: {sync_result.validation_result.error_message}"
+                        f"⚠ Credential validation failed: "
+                        f"{sync_result.validation_result.error_message}"
                     )
 
         output.success("✓ Configuration complete")

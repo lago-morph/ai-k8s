@@ -1,6 +1,7 @@
 """Tests for CLI main entry point."""
 
 import pytest
+from unittest.mock import Mock, patch
 from click.testing import CliRunner
 from mk8.cli.main import cli
 
@@ -105,16 +106,43 @@ class TestCommandRouting:
         assert result.exit_code == 0
         assert "mk8 version 0.1.0" in result.output
 
-    def test_config_command_routes_correctly(self) -> None:
+    @patch("mk8.cli.commands.config.KubectlClient")
+    @patch("mk8.cli.commands.config.CredentialManager")
+    @patch("mk8.cli.commands.config.CrossplaneManager")
+    def test_config_command_routes_correctly(
+        self,
+        mock_crossplane_mgr: Mock,
+        mock_cred_mgr: Mock,
+        mock_kubectl: Mock,
+    ) -> None:
         """Test that config command routes to config handler."""
+        from mk8.business.credential_models import AWSCredentials, SyncResult
+
+        # Mock kubectl client
+        mock_kubectl_instance = mock_kubectl.return_value
+        mock_kubectl_instance.cluster_exists.return_value = False
+
+        # Mock credential manager to return credentials
+        mock_cred_instance = mock_cred_mgr.return_value
+        mock_cred_instance.update_credentials.return_value = AWSCredentials(
+            access_key_id="AKIATEST",
+            secret_access_key="secret",
+            region="us-east-1",
+        )
+
+        # Mock crossplane manager to return sync result
+        mock_crossplane_instance = mock_crossplane_mgr.return_value
+        mock_crossplane_instance.sync_credentials.return_value = SyncResult(
+            success=True,
+            cluster_exists=False,
+            secret_updated=False,
+        )
+
         runner = CliRunner()
         result = runner.invoke(cli, ["config"])
 
         assert result.exit_code == 0
-        # Config is a placeholder, just verify it runs
-        assert (
-            "placeholder" in result.output.lower() or "config" in result.output.lower()
-        )
+        assert "config" in result.output.lower()
 
     def test_bootstrap_group_routes_correctly(self) -> None:
         """Test that bootstrap group routes correctly."""
