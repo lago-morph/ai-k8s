@@ -43,22 +43,25 @@ class TestCrossplaneManagerSyncCredentials:
     ) -> None:
         """Test sync_credentials skips when no cluster exists."""
         mock_kubectl_client.cluster_exists.return_value = False
-        
+
         creds = AWSCredentials(
             access_key_id="AKIAIOSFODNN7EXAMPLE",
             secret_access_key="secret",
             region="us-east-1",
         )
-        
+
         result = crossplane_manager.sync_credentials(creds)
-        
+
         assert result.success is True
         assert result.cluster_exists is False
         assert result.secret_updated is False
         mock_kubectl_client.apply_secret.assert_not_called()
 
     def test_sync_creates_secret_when_cluster_exists(
-        self, crossplane_manager: CrossplaneManager, mock_kubectl_client: Mock, mock_aws_client: Mock
+        self,
+        crossplane_manager: CrossplaneManager,
+        mock_kubectl_client: Mock,
+        mock_aws_client: Mock,
     ) -> None:
         """Test sync_credentials creates secret when cluster exists."""
         mock_kubectl_client.cluster_exists.return_value = True
@@ -66,15 +69,15 @@ class TestCrossplaneManagerSyncCredentials:
             success=True,
             account_id="123456789012",
         )
-        
+
         creds = AWSCredentials(
             access_key_id="AKIAIOSFODNN7EXAMPLE",
             secret_access_key="secret",
             region="us-east-1",
         )
-        
+
         result = crossplane_manager.sync_credentials(creds)
-        
+
         assert result.success is True
         assert result.cluster_exists is True
         assert result.secret_updated is True
@@ -83,7 +86,10 @@ class TestCrossplaneManagerSyncCredentials:
         )
 
     def test_sync_validates_credentials_after_update(
-        self, crossplane_manager: CrossplaneManager, mock_kubectl_client: Mock, mock_aws_client: Mock
+        self,
+        crossplane_manager: CrossplaneManager,
+        mock_kubectl_client: Mock,
+        mock_aws_client: Mock,
     ) -> None:
         """Test sync_credentials validates credentials after updating secret."""
         mock_kubectl_client.cluster_exists.return_value = True
@@ -91,15 +97,15 @@ class TestCrossplaneManagerSyncCredentials:
             success=True,
             account_id="123456789012",
         )
-        
+
         creds = AWSCredentials(
             access_key_id="AKIAIOSFODNN7EXAMPLE",
             secret_access_key="secret",
             region="us-east-1",
         )
-        
+
         result = crossplane_manager.sync_credentials(creds)
-        
+
         assert result.validation_result is not None
         assert result.validation_result.success is True
         assert result.validation_result.account_id == "123456789012"
@@ -114,15 +120,15 @@ class TestCrossplaneManagerSyncCredentials:
             "kubectl failed",
             suggestions=["Check cluster"],
         )
-        
+
         creds = AWSCredentials(
             access_key_id="AKIAIOSFODNN7EXAMPLE",
             secret_access_key="secret",
             region="us-east-1",
         )
-        
+
         result = crossplane_manager.sync_credentials(creds)
-        
+
         assert result.success is False
         assert result.cluster_exists is True
         assert result.secret_updated is False
@@ -130,7 +136,10 @@ class TestCrossplaneManagerSyncCredentials:
         assert "kubectl" in result.error.lower()
 
     def test_sync_reports_validation_failure(
-        self, crossplane_manager: CrossplaneManager, mock_kubectl_client: Mock, mock_aws_client: Mock
+        self,
+        crossplane_manager: CrossplaneManager,
+        mock_kubectl_client: Mock,
+        mock_aws_client: Mock,
     ) -> None:
         """Test sync_credentials reports validation failures."""
         mock_kubectl_client.cluster_exists.return_value = True
@@ -139,15 +148,15 @@ class TestCrossplaneManagerSyncCredentials:
             error_code="InvalidClientTokenId",
             error_message="Invalid token",
         )
-        
+
         creds = AWSCredentials(
             access_key_id="AKIAIOSFODNN7EXAMPLE",
             secret_access_key="secret",
             region="us-east-1",
         )
-        
+
         result = crossplane_manager.sync_credentials(creds)
-        
+
         assert result.success is True  # Sync succeeded even though validation failed
         assert result.secret_updated is True
         assert result.validation_result is not None
@@ -162,9 +171,9 @@ class TestCrossplaneManagerClusterExists:
     ) -> None:
         """Test cluster_exists delegates to kubectl client."""
         mock_kubectl_client.cluster_exists.return_value = True
-        
+
         result = crossplane_manager.cluster_exists()
-        
+
         assert result is True
         mock_kubectl_client.cluster_exists.assert_called_once()
 
@@ -173,9 +182,9 @@ class TestCrossplaneManagerClusterExists:
     ) -> None:
         """Test cluster_exists returns False when no cluster."""
         mock_kubectl_client.cluster_exists.return_value = False
-        
+
         result = crossplane_manager.cluster_exists()
-        
+
         assert result is False
 
 
@@ -191,9 +200,9 @@ class TestCrossplaneManagerCreateOrUpdateSecret:
             secret_access_key="secret",
             region="us-east-1",
         )
-        
+
         crossplane_manager.create_or_update_secret(creds)
-        
+
         mock_kubectl_client.apply_secret.assert_called_once_with(
             creds, "crossplane-system", "aws-credentials"
         )
@@ -207,9 +216,9 @@ class TestCrossplaneManagerCreateOrUpdateSecret:
             secret_access_key="secret",
             region="us-east-1",
         )
-        
+
         crossplane_manager.create_or_update_secret(creds, namespace="custom-ns")
-        
+
         mock_kubectl_client.apply_secret.assert_called_once_with(
             creds, "custom-ns", "aws-credentials"
         )
@@ -223,9 +232,9 @@ class TestCrossplaneManagerVerifyProviderConfig:
     ) -> None:
         """Test verify_provider_config checks for default ProviderConfig."""
         mock_kubectl_client.get_resource.return_value = True
-        
+
         result = crossplane_manager.verify_provider_config()
-        
+
         assert result is True
         mock_kubectl_client.get_resource.assert_called_once_with(
             "providerconfig", "default"
@@ -236,9 +245,9 @@ class TestCrossplaneManagerVerifyProviderConfig:
     ) -> None:
         """Test verify_provider_config returns False when not found."""
         mock_kubectl_client.get_resource.return_value = False
-        
+
         result = crossplane_manager.verify_provider_config()
-        
+
         assert result is False
 
 
@@ -246,7 +255,10 @@ class TestCrossplaneManagerProperties:
     """Property-based tests for CrossplaneManager."""
 
     def test_property_sync_result_always_has_cluster_status(
-        self, crossplane_manager: CrossplaneManager, mock_kubectl_client: Mock, mock_aws_client: Mock
+        self,
+        crossplane_manager: CrossplaneManager,
+        mock_kubectl_client: Mock,
+        mock_aws_client: Mock,
     ) -> None:
         """Property: Sync result should always indicate cluster existence."""
         mock_kubectl_client.cluster_exists.return_value = True
@@ -254,19 +266,22 @@ class TestCrossplaneManagerProperties:
             success=True,
             account_id="123456789012",
         )
-        
+
         creds = AWSCredentials(
             access_key_id="key",
             secret_access_key="secret",
             region="us-east-1",
         )
-        
+
         result = crossplane_manager.sync_credentials(creds)
-        
+
         assert isinstance(result.cluster_exists, bool)
 
     def test_property_secret_contains_all_credentials(
-        self, crossplane_manager: CrossplaneManager, mock_kubectl_client: Mock, mock_aws_client: Mock
+        self,
+        crossplane_manager: CrossplaneManager,
+        mock_kubectl_client: Mock,
+        mock_aws_client: Mock,
     ) -> None:
         """Property: Secret should contain all three credential fields."""
         mock_kubectl_client.cluster_exists.return_value = True
@@ -274,15 +289,15 @@ class TestCrossplaneManagerProperties:
             success=True,
             account_id="123456789012",
         )
-        
+
         creds = AWSCredentials(
             access_key_id="AKIAIOSFODNN7EXAMPLE",
             secret_access_key="secret",
             region="us-east-1",
         )
-        
+
         crossplane_manager.sync_credentials(creds)
-        
+
         # Verify the credentials passed to kubectl contain all fields
         call_args = mock_kubectl_client.apply_secret.call_args[0][0]
         assert call_args.access_key_id == "AKIAIOSFODNN7EXAMPLE"
@@ -290,7 +305,10 @@ class TestCrossplaneManagerProperties:
         assert call_args.region == "us-east-1"
 
     def test_property_sync_updates_secret_and_validates(
-        self, crossplane_manager: CrossplaneManager, mock_kubectl_client: Mock, mock_aws_client: Mock
+        self,
+        crossplane_manager: CrossplaneManager,
+        mock_kubectl_client: Mock,
+        mock_aws_client: Mock,
     ) -> None:
         """Property: Sync should update secret and validate credentials."""
         mock_kubectl_client.cluster_exists.return_value = True
@@ -298,15 +316,15 @@ class TestCrossplaneManagerProperties:
             success=True,
             account_id="123456789012",
         )
-        
+
         creds = AWSCredentials(
             access_key_id="key",
             secret_access_key="secret",
             region="us-east-1",
         )
-        
+
         result = crossplane_manager.sync_credentials(creds)
-        
+
         # Both operations should have been called
         mock_kubectl_client.apply_secret.assert_called_once()
         mock_aws_client.validate_credentials.assert_called_once()
@@ -322,15 +340,15 @@ class TestCrossplaneManagerProperties:
             "kubectl failed",
             suggestions=["Check cluster"],
         )
-        
+
         creds = AWSCredentials(
             access_key_id="key",
             secret_access_key="secret",
             region="us-east-1",
         )
-        
+
         result = crossplane_manager.sync_credentials(creds)
-        
+
         assert result.success is False
         assert result.error is not None
         assert len(result.error) > 0

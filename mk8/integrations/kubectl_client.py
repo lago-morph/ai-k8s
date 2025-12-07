@@ -51,7 +51,7 @@ class KubectlClient:
             CommandError: If kubectl command fails
         """
         yaml_content = self._build_secret_yaml(credentials, namespace, secret_name)
-        
+
         try:
             result = subprocess.run(
                 ["kubectl", "apply", "-f", "-"],
@@ -60,7 +60,7 @@ class KubectlClient:
                 text=True,
                 timeout=30,
             )
-            
+
             if result.returncode != 0:
                 raise CommandError(
                     f"Failed to apply secret: {result.stderr}",
@@ -111,17 +111,19 @@ class KubectlClient:
             cmd = ["kubectl", "get", resource_type, resource_name, "-o", "json"]
             if namespace:
                 cmd.extend(["-n", namespace])
-            
+
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
                 timeout=10,
             )
-            
+
             if result.returncode != 0:
-                raise CommandError(f"Resource {resource_type}/{resource_name} not found")
-            
+                raise CommandError(
+                    f"Resource {resource_type}/{resource_name} not found"
+                )
+
             return json.loads(result.stdout)
         except json.JSONDecodeError:
             raise CommandError(f"Failed to parse resource data")
@@ -204,9 +206,7 @@ stringData:
                 suggestions=["Install kubectl", "Add kubectl to PATH"],
             )
 
-    def delete_resource(
-        self, resource_type: str, name: str, namespace: str
-    ) -> None:
+    def delete_resource(self, resource_type: str, name: str, namespace: str) -> None:
         """
         Delete a Kubernetes resource.
 
@@ -220,9 +220,7 @@ stringData:
         """
         try:
             cmd = ["kubectl", "delete", resource_type, name, "-n", namespace]
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=30
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
             if result.returncode != 0:
                 raise CommandError(
@@ -233,9 +231,7 @@ stringData:
         except FileNotFoundError:
             raise CommandError("kubectl not found")
 
-    def resource_exists(
-        self, resource_type: str, name: str, namespace: str
-    ) -> bool:
+    def resource_exists(self, resource_type: str, name: str, namespace: str) -> bool:
         """
         Check if a resource exists.
 
@@ -249,9 +245,7 @@ stringData:
         """
         try:
             cmd = ["kubectl", "get", resource_type, name, "-n", namespace]
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=10
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
             return result.returncode == 0
         except Exception:
             return False
@@ -276,9 +270,7 @@ stringData:
                 "-o",
                 "json",
             ]
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=10
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
 
             if result.returncode != 0:
                 return []
@@ -307,9 +299,7 @@ stringData:
         """
         try:
             cmd = ["kubectl", "delete", "namespace", namespace, "--wait=false"]
-            result = subprocess.run(
-                cmd, capture_output=True, text=True, timeout=30
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
 
             if result.returncode != 0:
                 raise CommandError(

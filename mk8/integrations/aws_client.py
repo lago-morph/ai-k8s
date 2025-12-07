@@ -38,7 +38,7 @@ class AWSClient:
                 read_timeout=10,
                 retries={"max_attempts": 0},  # No retries for fast feedback
             )
-            
+
             # Create STS client with provided credentials
             sts = boto3.client(
                 "sts",
@@ -47,26 +47,26 @@ class AWSClient:
                 region_name=region,
                 config=config,
             )
-            
+
             # Call GetCallerIdentity to validate credentials
             response = sts.get_caller_identity()
-            
+
             return ValidationResult(
                 success=True,
                 account_id=response["Account"],
             )
-            
+
         except ClientError as e:
             # AWS API error (invalid credentials, permissions, etc.)
             error_code = e.response["Error"]["Code"]
             error_message = e.response["Error"]["Message"]
-            
+
             return ValidationResult(
                 success=False,
                 error_code=error_code,
                 error_message=error_message,
             )
-            
+
         except BotoCoreError as e:
             # Network or connection error
             return ValidationResult(
@@ -74,7 +74,7 @@ class AWSClient:
                 error_code="NetworkError",
                 error_message=f"Network error: {str(e)}",
             )
-            
+
         except Exception as e:
             # Unexpected error
             return ValidationResult(
@@ -95,9 +95,9 @@ class AWSClient:
         """
         if len(secret) <= 8:
             return "****"
-        
+
         first_four = secret[:4]
         last_four = secret[-4:]
         middle_length = len(secret) - 8
-        
+
         return f"{first_four}{'*' * middle_length}{last_four}"

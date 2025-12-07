@@ -217,9 +217,7 @@ def status(ctx: click.Context, verbose: bool) -> None:
             output.info(f"Version: {crossplane_status.version}")
 
         output.info(f"Namespace: {crossplane_status.namespace}")
-        output.info(
-            f"Status: {'Ready' if crossplane_status.ready else 'Not Ready'}"
-        )
+        output.info(f"Status: {'Ready' if crossplane_status.ready else 'Not Ready'}")
         output.info(
             f"Pods: {crossplane_status.ready_pods}/{crossplane_status.pod_count} ready"
         )
@@ -246,9 +244,15 @@ def status(ctx: click.Context, verbose: bool) -> None:
                 output.warning(f"  • {issue}")
 
             output.info("\nSuggestions:")
-            output.info("  • Check pod logs: kubectl logs -n crossplane-system -l app=crossplane")
-            output.info("  • Check provider logs: kubectl logs -n crossplane-system -l pkg.crossplane.io/provider=provider-aws")
-            output.info("  • Reinstall: mk8 crossplane uninstall && mk8 crossplane install")
+            output.info(
+                "  • Check pod logs: kubectl logs -n crossplane-system -l app=crossplane"
+            )
+            output.info(
+                "  • Check provider logs: kubectl logs -n crossplane-system -l pkg.crossplane.io/provider=provider-aws"
+            )
+            output.info(
+                "  • Reinstall: mk8 crossplane uninstall && mk8 crossplane install"
+            )
 
         sys.exit(ExitCode.SUCCESS.value)
 

@@ -103,28 +103,36 @@ class KindClient:
         suggestions = []
 
         if "already exists" in stderr.lower():
-            suggestions.extend([
-                "Use 'mk8 bootstrap delete' to remove the existing cluster",
-                "Use --force-recreate flag to automatically recreate",
-            ])
+            suggestions.extend(
+                [
+                    "Use 'mk8 bootstrap delete' to remove the existing cluster",
+                    "Use --force-recreate flag to automatically recreate",
+                ]
+            )
         elif "port" in stderr.lower() and "already" in stderr.lower():
-            suggestions.extend([
-                "Check for other services using the port",
-                "Stop conflicting services",
-                "Modify kind configuration to use different ports",
-            ])
+            suggestions.extend(
+                [
+                    "Check for other services using the port",
+                    "Stop conflicting services",
+                    "Modify kind configuration to use different ports",
+                ]
+            )
         elif "docker" in stderr.lower():
-            suggestions.extend([
-                "Ensure Docker daemon is running",
-                "Check Docker status: docker ps",
-                "Restart Docker if needed",
-            ])
+            suggestions.extend(
+                [
+                    "Ensure Docker daemon is running",
+                    "Check Docker status: docker ps",
+                    "Restart Docker if needed",
+                ]
+            )
         else:
-            suggestions.extend([
-                "Check kind logs for more details",
-                "Verify Docker is running: docker ps",
-                "Check system resources (memory, disk)",
-            ])
+            suggestions.extend(
+                [
+                    "Check kind logs for more details",
+                    "Verify Docker is running: docker ps",
+                    "Check system resources (memory, disk)",
+                ]
+            )
 
         return suggestions
 
@@ -185,9 +193,7 @@ class KindClient:
         # Write config to temp file and use it
         import tempfile
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".yaml", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
             yaml.safe_dump(config, f)
             config_path = f.name
 
@@ -320,12 +326,14 @@ class KindClient:
             for node in nodes_data.get("items", []):
                 node_info = {
                     "name": node["metadata"]["name"],
-                    "status": "Ready"
-                    if any(
-                        c["type"] == "Ready" and c["status"] == "True"
-                        for c in node["status"].get("conditions", [])
-                    )
-                    else "NotReady",
+                    "status": (
+                        "Ready"
+                        if any(
+                            c["type"] == "Ready" and c["status"] == "True"
+                            for c in node["status"].get("conditions", [])
+                        )
+                        else "NotReady"
+                    ),
                 }
                 nodes.append(node_info)
 

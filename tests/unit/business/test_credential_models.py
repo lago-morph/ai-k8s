@@ -68,12 +68,15 @@ class TestAWSCredentials:
             region="us-east-1",
         )
         result = creds.to_dict()
-        
+
         assert "AWS_ACCESS_KEY_ID" in result
         assert "AWS_SECRET_ACCESS_KEY" in result
         assert "AWS_DEFAULT_REGION" in result
         assert result["AWS_ACCESS_KEY_ID"] == "AKIAIOSFODNN7EXAMPLE"
-        assert result["AWS_SECRET_ACCESS_KEY"] == "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+        assert (
+            result["AWS_SECRET_ACCESS_KEY"]
+            == "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+        )
         assert result["AWS_DEFAULT_REGION"] == "us-east-1"
 
     def test_from_dict_creates_credentials(self) -> None:
@@ -84,7 +87,7 @@ class TestAWSCredentials:
             "AWS_DEFAULT_REGION": "us-east-1",
         }
         creds = AWSCredentials.from_dict(data)
-        
+
         assert creds.access_key_id == "AKIAIOSFODNN7EXAMPLE"
         assert creds.secret_access_key == "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
         assert creds.region == "us-east-1"
@@ -93,45 +96,57 @@ class TestAWSCredentials:
         """Test from_dict handles missing keys with empty strings."""
         data = {"AWS_ACCESS_KEY_ID": "AKIAIOSFODNN7EXAMPLE"}
         creds = AWSCredentials.from_dict(data)
-        
+
         assert creds.access_key_id == "AKIAIOSFODNN7EXAMPLE"
         assert creds.secret_access_key == ""
         assert creds.region == ""
 
-    def test_from_env_vars_with_aws_prefix(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_from_env_vars_with_aws_prefix(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test from_env_vars reads AWS_* environment variables."""
         monkeypatch.setenv("AWS_ACCESS_KEY_ID", "AKIAIOSFODNN7EXAMPLE")
-        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
+        monkeypatch.setenv(
+            "AWS_SECRET_ACCESS_KEY", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+        )
         monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
-        
+
         creds = AWSCredentials.from_env_vars("AWS")
-        
+
         assert creds is not None
         assert creds.access_key_id == "AKIAIOSFODNN7EXAMPLE"
         assert creds.secret_access_key == "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
         assert creds.region == "us-east-1"
 
-    def test_from_env_vars_with_mk8_prefix(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_from_env_vars_with_mk8_prefix(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test from_env_vars reads MK8_AWS_* environment variables."""
         monkeypatch.setenv("MK8_AWS_ACCESS_KEY_ID", "AKIAIOSFODNN7EXAMPLE")
-        monkeypatch.setenv("MK8_AWS_SECRET_ACCESS_KEY", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
+        monkeypatch.setenv(
+            "MK8_AWS_SECRET_ACCESS_KEY", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+        )
         monkeypatch.setenv("MK8_AWS_DEFAULT_REGION", "us-east-1")
-        
+
         creds = AWSCredentials.from_env_vars("MK8_AWS")
-        
+
         assert creds is not None
         assert creds.access_key_id == "AKIAIOSFODNN7EXAMPLE"
         assert creds.secret_access_key == "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
         assert creds.region == "us-east-1"
 
-    def test_from_env_vars_returns_none_when_incomplete(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_from_env_vars_returns_none_when_incomplete(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test from_env_vars returns None when not all vars are set."""
         monkeypatch.setenv("AWS_ACCESS_KEY_ID", "AKIAIOSFODNN7EXAMPLE")
-        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY")
+        monkeypatch.setenv(
+            "AWS_SECRET_ACCESS_KEY", "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+        )
         # Missing AWS_DEFAULT_REGION
-        
+
         creds = AWSCredentials.from_env_vars("AWS")
-        
+
         assert creds is None
 
     def test_from_env_vars_returns_none_when_all_missing(self) -> None:
@@ -139,9 +154,9 @@ class TestAWSCredentials:
         # Ensure no AWS env vars are set
         for key in ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_DEFAULT_REGION"]:
             os.environ.pop(key, None)
-        
+
         creds = AWSCredentials.from_env_vars("AWS")
-        
+
         assert creds is None
 
     def test_roundtrip_to_dict_and_from_dict(self) -> None:
@@ -151,10 +166,10 @@ class TestAWSCredentials:
             secret_access_key="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
             region="us-east-1",
         )
-        
+
         data = original.to_dict()
         restored = AWSCredentials.from_dict(data)
-        
+
         assert restored.access_key_id == original.access_key_id
         assert restored.secret_access_key == original.secret_access_key
         assert restored.region == original.region
@@ -191,7 +206,7 @@ class TestAWSCredentialsProperties:
         # Skip the case where all are non-empty
         if access_key and secret_key and region:
             return
-        
+
         creds = AWSCredentials(
             access_key_id=access_key,
             secret_access_key=secret_key,
@@ -214,7 +229,7 @@ class TestAWSCredentialsProperties:
             region=region,
         )
         result = creds.to_dict()
-        
+
         assert set(result.keys()) == {
             "AWS_ACCESS_KEY_ID",
             "AWS_SECRET_ACCESS_KEY",
@@ -238,9 +253,9 @@ class TestAWSCredentialsProperties:
             secret_access_key=secret_key,
             region=region,
         )
-        
+
         restored = AWSCredentials.from_dict(original.to_dict())
-        
+
         assert restored.access_key_id == original.access_key_id
         assert restored.secret_access_key == original.secret_access_key
         assert restored.region == original.region
@@ -270,7 +285,10 @@ class TestValidationResult:
         assert result.success is False
         assert result.account_id is None
         assert result.error_code == "InvalidClientTokenId"
-        assert result.error_message == "The security token included in the request is invalid"
+        assert (
+            result.error_message
+            == "The security token included in the request is invalid"
+        )
 
     def test_get_suggestions_for_invalid_client_token(self) -> None:
         """Test suggestions for InvalidClientTokenId error."""
@@ -280,7 +298,7 @@ class TestValidationResult:
             error_message="The security token included in the request is invalid",
         )
         suggestions = result.get_suggestions()
-        
+
         assert len(suggestions) > 0
         assert any("Access Key ID" in s for s in suggestions)
 
@@ -292,7 +310,7 @@ class TestValidationResult:
             error_message="User is not authorized",
         )
         suggestions = result.get_suggestions()
-        
+
         assert len(suggestions) > 0
         assert any("IAM" in s or "permission" in s for s in suggestions)
 
@@ -304,7 +322,7 @@ class TestValidationResult:
             error_message="Something went wrong",
         )
         suggestions = result.get_suggestions()
-        
+
         assert len(suggestions) > 0
         assert any("credentials" in s.lower() for s in suggestions)
 
@@ -315,7 +333,7 @@ class TestValidationResult:
             account_id="123456789012",
         )
         suggestions = result.get_suggestions()
-        
+
         assert suggestions == []
 
 
@@ -331,7 +349,7 @@ class TestSyncResult:
             secret_updated=True,
             validation_result=validation,
         )
-        
+
         assert result.success is True
         assert result.cluster_exists is True
         assert result.secret_updated is True
@@ -347,7 +365,7 @@ class TestSyncResult:
             secret_updated=False,
             error="kubectl command failed",
         )
-        
+
         assert result.success is False
         assert result.cluster_exists is True
         assert result.secret_updated is False
@@ -360,7 +378,7 @@ class TestSyncResult:
             cluster_exists=False,
             secret_updated=False,
         )
-        
+
         assert result.success is True
         assert result.cluster_exists is False
         assert result.secret_updated is False

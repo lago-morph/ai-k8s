@@ -88,35 +88,45 @@ class HelmClient:
         suggestions = []
 
         if "not found" in stderr.lower() and "repository" in stderr.lower():
-            suggestions.extend([
-                "Add the repository: helm repo add <name> <url>",
-                "Update repositories: helm repo update",
-                "List repositories: helm repo list",
-            ])
+            suggestions.extend(
+                [
+                    "Add the repository: helm repo add <name> <url>",
+                    "Update repositories: helm repo update",
+                    "List repositories: helm repo list",
+                ]
+            )
         elif "already exists" in stderr.lower():
-            suggestions.extend([
-                "Use --force flag to overwrite",
-                "Uninstall first: helm uninstall <release>",
-                "Use different release name",
-            ])
+            suggestions.extend(
+                [
+                    "Use --force flag to overwrite",
+                    "Uninstall first: helm uninstall <release>",
+                    "Use different release name",
+                ]
+            )
         elif "connection refused" in stderr.lower():
-            suggestions.extend([
-                "Check cluster is running: kubectl get nodes",
-                "Verify context: kubectl config current-context",
-                "Check cluster connectivity",
-            ])
+            suggestions.extend(
+                [
+                    "Check cluster is running: kubectl get nodes",
+                    "Verify context: kubectl config current-context",
+                    "Check cluster connectivity",
+                ]
+            )
         elif "forbidden" in stderr.lower() or "unauthorized" in stderr.lower():
-            suggestions.extend([
-                "Check RBAC permissions",
-                "Verify service account has required permissions",
-                "Check if cluster-admin role is needed",
-            ])
+            suggestions.extend(
+                [
+                    "Check RBAC permissions",
+                    "Verify service account has required permissions",
+                    "Check if cluster-admin role is needed",
+                ]
+            )
         else:
-            suggestions.extend([
-                "Check helm status: helm status <release>",
-                "Verify cluster connectivity: kubectl get nodes",
-                "Check helm version compatibility",
-            ])
+            suggestions.extend(
+                [
+                    "Check helm status: helm status <release>",
+                    "Verify cluster connectivity: kubectl get nodes",
+                    "Check helm version compatibility",
+                ]
+            )
 
         return suggestions
 
@@ -246,9 +256,7 @@ class HelmClient:
         except Exception:
             return []
 
-    def get_release_status(
-        self, release_name: str, namespace: str
-    ) -> Dict[str, Any]:
+    def get_release_status(self, release_name: str, namespace: str) -> Dict[str, Any]:
         """
         Get status of a Helm release.
 

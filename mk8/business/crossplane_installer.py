@@ -259,9 +259,7 @@ class CrossplaneInstaller:
             self.output.warning(f"Failed to delete namespace: {e}")
 
         if errors:
-            self.output.warning(
-                f"Uninstallation completed with {len(errors)} error(s)"
-            )
+            self.output.warning(f"Uninstallation completed with {len(errors)} error(s)")
         else:
             self.output.success("Crossplane uninstalled successfully")
 
@@ -289,7 +287,9 @@ class CrossplaneInstaller:
             pods = self._get_pods_in_namespace(self.CROSSPLANE_NAMESPACE)
             status.pod_count = len(pods)
             status.ready_pods = sum(1 for p in pods if p.get("ready"))
-            status.ready = status.pod_count > 0 and status.pod_count == status.ready_pods
+            status.ready = (
+                status.pod_count > 0 and status.pod_count == status.ready_pods
+            )
 
             # Check AWS provider
             status.aws_provider_installed = self._resource_exists(

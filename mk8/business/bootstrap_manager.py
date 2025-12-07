@@ -4,7 +4,11 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 import click
 
-from mk8.integrations.kind_client import KindClient, ClusterExistsError, ClusterNotFoundError
+from mk8.integrations.kind_client import (
+    KindClient,
+    ClusterExistsError,
+    ClusterNotFoundError,
+)
 from mk8.integrations.kubeconfig import KubeconfigManager
 from mk8.integrations.prerequisites import PrerequisiteChecker
 from mk8.cli.output import OutputFormatter
@@ -93,7 +97,9 @@ class BootstrapManager:
                 )
 
         # Create cluster
-        self.output.info(f"Creating bootstrap cluster '{self.kind_client.CLUSTER_NAME}'...")
+        self.output.info(
+            f"Creating bootstrap cluster '{self.kind_client.CLUSTER_NAME}'..."
+        )
         try:
             self.kind_client.create_cluster(kubernetes_version=kubernetes_version)
         except Exception as e:
@@ -129,7 +135,9 @@ class BootstrapManager:
 
         except Exception as e:
             self.output.warning(f"Failed to configure kubectl: {e}")
-            self.output.info("Cluster created but kubectl configuration may need manual setup")
+            self.output.info(
+                "Cluster created but kubectl configuration may need manual setup"
+            )
 
         # Display success
         context_name = f"kind-{self.kind_client.CLUSTER_NAME}"
@@ -164,7 +172,9 @@ class BootstrapManager:
                 self.output.info("Deletion cancelled")
                 return
 
-        self.output.info(f"Deleting bootstrap cluster '{self.kind_client.CLUSTER_NAME}'...")
+        self.output.info(
+            f"Deleting bootstrap cluster '{self.kind_client.CLUSTER_NAME}'..."
+        )
 
         # Track what was cleaned up
         cleaned_up = []
@@ -222,9 +232,7 @@ class BootstrapManager:
             issues = []
             if not all_ready:
                 not_ready = [
-                    node["name"]
-                    for node in info["nodes"]
-                    if node["status"] != "Ready"
+                    node["name"] for node in info["nodes"] if node["status"] != "Ready"
                 ]
                 issues.append(f"Nodes not ready: {', '.join(not_ready)}")
 

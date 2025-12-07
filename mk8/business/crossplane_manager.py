@@ -57,7 +57,9 @@ class CrossplaneManager:
         # Update secret
         try:
             self.create_or_update_secret(credentials, namespace, secret_name)
-            self.output.info(f"Updated Crossplane credentials in {namespace}/{secret_name}")
+            self.output.info(
+                f"Updated Crossplane credentials in {namespace}/{secret_name}"
+            )
         except CommandError as e:
             self.output.error(f"Failed to update Crossplane credentials: {e}")
             return SyncResult(

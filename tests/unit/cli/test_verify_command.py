@@ -102,9 +102,7 @@ class TestVerifyCommand:
             messages=["✓ mk8 is installed", "✗ Missing prerequisites: docker"],
         )
 
-        with patch(
-            "mk8.cli.commands.verify.VerificationManager"
-        ) as mock_manager_class:
+        with patch("mk8.cli.commands.verify.VerificationManager") as mock_manager_class:
             mock_manager = MagicMock()
             mock_manager.verify.return_value = mock_result
             mock_manager.get_installation_instructions.return_value = (

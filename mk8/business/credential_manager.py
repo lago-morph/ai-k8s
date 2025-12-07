@@ -4,7 +4,11 @@ import sys
 import click
 from typing import Optional
 
-from mk8.business.credential_models import AWSCredentials, ValidationResult, PromptChoice
+from mk8.business.credential_models import (
+    AWSCredentials,
+    ValidationResult,
+    PromptChoice,
+)
 from mk8.integrations.file_io import FileIO
 from mk8.integrations.aws_client import AWSClient
 from mk8.cli.output import OutputFormatter
@@ -57,7 +61,9 @@ class CredentialManager:
         # 2. Check MK8_* environment variables (auto-save)
         creds = self._read_from_mk8_env_vars()
         if creds and creds.is_complete():
-            self.output.info("Credentials configured from MK8_AWS_* environment variables")
+            self.output.info(
+                "Credentials configured from MK8_AWS_* environment variables"
+            )
             self._save_credentials(creds)
             return creds
 
@@ -102,7 +108,9 @@ class CredentialManager:
         # Check MK8_* environment variables first
         creds = self._read_from_mk8_env_vars()
         if creds and creds.is_complete():
-            self.output.info("Credentials configured from MK8_AWS_* environment variables")
+            self.output.info(
+                "Credentials configured from MK8_AWS_* environment variables"
+            )
             self._save_credentials(creds)
             self._report_credential_changes(old_creds, creds)
             return creds
@@ -162,7 +170,7 @@ class CredentialManager:
             return None
 
         creds = AWSCredentials.from_dict(config)
-        
+
         # Check if complete
         if not creds.is_complete():
             missing = []
@@ -172,7 +180,7 @@ class CredentialManager:
                 missing.append("AWS_SECRET_ACCESS_KEY")
             if not creds.region:
                 missing.append("AWS_DEFAULT_REGION")
-            
+
             self.output.warning(
                 f"Configuration file is incomplete. Missing: {', '.join(missing)}"
             )
@@ -210,9 +218,9 @@ class CredentialManager:
         click.echo("  1. Use existing AWS_* environment variables and save to config")
         click.echo("  2. Enter credentials manually and save to config")
         click.echo("  3. Exit without configuring\n")
-        
+
         choice = click.prompt("Choice", type=click.Choice(["1", "2", "3"]))
-        
+
         if choice == "1":
             return PromptChoice.USE_ENV_VARS
         elif choice == "2":
@@ -233,12 +241,14 @@ class CredentialManager:
         click.echo("\nAWS credentials not found in environment variables.\n")
         click.echo("Options:")
         if allow_env_option:
-            click.echo("  1. Use existing AWS_* environment variables and save to config (disabled - not all variables set)")
+            click.echo(
+                "  1. Use existing AWS_* environment variables and save to config (disabled - not all variables set)"
+            )
         click.echo("  1. Enter credentials manually and save to config")
         click.echo("  2. Exit without configuring\n")
-        
+
         choice = click.prompt("Choice", type=click.Choice(["1", "2"]))
-        
+
         if choice == "1":
             return PromptChoice.ENTER_MANUALLY
         else:
@@ -255,7 +265,7 @@ class CredentialManager:
         access_key_id = click.prompt("AWS Access Key ID")
         secret_access_key = click.prompt("AWS Secret Access Key", hide_input=True)
         region = click.prompt("AWS Default Region")
-        
+
         return AWSCredentials(
             access_key_id=access_key_id,
             secret_access_key=secret_access_key,
@@ -288,7 +298,7 @@ class CredentialManager:
         """
         if old is None:
             return True
-        
+
         return (
             old.access_key_id != new.access_key_id
             or old.secret_access_key != new.secret_access_key

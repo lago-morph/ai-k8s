@@ -40,9 +40,7 @@ class TestPrerequisiteCheckerProperties:
 
             mock_which.side_effect = which_side_effect
 
-            with patch.object(
-                checker, "is_docker_daemon_running", return_value=True
-            ):
+            with patch.object(checker, "is_docker_daemon_running", return_value=True):
                 result = checker.check_all()
 
         # Property: All three prerequisites must be checked
@@ -103,9 +101,7 @@ class TestPrerequisiteCheckerProperties:
 
             mock_which.side_effect = which_side_effect
 
-            with patch.object(
-                checker, "is_docker_daemon_running", return_value=True
-            ):
+            with patch.object(checker, "is_docker_daemon_running", return_value=True):
                 result = checker.check_all()
 
         # Property: All missing prerequisites must be reported
@@ -148,17 +144,21 @@ class TestPrerequisiteCheckerProperties:
 
             mock_which.side_effect = which_side_effect
 
-            with patch.object(
-                checker, "is_docker_daemon_running", return_value=True
-            ):
+            with patch.object(checker, "is_docker_daemon_running", return_value=True):
                 # Run check multiple times
                 result1 = checker.check_all()
                 result2 = checker.check_all()
                 result3 = checker.check_all()
 
         # Property: Multiple checks should return consistent results
-        assert result1.docker.installed == result2.docker.installed == result3.docker.installed
-        assert result1.kind.installed == result2.kind.installed == result3.kind.installed
+        assert (
+            result1.docker.installed
+            == result2.docker.installed
+            == result3.docker.installed
+        )
+        assert (
+            result1.kind.installed == result2.kind.installed == result3.kind.installed
+        )
         assert (
             result1.kubectl.installed
             == result2.kubectl.installed

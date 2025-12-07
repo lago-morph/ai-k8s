@@ -39,18 +39,18 @@ class FileIO:
             with open(self.config_path, "r", encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
-                    
+
                     # Skip empty lines and comments
                     if not line or line.startswith("#"):
                         continue
-                    
+
                     # Parse key=value format
                     if "=" not in line:
                         continue
-                    
+
                     key, value = line.split("=", 1)
                     config[key.strip()] = value.strip()
-            
+
             return config
         except Exception as e:
             raise ConfigurationError(
@@ -75,15 +75,15 @@ class FileIO:
         try:
             # Ensure parent directory exists
             self.ensure_config_directory()
-            
+
             # Write config file with UTF-8 encoding
             with open(self.config_path, "w", encoding="utf-8") as f:
                 for key, value in config.items():
                     f.write(f"{key}={value}\n")
-            
+
             # Set secure permissions (0600)
             self.set_secure_permissions(str(self.config_path))
-            
+
         except Exception as e:
             raise ConfigurationError(
                 f"Failed to write config file: {e}",
@@ -117,12 +117,12 @@ class FileIO:
                         "Ensure the file is created before setting permissions",
                     ],
                 )
-            
+
             # Set permissions to 0600 (owner read/write only)
             # On Windows, this may not work as expected, but we try anyway
-            if os.name != 'nt':
+            if os.name != "nt":
                 path.chmod(0o600)
-            
+
         except ConfigurationError:
             raise
         except Exception as e:
@@ -148,17 +148,17 @@ class FileIO:
             path = Path(file_path)
             if not path.exists():
                 return False
-            
+
             # On Windows, permission checking works differently
-            if os.name == 'nt':
+            if os.name == "nt":
                 return True
-            
+
             # Check if permissions are 0600
             file_stat = path.stat()
             mode = stat.S_IMODE(file_stat.st_mode)
-            
+
             # 0600 = 0o600 = owner read/write only
             return mode == 0o600
-            
+
         except Exception:
             return False

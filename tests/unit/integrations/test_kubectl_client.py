@@ -24,9 +24,9 @@ class TestKubectlClientClusterExists:
     ) -> None:
         """Test cluster_exists returns True when cluster is active."""
         mock_run.return_value = Mock(returncode=0, stdout="kubernetes\n")
-        
+
         result = kubectl_client.cluster_exists()
-        
+
         assert result is True
         mock_run.assert_called_once()
 
@@ -36,9 +36,9 @@ class TestKubectlClientClusterExists:
     ) -> None:
         """Test cluster_exists returns False when no cluster configured."""
         mock_run.return_value = Mock(returncode=1, stderr="no context")
-        
+
         result = kubectl_client.cluster_exists()
-        
+
         assert result is False
 
     @patch("mk8.integrations.kubectl_client.subprocess.run")
@@ -47,9 +47,9 @@ class TestKubectlClientClusterExists:
     ) -> None:
         """Test cluster_exists returns False on kubectl error."""
         mock_run.side_effect = Exception("kubectl not found")
-        
+
         result = kubectl_client.cluster_exists()
-        
+
         assert result is False
 
 
@@ -61,16 +61,18 @@ class TestKubectlClientApplySecret:
         self, mock_run: Mock, kubectl_client: KubectlClient
     ) -> None:
         """Test apply_secret creates Kubernetes secret."""
-        mock_run.return_value = Mock(returncode=0, stdout="secret/aws-credentials created")
-        
+        mock_run.return_value = Mock(
+            returncode=0, stdout="secret/aws-credentials created"
+        )
+
         creds = AWSCredentials(
             access_key_id="AKIAIOSFODNN7EXAMPLE",
             secret_access_key="secret",
             region="us-east-1",
         )
-        
+
         kubectl_client.apply_secret(creds)
-        
+
         mock_run.assert_called_once()
         # Check that kubectl apply was called
         call_args = mock_run.call_args[0][0]
@@ -83,15 +85,15 @@ class TestKubectlClientApplySecret:
     ) -> None:
         """Test apply_secret uses crossplane-system namespace."""
         mock_run.return_value = Mock(returncode=0)
-        
+
         creds = AWSCredentials(
             access_key_id="AKIAIOSFODNN7EXAMPLE",
             secret_access_key="secret",
             region="us-east-1",
         )
-        
+
         kubectl_client.apply_secret(creds, namespace="crossplane-system")
-        
+
         # Check the YAML input contains the namespace
         yaml_input = mock_run.call_args[1]["input"]
         assert "namespace: crossplane-system" in yaml_input
@@ -102,19 +104,18 @@ class TestKubectlClientApplySecret:
     ) -> None:
         """Test apply_secret raises CommandError on kubectl failure."""
         mock_run.return_value = Mock(
-            returncode=1,
-            stderr="error: unable to create secret"
+            returncode=1, stderr="error: unable to create secret"
         )
-        
+
         creds = AWSCredentials(
             access_key_id="AKIAIOSFODNN7EXAMPLE",
             secret_access_key="secret",
             region="us-east-1",
         )
-        
+
         with pytest.raises(CommandError) as exc_info:
             kubectl_client.apply_secret(creds)
-        
+
         assert "secret" in str(exc_info.value).lower()
 
 
@@ -126,10 +127,12 @@ class TestKubectlClientGetResource:
         self, mock_run: Mock, kubectl_client: KubectlClient
     ) -> None:
         """Test get_resource returns True when resource exists."""
-        mock_run.return_value = Mock(returncode=0, stdout="providerconfig.aws.crossplane.io/default")
-        
+        mock_run.return_value = Mock(
+            returncode=0, stdout="providerconfig.aws.crossplane.io/default"
+        )
+
         result = kubectl_client.get_resource("providerconfig", "default")
-        
+
         assert result is True
 
     @patch("mk8.integrations.kubectl_client.subprocess.run")
@@ -138,9 +141,9 @@ class TestKubectlClientGetResource:
     ) -> None:
         """Test get_resource returns False when resource not found."""
         mock_run.return_value = Mock(returncode=1, stderr="not found")
-        
+
         result = kubectl_client.get_resource("providerconfig", "default")
-        
+
         assert result is False
 
     @patch("mk8.integrations.kubectl_client.subprocess.run")
@@ -149,9 +152,11 @@ class TestKubectlClientGetResource:
     ) -> None:
         """Test get_resource uses specified namespace."""
         mock_run.return_value = Mock(returncode=0)
-        
-        kubectl_client.get_resource("secret", "aws-credentials", namespace="crossplane-system")
-        
+
+        kubectl_client.get_resource(
+            "secret", "aws-credentials", namespace="crossplane-system"
+        )
+
         call_args = mock_run.call_args[0][0]
         assert "-n" in call_args or "--namespace" in call_args
 
@@ -168,9 +173,9 @@ class TestKubectlClientBuildSecretYaml:
             secret_access_key="secret",
             region="us-east-1",
         )
-        
+
         yaml_content = kubectl_client._build_secret_yaml(creds)
-        
+
         assert "AWS_ACCESS_KEY_ID" in yaml_content
         assert "AWS_SECRET_ACCESS_KEY" in yaml_content
         assert "AWS_DEFAULT_REGION" in yaml_content
@@ -187,9 +192,9 @@ class TestKubectlClientBuildSecretYaml:
             secret_access_key="secret",
             region="us-east-1",
         )
-        
+
         yaml_content = kubectl_client._build_secret_yaml(creds)
-        
+
         assert "apiVersion: v1" in yaml_content
         assert "kind: Secret" in yaml_content
         assert "metadata:" in yaml_content
@@ -206,9 +211,11 @@ class TestKubectlClientBuildSecretYaml:
             secret_access_key="secret",
             region="us-east-1",
         )
-        
-        yaml_content = kubectl_client._build_secret_yaml(creds, namespace="crossplane-system")
-        
+
+        yaml_content = kubectl_client._build_secret_yaml(
+            creds, namespace="crossplane-system"
+        )
+
         assert "namespace: crossplane-system" in yaml_content
 
 
@@ -230,9 +237,9 @@ class TestKubectlClientProperties:
             secret_access_key=secret_key,
             region=region,
         )
-        
+
         yaml_content = kubectl_client._build_secret_yaml(creds)
-        
+
         assert "AWS_ACCESS_KEY_ID" in yaml_content
         assert "AWS_SECRET_ACCESS_KEY" in yaml_content
         assert "AWS_DEFAULT_REGION" in yaml_content
@@ -245,24 +252,22 @@ class TestKubectlClientProperties:
         kubectl_client = KubectlClient()
         # Simulate various error conditions
         mock_run.side_effect = Exception("Any error")
-        
+
         # Should return False, not raise
         result = kubectl_client.cluster_exists()
         assert result is False
 
     @patch("mk8.integrations.kubectl_client.subprocess.run")
-    def test_property_apply_secret_raises_on_failure(
-        self, mock_run: Mock
-    ) -> None:
+    def test_property_apply_secret_raises_on_failure(self, mock_run: Mock) -> None:
         """Property: apply_secret should raise CommandError on kubectl failure."""
         kubectl_client = KubectlClient()
         mock_run.return_value = Mock(returncode=1, stderr="error")
-        
+
         creds = AWSCredentials(
             access_key_id="key",
             secret_access_key="secret",
             region="us-east-1",
         )
-        
+
         with pytest.raises(CommandError):
             kubectl_client.apply_secret(creds)

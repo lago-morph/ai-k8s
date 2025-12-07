@@ -36,7 +36,7 @@ class TestConfigCommand:
         mock_cred_mgr = Mock()
         mock_cred_mgr.update_credentials.return_value = mock_creds
         mock_cred_mgr_cls.return_value = mock_cred_mgr
-        
+
         mock_crossplane = Mock()
         mock_crossplane.sync_credentials.return_value = SyncResult(
             success=True,
@@ -44,10 +44,10 @@ class TestConfigCommand:
             secret_updated=False,
         )
         mock_crossplane_cls.return_value = mock_crossplane
-        
+
         runner = CliRunner()
         result = runner.invoke(config, [])
-        
+
         assert result.exit_code == 0
         mock_cred_mgr.update_credentials.assert_called_once()
         mock_crossplane.sync_credentials.assert_called_once_with(mock_creds)
@@ -74,7 +74,7 @@ class TestConfigCommand:
         mock_cred_mgr = Mock()
         mock_cred_mgr.update_credentials.return_value = mock_creds
         mock_cred_mgr_cls.return_value = mock_cred_mgr
-        
+
         mock_crossplane = Mock()
         mock_crossplane.sync_credentials.return_value = SyncResult(
             success=True,
@@ -83,10 +83,10 @@ class TestConfigCommand:
             validation_result=ValidationResult(success=True, account_id="123456789012"),
         )
         mock_crossplane_cls.return_value = mock_crossplane
-        
+
         runner = CliRunner()
         result = runner.invoke(config, [])
-        
+
         assert result.exit_code == 0
         mock_crossplane.sync_credentials.assert_called_once()
 
@@ -110,10 +110,10 @@ class TestConfigCommand:
             suggestions=["Check permissions"],
         )
         mock_cred_mgr_cls.return_value = mock_cred_mgr
-        
+
         runner = CliRunner()
         result = runner.invoke(config, [])
-        
+
         assert result.exit_code == ExitCode.CONFIGURATION_ERROR.value
         assert "Failed to configure" in result.output
 
@@ -139,7 +139,7 @@ class TestConfigCommand:
         mock_cred_mgr = Mock()
         mock_cred_mgr.update_credentials.return_value = mock_creds
         mock_cred_mgr_cls.return_value = mock_cred_mgr
-        
+
         mock_crossplane = Mock()
         mock_crossplane.sync_credentials.return_value = SyncResult(
             success=False,
@@ -148,10 +148,10 @@ class TestConfigCommand:
             error="kubectl failed",
         )
         mock_crossplane_cls.return_value = mock_crossplane
-        
+
         runner = CliRunner()
         result = runner.invoke(config, [])
-        
+
         # Should still succeed (credentials were updated)
         assert result.exit_code == 0
 
@@ -177,7 +177,7 @@ class TestConfigCommand:
         mock_cred_mgr = Mock()
         mock_cred_mgr.update_credentials.return_value = mock_creds
         mock_cred_mgr_cls.return_value = mock_cred_mgr
-        
+
         mock_crossplane = Mock()
         mock_crossplane.sync_credentials.return_value = SyncResult(
             success=True,
@@ -185,10 +185,10 @@ class TestConfigCommand:
             secret_updated=False,
         )
         mock_crossplane_cls.return_value = mock_crossplane
-        
+
         runner = CliRunner()
         result = runner.invoke(config, ["--verbose"])
-        
+
         assert result.exit_code == 0
 
     @patch("mk8.cli.commands.config.CredentialManager")
@@ -213,7 +213,7 @@ class TestConfigCommand:
         mock_cred_mgr = Mock()
         mock_cred_mgr.update_credentials.return_value = mock_creds
         mock_cred_mgr_cls.return_value = mock_cred_mgr
-        
+
         mock_crossplane = Mock()
         mock_crossplane.sync_credentials.return_value = SyncResult(
             success=True,
@@ -222,10 +222,10 @@ class TestConfigCommand:
             validation_result=ValidationResult(success=True, account_id="123456789012"),
         )
         mock_crossplane_cls.return_value = mock_crossplane
-        
+
         runner = CliRunner()
         result = runner.invoke(config, [])
-        
+
         assert result.exit_code == 0
         # Output should contain success indicators
         assert result.output  # Should have some output
@@ -252,7 +252,7 @@ class TestConfigCommand:
         mock_cred_mgr = Mock()
         mock_cred_mgr.update_credentials.return_value = mock_creds
         mock_cred_mgr_cls.return_value = mock_cred_mgr
-        
+
         mock_crossplane = Mock()
         mock_crossplane.sync_credentials.return_value = SyncResult(
             success=True,
@@ -265,10 +265,10 @@ class TestConfigCommand:
             ),
         )
         mock_crossplane_cls.return_value = mock_crossplane
-        
+
         runner = CliRunner()
         result = runner.invoke(config, [])
-        
+
         assert result.exit_code == 0
         # Should still succeed but show warning
         assert result.output

@@ -55,7 +55,9 @@ class TestKubeconfigManagerInit:
         manager = KubeconfigManager(config_path=custom_path)
         assert manager.config_path == custom_path
 
-    def test_init_respects_kubeconfig_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_init_respects_kubeconfig_env(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test initialization respects KUBECONFIG environment variable."""
         custom_path = "/tmp/env-kubeconfig"
         monkeypatch.setenv("KUBECONFIG", custom_path)
@@ -97,7 +99,9 @@ class TestKubeconfigManagerFileOperations:
                 "apiVersion": "v1",
                 "kind": "Config",
                 "clusters": [{"name": "test", "cluster": {"server": "https://test"}}],
-                "contexts": [{"name": "test", "context": {"cluster": "test", "user": "test"}}],
+                "contexts": [
+                    {"name": "test", "context": {"cluster": "test", "user": "test"}}
+                ],
                 "users": [{"name": "test", "user": {"token": "test-token"}}],
                 "current-context": "test",
                 "preferences": {},
@@ -203,7 +207,9 @@ class TestKubeconfigManagerFileOperations:
 
             # Write new config (should create backup)
             new_config = initial_config.copy()
-            new_config["clusters"] = [{"name": "new", "cluster": {"server": "https://new"}}]
+            new_config["clusters"] = [
+                {"name": "new", "cluster": {"server": "https://new"}}
+            ]
             manager._write_config(new_config)
 
             # Check backup was created
@@ -369,7 +375,9 @@ class TestKubeconfigManagerProperties:
         with tempfile.TemporaryDirectory() as tmpdir:
             config_path = Path(tmpdir) / "config"
             max_backups = 3
-            manager = KubeconfigManager(config_path=config_path, max_backups=max_backups)
+            manager = KubeconfigManager(
+                config_path=config_path, max_backups=max_backups
+            )
 
             backup_dir = config_path.parent / "backups"
             backup_dir.mkdir(parents=True)
@@ -396,7 +404,6 @@ class TestKubeconfigManagerProperties:
 
             tmp_files = list(config_path.parent.glob("*.tmp"))
             assert len(tmp_files) == 0
-
 
 
 class TestKubeconfigManagerClusterAddition:
@@ -444,9 +451,14 @@ class TestKubeconfigManagerClusterAddition:
             initial_config = {
                 "apiVersion": "v1",
                 "kind": "Config",
-                "clusters": [{"name": "existing", "cluster": {"server": "https://existing"}}],
+                "clusters": [
+                    {"name": "existing", "cluster": {"server": "https://existing"}}
+                ],
                 "contexts": [
-                    {"name": "existing", "context": {"cluster": "existing", "user": "existing"}}
+                    {
+                        "name": "existing",
+                        "context": {"cluster": "existing", "user": "existing"},
+                    }
                 ],
                 "users": [{"name": "existing", "user": {"token": "existing-token"}}],
                 "current-context": "existing",
@@ -473,8 +485,12 @@ class TestKubeconfigManagerClusterAddition:
             initial_config = {
                 "apiVersion": "v1",
                 "kind": "Config",
-                "clusters": [{"name": "test", "cluster": {"server": "https://existing"}}],
-                "contexts": [{"name": "test", "context": {"cluster": "test", "user": "test"}}],
+                "clusters": [
+                    {"name": "test", "cluster": {"server": "https://existing"}}
+                ],
+                "contexts": [
+                    {"name": "test", "context": {"cluster": "test", "user": "test"}}
+                ],
                 "users": [{"name": "test", "user": {"token": "existing-token"}}],
                 "current-context": "test",
                 "preferences": {},
@@ -501,9 +517,14 @@ class TestKubeconfigManagerClusterAddition:
             initial_config = {
                 "apiVersion": "v1",
                 "kind": "Config",
-                "clusters": [{"name": "existing", "cluster": {"server": "https://existing"}}],
+                "clusters": [
+                    {"name": "existing", "cluster": {"server": "https://existing"}}
+                ],
                 "contexts": [
-                    {"name": "existing", "context": {"cluster": "existing", "user": "existing"}}
+                    {
+                        "name": "existing",
+                        "context": {"cluster": "existing", "user": "existing"},
+                    }
                 ],
                 "users": [{"name": "existing", "user": {"token": "existing-token"}}],
                 "current-context": "existing",
@@ -540,9 +561,14 @@ class TestKubeconfigManagerClusterAddition:
             initial_config = {
                 "apiVersion": "v1",
                 "kind": "Config",
-                "clusters": [{"name": "existing", "cluster": {"server": "https://existing"}}],
+                "clusters": [
+                    {"name": "existing", "cluster": {"server": "https://existing"}}
+                ],
                 "contexts": [
-                    {"name": "existing", "context": {"cluster": "existing", "user": "existing"}}
+                    {
+                        "name": "existing",
+                        "context": {"cluster": "existing", "user": "existing"},
+                    }
                 ],
                 "users": [{"name": "existing", "user": {"token": "existing-token"}}],
                 "current-context": "existing",
@@ -571,8 +597,12 @@ class TestKubeconfigManagerClusterAdditionProperties:
 
             manager = KubeconfigManager(config_path=config_path)
 
-            with patch.object(manager, "_read_config", wraps=manager._read_config) as mock_read:
-                with patch.object(manager, "_write_config", wraps=manager._write_config) as mock_write:
+            with patch.object(
+                manager, "_read_config", wraps=manager._read_config
+            ) as mock_read:
+                with patch.object(
+                    manager, "_write_config", wraps=manager._write_config
+                ) as mock_write:
                     cluster_config = {"server": "https://new:6443"}
                     manager.add_cluster("new-cluster", cluster_config)
 
@@ -583,7 +613,9 @@ class TestKubeconfigManagerClusterAdditionProperties:
 
     @given(valid_kubeconfig())
     @settings(max_examples=50)
-    def test_property_preservation_of_unrelated_entries(self, initial_config: dict) -> None:
+    def test_property_preservation_of_unrelated_entries(
+        self, initial_config: dict
+    ) -> None:
         """Property 3: Should preserve all unrelated entries."""
         with tempfile.TemporaryDirectory() as tmpdir:
             config_path = Path(tmpdir) / "config"
@@ -633,7 +665,9 @@ class TestKubeconfigManagerClusterAdditionProperties:
 
     @given(valid_kubeconfig())
     @settings(max_examples=50)
-    def test_property_context_setting_on_cluster_add(self, initial_config: dict) -> None:
+    def test_property_context_setting_on_cluster_add(
+        self, initial_config: dict
+    ) -> None:
         """Property 8: Should set current context when set_current=True."""
         with tempfile.TemporaryDirectory() as tmpdir:
             config_path = Path(tmpdir) / "config"
@@ -665,7 +699,6 @@ class TestKubeconfigManagerClusterAdditionProperties:
             assert manager._previous_context == previous
 
 
-
 class TestKubeconfigManagerClusterRemoval:
     """Tests for cluster removal."""
 
@@ -680,7 +713,9 @@ class TestKubeconfigManagerClusterRemoval:
                 "apiVersion": "v1",
                 "kind": "Config",
                 "clusters": [{"name": "test", "cluster": {"server": "https://test"}}],
-                "contexts": [{"name": "test", "context": {"cluster": "test", "user": "test"}}],
+                "contexts": [
+                    {"name": "test", "context": {"cluster": "test", "user": "test"}}
+                ],
                 "users": [{"name": "test", "user": {"token": "test-token"}}],
                 "current-context": "test",
                 "preferences": {},
@@ -709,8 +744,14 @@ class TestKubeconfigManagerClusterRemoval:
                     {"name": "cluster2", "cluster": {"server": "https://cluster2"}},
                 ],
                 "contexts": [
-                    {"name": "cluster1", "context": {"cluster": "cluster1", "user": "cluster1"}},
-                    {"name": "cluster2", "context": {"cluster": "cluster2", "user": "cluster2"}},
+                    {
+                        "name": "cluster1",
+                        "context": {"cluster": "cluster1", "user": "cluster1"},
+                    },
+                    {
+                        "name": "cluster2",
+                        "context": {"cluster": "cluster2", "user": "cluster2"},
+                    },
                 ],
                 "users": [
                     {"name": "cluster1", "user": {"token": "token1"}},
@@ -746,8 +787,14 @@ class TestKubeconfigManagerClusterRemoval:
                     {"name": "cluster2", "cluster": {"server": "https://cluster2"}},
                 ],
                 "contexts": [
-                    {"name": "cluster1", "context": {"cluster": "cluster1", "user": "cluster1"}},
-                    {"name": "cluster2", "context": {"cluster": "cluster2", "user": "cluster2"}},
+                    {
+                        "name": "cluster1",
+                        "context": {"cluster": "cluster1", "user": "cluster1"},
+                    },
+                    {
+                        "name": "cluster2",
+                        "context": {"cluster": "cluster2", "user": "cluster2"},
+                    },
                 ],
                 "users": [
                     {"name": "cluster1", "user": {"token": "token1"}},
@@ -782,8 +829,14 @@ class TestKubeconfigManagerClusterRemoval:
                     {"name": "cluster2", "cluster": {"server": "https://cluster2"}},
                 ],
                 "contexts": [
-                    {"name": "cluster1", "context": {"cluster": "cluster1", "user": "cluster1"}},
-                    {"name": "cluster2", "context": {"cluster": "cluster2", "user": "cluster2"}},
+                    {
+                        "name": "cluster1",
+                        "context": {"cluster": "cluster1", "user": "cluster1"},
+                    },
+                    {
+                        "name": "cluster2",
+                        "context": {"cluster": "cluster2", "user": "cluster2"},
+                    },
                 ],
                 "users": [
                     {"name": "cluster1", "user": {"token": "token1"}},
@@ -810,7 +863,9 @@ class TestKubeconfigManagerClusterRemoval:
                 "apiVersion": "v1",
                 "kind": "Config",
                 "clusters": [{"name": "test", "cluster": {"server": "https://test"}}],
-                "contexts": [{"name": "test", "context": {"cluster": "test", "user": "test"}}],
+                "contexts": [
+                    {"name": "test", "context": {"cluster": "test", "user": "test"}}
+                ],
                 "users": [{"name": "test", "user": {"token": "test-token"}}],
                 "current-context": "test",
                 "preferences": {},
@@ -849,7 +904,9 @@ class TestKubeconfigManagerContextManagement:
                 "apiVersion": "v1",
                 "kind": "Config",
                 "clusters": [{"name": "test", "cluster": {"server": "https://test"}}],
-                "contexts": [{"name": "test", "context": {"cluster": "test", "user": "test"}}],
+                "contexts": [
+                    {"name": "test", "context": {"cluster": "test", "user": "test"}}
+                ],
                 "users": [{"name": "test", "user": {"token": "test-token"}}],
                 "current-context": "test",
                 "preferences": {},
@@ -879,7 +936,9 @@ class TestKubeconfigManagerContextManagement:
                 "apiVersion": "v1",
                 "kind": "Config",
                 "clusters": [{"name": "test", "cluster": {"server": "https://test"}}],
-                "contexts": [{"name": "test", "context": {"cluster": "test", "user": "test"}}],
+                "contexts": [
+                    {"name": "test", "context": {"cluster": "test", "user": "test"}}
+                ],
                 "users": [{"name": "test", "user": {"token": "test-token"}}],
                 "current-context": None,
                 "preferences": {},
@@ -994,7 +1053,9 @@ class TestKubeconfigManagerRemovalProperties:
 
             # Set first cluster as current
             if initial_config["clusters"]:
-                initial_config["current-context"] = initial_config["clusters"][0]["name"]
+                initial_config["current-context"] = initial_config["clusters"][0][
+                    "name"
+                ]
 
             config_path.write_text(yaml.safe_dump(initial_config))
 
@@ -1008,7 +1069,9 @@ class TestKubeconfigManagerRemovalProperties:
             # Context should be updated (either to another cluster or None)
             if config["clusters"]:
                 # Should switch to another cluster
-                assert config["current-context"] in [c["name"] for c in config["clusters"]]
+                assert config["current-context"] in [
+                    c["name"] for c in config["clusters"]
+                ]
             else:
                 # Should be None if no clusters left
                 assert config["current-context"] is None
@@ -1026,7 +1089,11 @@ class TestKubeconfigManagerErrorHandling:
             # Test various error conditions
             errors_to_test = [
                 lambda: manager.remove_cluster("nonexistent"),
-                lambda: manager._read_config() if config_path.write_text("{ invalid: yaml") else None,
+                lambda: (
+                    manager._read_config()
+                    if config_path.write_text("{ invalid: yaml")
+                    else None
+                ),
             ]
 
             for error_func in errors_to_test:
