@@ -10,7 +10,7 @@ This section tracks the roadmap and implementation priority. The order may be ma
 4. ✅ **kubeconfig-file-handling** - COMPLETE
 5. ✅ **local-kind-cluster** - COMPLETE
 6. ✅ **crossplane-bootstrap** - COMPLETE
-7. **tutorial-01-create-s3-bucket** - Requirements complete, needs design (NEXT)
+7. **tutorial-01-create-s3-bucket** - Design complete, ready for implementation (NEXT)
 8. **gitops-repository-setup** - Design complete, needs tasks
 9. **argocd-bootstrap** - Requirements only, needs design
 10. **argocd-gitops-promotion** - Design complete, needs tasks (Phase 1)
@@ -113,13 +113,6 @@ This section tracks the roadmap and implementation priority. The order may be ma
 
 These specs have requirements defined but need design and task planning:
 
-### 📝 tutorial-01-create-s3-bucket
-- **Status**: REQUIREMENTS COMPLETE
-- **Files**: requirements.md, design-notes.md
-- **Description**: Tutorial demonstrating S3 bucket creation using mk8 and Crossplane on bootstrap cluster
-- **Scope**: Bootstrap cluster only, no management cluster, no GitOps
-- **Next Steps**: Create design.md and tasks.md
-
 ### 📝 argocd-bootstrap
 - **Status**: REQUIREMENTS COMPLETE
 - **Files**: requirements.md
@@ -132,7 +125,14 @@ These specs have requirements defined but need design and task planning:
 - **Description**: Documentation site generation framework for mk8 tutorials and docs
 - **Next Steps**: Complete requirements, then create design.md and tasks.md
 
-## Design-Complete Specs (Tasks Phase Needed)
+## Design-Complete Specs (Ready for Implementation)
+
+### 📋 tutorial-01-create-s3-bucket
+- **Status**: DESIGN COMPLETE (0/25 tasks)
+- **Files**: requirements.md, design.md, design-notes.md, tasks.md
+- **Description**: Tutorial demonstrating S3 bucket creation using mk8 and Crossplane on bootstrap cluster
+- **Scope**: Bootstrap cluster only, no management cluster, no GitOps
+- **Next Steps**: Begin implementation (write tutorial content)
 
 ### 📋 gitops-repository-setup
 - **Status**: DESIGN COMPLETE
@@ -191,8 +191,8 @@ These specs implement safe testing and promotion of ArgoCD CRD changes. See `.cl
 
 - **Total Specs**: 16 (1 deprecated)
 - **Complete**: 6 (mk8-cli, installer, aws-credentials-management, kubeconfig-file-handling, local-kind-cluster, crossplane-bootstrap)
-- **Design Complete**: 2 (gitops-repository-setup, argocd-gitops-promotion)
-- **Requirements Complete**: 3 (tutorial-01-create-s3-bucket, argocd-bootstrap, documentation-site incomplete)
+- **Design Complete**: 3 (tutorial-01-create-s3-bucket, gitops-repository-setup, argocd-gitops-promotion)
+- **Requirements Complete**: 2 (argocd-bootstrap, documentation-site incomplete)
 - **Draft (Needs Refinement)**: 3 (argocd-crd-basic-static, workload-cluster-gitops, argocd-crd-advanced-static)
 - **Planned**: 1 (installer-future)
 - **Deprecated**: 1 (local-bootstrap-cluster)
