@@ -249,3 +249,53 @@ class TestFlexibleOptionPlacement:
 
         assert result.exit_code == 0
         assert "mk8 - Manage Kubernetes infrastructure on AWS" in result.output
+
+
+class TestMainFunction:
+    """Tests for main() function entry point."""
+
+    @patch("mk8.cli.main.cli")
+    def test_main_returns_zero_on_success(self, mock_cli: Mock) -> None:
+        """Test main() returns 0 on successful execution."""
+        from mk8.cli.main import main
+
+        mock_cli.return_value = None
+
+        result = main()
+
+        assert result == 0
+        mock_cli.assert_called_once_with(obj={})
+
+    @patch("mk8.cli.main.cli")
+    def test_main_handles_system_exit_with_code(self, mock_cli: Mock) -> None:
+        """Test main() handles SystemExit with exit code."""
+        from mk8.cli.main import main
+
+        mock_cli.side_effect = SystemExit(1)
+
+        result = main()
+
+        assert result == 1
+
+    @patch("mk8.cli.main.cli")
+    def test_main_handles_system_exit_with_non_int_code(self, mock_cli: Mock) -> None:
+        """Test main() handles SystemExit with non-integer code."""
+        from mk8.cli.main import main
+
+        mock_cli.side_effect = SystemExit("error")
+
+        result = main()
+
+        assert result == 0
+
+    @patch("mk8.cli.main.cli")
+    def test_main_handles_unexpected_exception(self, mock_cli: Mock) -> None:
+        """Test main() handles unexpected exceptions."""
+        from mk8.cli.main import main
+        from mk8.core.errors import ExitCode
+
+        mock_cli.side_effect = RuntimeError("Unexpected error")
+
+        result = main()
+
+        assert result == ExitCode.GENERAL_ERROR.value
