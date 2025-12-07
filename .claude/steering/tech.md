@@ -5,12 +5,12 @@
 ### Core Technologies
 - **Language**: Python 3.8+
 - **CLI Framework**: Click 8.0+ (decorator-based, hierarchical commands)
-- **Testing**: pytest 7.0+ with pytest-cov, pytest-mock
+- **Testing**: pytest 7.0+ with pytest-cov, pytest-mock, Hypothesis (property-based testing)
 - **Package Management**: pip with setuptools/pyproject.toml
 
 ### External Dependencies
-- **AWS SDK**: boto3 (AWS API interactions)
-- **Configuration**: PyYAML (YAML parsing)
+- **AWS SDK**: boto3 (AWS STS validation, credential verification)
+- **Configuration**: PyYAML (YAML parsing for kubeconfig and Crossplane resources)
 - **HTTP**: requests (general HTTP client)
 
 ### Development Tools
@@ -18,28 +18,47 @@
 - **Linter**: flake8 (PEP 8 compliance)
 - **Type Checker**: mypy (strict type checking)
 - **Version Control**: Git
+- **Property Testing**: Hypothesis (100+ examples per property)
 
 ### External Tools (Runtime Dependencies)
-- **Docker**: Required for kind clusters
-- **kind**: Kubernetes in Docker for local clusters
-- **kubectl**: Kubernetes command-line tool
-- **Crossplane**: Infrastructure provisioning (installed automatically)
+- **Docker**: Required for kind clusters (verified by prerequisite checker)
+- **kind**: Kubernetes in Docker for local bootstrap clusters
+- **kubectl**: Kubernetes command-line tool for cluster operations
+- **Helm**: Package manager for Kubernetes (used for Crossplane installation)
+- **Crossplane**: Infrastructure provisioning (installed automatically via Helm)
 
 ## Code Organization
 
 ### Package Structure
 ```
 mk8/
-├── cli/              # CLI interface layer
-│   ├── commands/     # Command implementations
-│   ├── main.py       # Entry point and routing
-│   └── output.py     # Output formatting
-├── core/             # Core infrastructure
-│   ├── errors.py     # Exception hierarchy
-│   ├── logging.py    # Logging configuration
-│   └── version.py    # Version management
-├── business/         # Business logic (future)
-└── integrations/     # External tool clients (future)
+├── cli/                      # CLI interface layer
+│   ├── commands/             # Command implementations
+│   │   ├── bootstrap.py      # ✅ Bootstrap cluster commands
+│   │   ├── config.py         # ✅ AWS credentials configuration
+│   │   ├── crossplane.py     # ✅ Crossplane management commands
+│   │   ├── verify.py         # ✅ Prerequisite verification
+│   │   └── version.py        # ✅ Version command
+│   ├── main.py               # Entry point and routing
+│   └── output.py             # Output formatting
+├── core/                     # Core infrastructure
+│   ├── errors.py             # Exception hierarchy
+│   ├── logging.py            # Logging configuration
+│   └── version.py            # Version management
+├── business/                 # Business logic
+│   ├── bootstrap_manager.py  # ✅ Bootstrap cluster orchestration
+│   ├── credential_manager.py # ✅ AWS credential management
+│   ├── crossplane_installer.py # ✅ Crossplane installation orchestration
+│   ├── crossplane_manager.py # ✅ Crossplane secret synchronization
+│   └── verification.py       # ✅ Prerequisite verification orchestration
+└── integrations/             # External tool clients
+    ├── aws_client.py         # ✅ AWS STS validation
+    ├── file_io.py            # ✅ Secure file operations
+    ├── helm_client.py        # ✅ Helm CLI wrapper
+    ├── kind_client.py        # ✅ kind cluster operations
+    ├── kubeconfig.py         # ✅ Kubeconfig management
+    ├── kubectl_client.py     # ✅ kubectl operations
+    └── prerequisites.py      # ✅ Prerequisite checking
 ```
 
 ### Layered Architecture

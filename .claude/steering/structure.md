@@ -5,22 +5,43 @@
 ```
 ai-k8s/
 ├── .claude/                    # Claude Code configuration
-│   ├── specs/                  # Feature specifications
-│   │   ├── aws-credentials-management/
-│   │   ├── kubeconfig-file-handling/
-│   │   ├── local-bootstrap-cluster/
-│   │   └── mk8-cli/
+│   ├── architecture/           # Architecture Decision Records (ADRs)
+│   │   ├── ADR-001-argocd-testing-approaches-analysis.md
+│   │   ├── ADR-002-argocd-testing-implementation-strategy.md
+│   │   ├── README.md
+│   │   └── template-adr.md
+│   ├── specs/                  # Feature specifications (16 specs)
+│   │   ├── SPECS-STATUS.md     # ⚠️ CRITICAL: Overall spec status tracking
+│   │   ├── aws-credentials-management/      # ✅ COMPLETE
+│   │   ├── crossplane-bootstrap/            # ✅ COMPLETE
+│   │   ├── kubeconfig-file-handling/        # ✅ COMPLETE
+│   │   ├── local-kind-cluster/              # ✅ COMPLETE
+│   │   ├── mk8-cli/                         # ✅ COMPLETE
+│   │   ├── installer/                       # ✅ COMPLETE
+│   │   ├── tutorial-01-create-s3-bucket/    # 🚧 IN PROGRESS (96%)
+│   │   ├── gitops-repository-setup/         # 📋 DESIGN COMPLETE
+│   │   ├── argocd-gitops-promotion/         # 📋 DESIGN COMPLETE
+│   │   ├── argocd-bootstrap/                # 📝 REQUIREMENTS ONLY
+│   │   ├── documentation-site/              # 📝 REQUIREMENTS INCOMPLETE
+│   │   ├── argocd-crd-basic-static/         # 📝 DRAFT
+│   │   ├── workload-cluster-gitops/         # 📝 DRAFT
+│   │   ├── argocd-crd-advanced-static/      # 📝 DRAFT
+│   │   ├── installer-future/                # 📋 PLANNED
+│   │   └── local-bootstrap-cluster/         # ❌ DEPRECATED
 │   ├── steering/               # Steering documents (this file)
 │   ├── commands/               # Custom slash commands
 │   └── settings.json           # Permissions and settings
-├── mk8/                        # Main package
-│   ├── cli/                    # CLI interface
-│   ├── core/                   # Core functionality
-│   ├── business/               # Business logic
-│   └── integrations/           # External tool clients
-├── tests/                      # Test suite
+├── docs/                       # Documentation
+│   └── tutorials/              # Tutorial content
+│       └── tutorial-01-create-s3-bucket/
+├── mk8/                        # Main package (1,033+ lines implemented)
+│   ├── cli/                    # CLI interface (✅ Complete)
+│   ├── core/                   # Core functionality (✅ Complete)
+│   ├── business/               # Business logic (✅ Complete)
+│   └── integrations/           # External tool clients (✅ Complete)
+├── tests/                      # Test suite (273+ tests, 95%+ coverage)
 │   ├── unit/                   # Unit tests
-│   └── integration/            # Integration tests
+│   └── integration/            # Integration tests (planned)
 ├── .venv/                      # Virtual environment
 ├── setup.py                    # Package setup
 ├── pyproject.toml              # Modern Python config
@@ -35,13 +56,17 @@ ai-k8s/
 
 **Purpose**: Handle command-line parsing, routing, and user interaction
 
+**Status**: ✅ Complete
+
 **Components**:
 - `main.py`: Entry point, Click group setup, global options, routing
 - `output.py`: OutputFormatter class for consistent terminal output
 - `commands/`: Individual command implementations
-  - `version.py`: Version command handler
-  - `bootstrap.py`: Bootstrap commands (future)
-  - `config.py`: Config command (future)
+  - `version.py`: ✅ Version command handler
+  - `verify.py`: ✅ Prerequisite verification command
+  - `config.py`: ✅ AWS credentials configuration command
+  - `bootstrap.py`: ✅ Bootstrap cluster lifecycle commands (create, delete, status)
+  - `crossplane.py`: ✅ Crossplane management commands (install, uninstall, status)
 
 **Responsibilities**:
 - Parse command-line arguments with Click
@@ -49,6 +74,7 @@ ai-k8s/
 - Manage command context (verbose, logger, output)
 - Handle global options (--verbose, --version, --help)
 - Format and display output to user
+- Provide interactive prompts for user input
 
 **Key Classes**:
 - `CommandContext`: Shared context (verbose, logger, output)
@@ -76,36 +102,65 @@ ai-k8s/
 - `Version`: Semantic version management
 - `VerboseFormatter`: Timestamp-enabled log formatter
 
-### mk8.business - Business Logic (Future)
+### mk8.business - Business Logic
 
 **Purpose**: Core business logic independent of CLI or external tools
 
-**Planned Components**:
-- `cluster_manager.py`: Bootstrap cluster lifecycle
-- `credential_manager.py`: AWS credential management
-- `kubeconfig_manager.py`: kubectl config file handling
+**Status**: ✅ Complete for current features
+
+**Components**:
+- `verification.py`: ✅ Prerequisite verification orchestration (VerificationManager)
+- `credential_manager.py`: ✅ AWS credential management (CredentialManager)
+- `crossplane_manager.py`: ✅ Crossplane secret synchronization (CrossplaneManager)
+- `bootstrap_manager.py`: ✅ Bootstrap cluster lifecycle orchestration (BootstrapManager)
+- `crossplane_installer.py`: ✅ Crossplane installation orchestration (CrossplaneInstaller)
 
 **Responsibilities**:
 - Implement core feature logic
 - Orchestrate integration layer
 - Enforce business rules
 - Manage application state
+- Coordinate multi-step workflows
+- Provide high-level abstractions for CLI commands
 
-### mk8.integrations - External Tool Clients (Future)
+**Key Classes**:
+- `VerificationManager`: Orchestrates prerequisite checking and reporting
+- `CredentialManager`: Manages AWS credential acquisition, validation, and storage
+- `CrossplaneManager`: Synchronizes credentials with Crossplane Kubernetes secrets
+- `BootstrapManager`: Orchestrates bootstrap cluster lifecycle with prerequisite validation
+- `CrossplaneInstaller`: Manages Crossplane and AWS provider installation/configuration
+
+### mk8.integrations - External Tool Clients
 
 **Purpose**: Interface with external tools and services
 
-**Planned Components**:
-- `kind.py`: kind cluster operations
-- `kubectl.py`: kubectl interactions
-- `crossplane.py`: Crossplane installation/management
-- `aws.py`: AWS API client wrapper
+**Status**: ✅ Complete for current features
+
+**Components**:
+- `prerequisites.py`: ✅ Prerequisite checking (PrerequisiteChecker)
+- `aws_client.py`: ✅ AWS STS validation (AWSClient)
+- `file_io.py`: ✅ Secure file operations (FileIO)
+- `kubeconfig.py`: ✅ Kubeconfig management (KubeconfigManager)
+- `kind_client.py`: ✅ kind cluster operations (KindClient)
+- `kubectl_client.py`: ✅ kubectl interactions (KubectlClient)
+- `helm_client.py`: ✅ Helm chart operations (HelmClient)
 
 **Responsibilities**:
-- Wrap external CLI tools (kind, kubectl)
-- Handle AWS API calls
-- Manage Crossplane operations
-- Provide error translation
+- Wrap external CLI tools (kind, kubectl, helm)
+- Handle AWS API calls (STS validation)
+- Manage secure file I/O with proper permissions
+- Provide error translation with actionable suggestions
+- Execute subprocess commands safely
+- Parse and validate external tool outputs
+
+**Key Classes**:
+- `PrerequisiteChecker`: Checks Docker, kind, kubectl availability and versions
+- `AWSClient`: Validates AWS credentials via STS GetCallerIdentity
+- `FileIO`: Secure file operations with atomic writes and proper permissions
+- `KubeconfigManager`: Safe kubeconfig merging, backups, conflict resolution
+- `KindClient`: kind cluster lifecycle with hardcoded cluster name (mk8-bootstrap)
+- `KubectlClient`: kubectl operations with context isolation
+- `HelmClient`: Helm repository and chart management
 
 ## Data Flow
 
