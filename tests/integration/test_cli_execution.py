@@ -137,7 +137,9 @@ class TestCLIExecution:
                 ["config"],
                 env={
                     "MK8_AWS_ACCESS_KEY_ID": "AKIAIOSFODNN7EXAMPLE",
-                    "MK8_AWS_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+                    "MK8_AWS_SECRET_ACCESS_KEY": (
+                        "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+                    ),
                     "MK8_AWS_DEFAULT_REGION": "us-east-1",
                 },
             )
