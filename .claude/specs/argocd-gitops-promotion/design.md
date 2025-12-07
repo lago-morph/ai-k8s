@@ -1,94 +1,21 @@
----
-status: AUTHORITATIVE
-created: 2025-12-06
-purpose: Design Specification
-related:
-  - argocd-crd-testing-requirements.md
-  - argocd-testing-decisions.md (context only)
-  - argocd-testing-analysis.md (frozen reference)
-ai-instructions: |
-  THIS IS THE AUTHORITATIVE DESIGN DOCUMENT for ArgoCD CRD Testing.
-  
-  PHASE 1 DESIGN: Complete and verified. Ready for detailed design and implementation.
-  PHASE 2, 3, 4 DESIGN: High-level concepts captured from planning discussions but NOT
-  fully designed. These phases require additional detailed design before implementation.
-  
-  For requirements, see argocd-crd-testing-requirements.md.
-  For context on WHY decisions were made, see argocd-testing-decisions.md.
----
-
-# ArgoCD CRD Testing - Design Document
+# Design Document: ArgoCD GitOps Promotion
 
 ## Document Status
 
-| Phase | Status | Notes |
-|-------|--------|-------|
-| Phase 1 | ✅ COMPLETE | High-level design verified, ready for detailed design |
-| Phase 2 | 📝 DRAFT | Concepts captured, needs detailed design |
-| Phase 3 | 📝 DRAFT | Concepts captured, needs detailed design |
-| Phase 4 | 📝 DRAFT | Concepts captured, needs detailed design |
+**Status**: ✅ COMPLETE - Ready for detailed design and implementation
+
+## Related Documents
+
+- **Requirements**: `requirements.md` in this directory
+- **Architecture Decisions**: 
+  - `.claude/architecture/ADR-001-argocd-testing-approaches-analysis.md`
+  - `.claude/architecture/ADR-002-argocd-testing-implementation-strategy.md`
 
 ---
 
 ## Overview
 
-This document describes the design for implementing safe testing and promotion of ArgoCD CRD changes. The design spans four phases, with Phase 1 fully specified and Phases 2-4 captured at a conceptual level.
-
-### Architecture Overview
-
-```mermaid
-flowchart TD
-    subgraph "GitOps Repository"
-        Base[Kustomize Base<br/>Templated CRDs]
-        DevOverlay[Dev Overlay]
-        StagingOverlay[Staging Overlay]
-        ProdOverlay[Prod Overlay]
-        
-        Base --> DevOverlay
-        Base --> StagingOverlay
-        Base --> ProdOverlay
-    end
-    
-    subgraph "CI/CD Pipeline"
-        StaticAnalysis[Static Analysis<br/>Phases 2 & 4]
-    end
-    
-    subgraph "Management Cluster"
-        subgraph "argocd-dev"
-            DevConfig[Dev ArgoCD Config]
-        end
-        subgraph "argocd-staging"
-            StagingConfig[Staging ArgoCD Config]
-        end
-        subgraph "argocd"
-            ProdConfig[Prod ArgoCD Config]
-        end
-    end
-    
-    subgraph "Workload Clusters"
-        Canary[Canary Cluster<br/>Phase 3]
-        Wave1[Wave 1 Clusters]
-        Wave2[Wave 2 Clusters]
-    end
-    
-    DevOverlay --> StaticAnalysis
-    StagingOverlay --> StaticAnalysis
-    ProdOverlay --> StaticAnalysis
-    
-    StaticAnalysis --> DevConfig
-    StaticAnalysis --> StagingConfig
-    StaticAnalysis --> ProdConfig
-    
-    ProdConfig --> Canary
-    Canary --> Wave1
-    Wave1 --> Wave2
-```
-
----
-
-## Phase 1: Management Cluster Namespaced Environments
-
-**Status**: ✅ COMPLETE - Ready for detailed design and implementation
+This document describes the design for implementing safe testing and promotion of ArgoCD CRD changes on the management cluster using dev/staging/prod namespace isolation.
 
 ### High-Level Architecture
 
@@ -129,7 +56,9 @@ flowchart LR
     style ProdArgo fill:#ff9999
 ```
 
-### GitOps Repository Structure
+---
+
+## GitOps Repository Structure
 
 ```
 gitops-repo/
@@ -176,9 +105,11 @@ gitops-repo/
 └── ... (other gitops content)
 ```
 
-### Kustomize Structure
+---
 
-#### Base Template Example
+## Kustomize Structure
+
+### Base Template Example
 
 ```yaml
 # argocd-config/base/applications/example-app.yaml
@@ -205,7 +136,7 @@ spec:
       selfHeal: true
 ```
 
-#### Base Kustomization
+### Base Kustomization
 
 ```yaml
 # argocd-config/base/kustomization.yaml
@@ -222,7 +153,7 @@ commonLabels:
   app.kubernetes.io/part-of: argocd-crd-testing
 ```
 
-#### Dev Overlay Example
+### Dev Overlay Example
 
 ```yaml
 # argocd-config/overlays/dev/kustomization.yaml
@@ -263,7 +194,7 @@ spec:
       - CreateNamespace=true
 ```
 
-#### Prod Overlay Example
+### Prod Overlay Example
 
 ```yaml
 # argocd-config/overlays/prod/kustomization.yaml
@@ -304,9 +235,11 @@ spec:
       - PruneLast=true
 ```
 
-### ArgoCD Instance Configuration
+---
 
-#### Dev Instance
+## ArgoCD Instance Configuration
+
+### Dev Instance
 
 ```yaml
 # argocd-instances/dev/argocd-instance.yaml
@@ -325,7 +258,7 @@ spec:
     enabled: true
 ```
 
-#### Staging Instance
+### Staging Instance
 
 ```yaml
 # argocd-instances/staging/argocd-instance.yaml
@@ -344,7 +277,9 @@ spec:
     enabled: true
 ```
 
-### Promotion Workflow
+---
+
+## Promotion Workflow
 
 ```mermaid
 sequenceDiagram
@@ -371,7 +306,9 @@ sequenceDiagram
     Dev->>ProdEnv: Verify changes work
 ```
 
-### Namespace and RBAC Design
+---
+
+## Namespace and RBAC Design
 
 ```mermaid
 flowchart TD
@@ -405,7 +342,9 @@ flowchart TD
     Note1[Each ArgoCD instance<br/>only has permissions<br/>in its own namespace]
 ```
 
-### Integration with mk8 Bootstrap
+---
+
+## Integration with mk8 Bootstrap
 
 ```mermaid
 sequenceDiagram
@@ -435,7 +374,9 @@ sequenceDiagram
     Note over Mgmt: Management cluster now<br/>self-manages via GitOps
 ```
 
-### Component Interactions
+---
+
+## Component Interactions
 
 | Component | Responsibility |
 |-----------|----------------|
@@ -449,188 +390,17 @@ sequenceDiagram
 
 ---
 
-## Phase 2: Basic Static Analysis
-
-**Status**: 📝 DRAFT - Concepts captured, needs detailed design
-
-### Conceptual Design
-
-```mermaid
-flowchart TD
-    subgraph "CI/CD Pipeline"
-        PR[Pull Request] --> Schema[Schema Validation]
-        Schema --> Policies[Safety Policies]
-        Policies --> |Pass| Merge[Allow Merge]
-        Policies --> |Fail| Block[Block Merge]
-    end
-    
-    subgraph "Validation Tools"
-        Schema --> Kubeconform[kubeconform]
-        Policies --> PolicyEngine[OPA/Kyverno CLI]
-    end
-```
-
-### Schema Validation Concept
-
-- Use `kubeconform` or similar tool
-- Validate against ArgoCD CRD schemas
-- Run on every PR
-- Block merge on failure
-
-### Basic Safety Policies Concept
-
-| Policy | Purpose |
-|--------|---------|
-| ApplicationSet preserveResourcesOnDeletion | Prevent mass deletion on AppSet removal |
-| Application prune requires annotation | Prevent accidental prune enablement |
-| Project destinations not wildcard | Prevent overly permissive projects |
-| Repository URL pattern matching | Prevent typos in repo URLs |
-| Application targetRevision not empty | Prevent accidental HEAD tracking |
-
-### Tooling Options (To Be Decided)
-
-- **OPA/Conftest**: Rego-based policies, powerful but steeper learning curve
-- **Kyverno CLI**: YAML-based policies, easier to read/write
-- **Custom validators**: Python/Go scripts for specific checks
-
----
-
-## Phase 3: Workload Cluster Canary Deployment
-
-**Status**: 📝 DRAFT - Concepts captured, needs detailed design
-
-### Conceptual Design
-
-```mermaid
-flowchart TD
-    subgraph "Change Flow"
-        Change[Configuration Change]
-        Change --> Canary[Canary Cluster]
-        Canary --> |Health OK| Wave1[Wave 1 Clusters]
-        Wave1 --> |Health OK| Wave2[Wave 2 Clusters]
-        
-        Canary --> |Health Fail| Rollback[Rollback]
-        Wave1 --> |Health Fail| Rollback
-    end
-    
-    subgraph "Health Checks"
-        ArgoSync[ArgoCD Sync Status]
-        PodHealth[Pod Health]
-        CustomMetrics[Custom Metrics]
-    end
-    
-    Canary --> ArgoSync
-    Canary --> PodHealth
-    Canary --> CustomMetrics
-```
-
-### Canary Strategy Options (To Be Decided)
-
-1. **Dedicated Canary Cluster**: One cluster always receives changes first
-2. **Environment-Based**: Dev clusters → Staging clusters → Prod clusters
-3. **Rotating Canary**: Different cluster is canary based on change type
-
-### Wave Configuration Concept
-
-```yaml
-# Conceptual - actual format TBD
-waves:
-  - name: canary
-    clusters: [canary-cluster]
-    waitTime: 30m
-    healthChecks: [argocd-sync, pod-health]
-    
-  - name: wave-1
-    clusters: [dev-cluster-1, dev-cluster-2]
-    waitTime: 1h
-    
-  - name: wave-2
-    clusters: [staging-cluster-1]
-    waitTime: 2h
-    requireApproval: true
-```
-
----
-
-## Phase 4: Advanced Static Analysis
-
-**Status**: 📝 DRAFT - Concepts captured, needs detailed design
-
-### Conceptual Design
-
-```mermaid
-flowchart TD
-    subgraph "Change Detection"
-        GitDiff[Git Diff Analysis]
-        GitDiff --> FieldChanges[Identify Changed Fields]
-        FieldChanges --> RiskAssessment[Risk Assessment]
-    end
-    
-    subgraph "Blast Radius Analysis"
-        RiskAssessment --> AppSetExpansion[ApplicationSet Expansion]
-        AppSetExpansion --> ImpactCount[Count Affected Apps]
-        ImpactCount --> Report[Impact Report]
-    end
-    
-    Report --> |High Risk| RequireApproval[Require Manual Approval]
-    Report --> |Low Risk| AutoProceed[Auto-Proceed]
-```
-
-### Change Detection Concept
-
-Detect changes to high-risk fields:
-- ApplicationSet `spec.generators[*].selector`
-- AppProject `spec.destinations`
-- Application `spec.syncPolicy`
-- Repository `spec.url`
-
-### Blast Radius Analysis Concept
-
-For ApplicationSet changes:
-1. Parse the old and new ApplicationSet
-2. Simulate template expansion for both
-3. Compare generated Applications
-4. Report: "This change affects N applications across M clusters"
-
-### Implementation Complexity
-
-This phase requires custom tooling:
-- Git diff parsing
-- ApplicationSet template simulation
-- State comparison logic
-- Report generation
-
-Estimated effort: 1-2 weeks
-
----
-
 ## Security Considerations
-
-### Phase 1
 
 - Namespace isolation prevents cross-environment interference
 - RBAC limits each ArgoCD instance to its own namespace
 - Git branch protection enforces PR requirements
 - No credentials stored in GitOps repository
 
-### Phases 2-4
-
-- CI/CD secrets managed by platform (not in repo)
-- Policy definitions are code-reviewed like any other change
-- Canary health checks don't expose sensitive data
-
 ---
 
 ## Testing Strategy
 
-### Phase 1
-
 - Unit tests for Kustomize overlays (kustomize build succeeds)
 - Integration tests for ArgoCD instance deployment
 - End-to-end tests for promotion workflow
-
-### Phases 2-4
-
-- Policy unit tests (known-good and known-bad inputs)
-- Canary simulation tests
-- Blast radius calculation accuracy tests

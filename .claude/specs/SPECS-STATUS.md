@@ -100,10 +100,41 @@ These specs have requirements defined but need design and task planning:
 - **Next Steps**: Create design.md and tasks.md
 
 ### 📝 gitops-repository-setup
-- **Status**: REQUIREMENTS COMPLETE
-- **Files**: requirements.md
-- **Description**: Git repository structure for GitOps workflows
-- **Next Steps**: Create design.md and tasks.md
+- **Status**: DESIGN COMPLETE
+- **Files**: requirements.md, design.md
+- **Description**: Git repository structure for GitOps workflows (Helm-based)
+- **Next Steps**: Create tasks.md
+
+## ArgoCD CRD Testing Specs (4-Phase Implementation)
+
+These specs implement safe testing and promotion of ArgoCD CRD changes. See `.claude/architecture/` for ADRs explaining the approach.
+
+### ✅ argocd-gitops-promotion (Phase 1)
+- **Status**: READY FOR IMPLEMENTATION
+- **Files**: requirements.md, design.md
+- **Description**: Management cluster namespaced environments (dev/staging/prod)
+- **Next Steps**: Create tasks.md and implement
+
+### 📝 argocd-crd-basic-static (Phase 2)
+- **Status**: DRAFT - Needs refinement
+- **Files**: requirements.md, design.md
+- **Description**: Basic static analysis (schema validation, safety policies)
+- **Prerequisite**: Phase 1 complete
+- **Next Steps**: Refine requirements and design before implementation
+
+### 📝 workload-cluster-gitops (Phase 3)
+- **Status**: DRAFT - Needs refinement
+- **Files**: requirements.md, design.md
+- **Description**: Workload cluster canary deployment
+- **Prerequisite**: Phases 1 and 2 complete
+- **Next Steps**: Refine requirements and design before implementation
+
+### 📝 argocd-crd-advanced-static (Phase 4)
+- **Status**: DRAFT - Needs refinement
+- **Files**: requirements.md, design.md
+- **Description**: Advanced static analysis (change detection, blast radius)
+- **Prerequisite**: Phases 1, 2, and 3 complete
+- **Next Steps**: Refine requirements and design before implementation
 
 
 
@@ -123,12 +154,20 @@ These specs have requirements defined but need design and task planning:
 
 ## Summary Statistics
 
-- **Total Specs**: 10 (1 deprecated)
-- **Complete**: 7 (mk8-cli, installer, aws-credentials-management, kubeconfig-file-handling, local-kind-cluster, crossplane-bootstrap)
-- **In Progress**: 0
+- **Total Specs**: 14 (1 deprecated)
+- **Complete**: 6 (mk8-cli, installer, aws-credentials-management, kubeconfig-file-handling, local-kind-cluster, crossplane-bootstrap)
+- **Ready for Implementation**: 1 (argocd-gitops-promotion)
+- **Draft (Needs Refinement)**: 3 (argocd-crd-basic-static, workload-cluster-gitops, argocd-crd-advanced-static)
+- **Design Complete**: 1 (gitops-repository-setup)
 - **Planned**: 1 (installer-future)
-- **Requirements Only**: 2 (argocd-bootstrap, gitops-repository-setup)
+- **Requirements Only**: 1 (argocd-bootstrap)
 - **Deprecated**: 1 (local-bootstrap-cluster)
+
+## Architecture Decision Records
+
+See `.claude/architecture/` for cross-cutting architectural decisions:
+- **ADR-001**: ArgoCD Testing Approaches Analysis
+- **ADR-002**: ArgoCD Testing Implementation Strategy
 
 ## Recommended Implementation Order
 
@@ -138,9 +177,13 @@ These specs have requirements defined but need design and task planning:
 4. ✅ **kubeconfig-file-handling** - COMPLETE
 5. ✅ **local-kind-cluster** - COMPLETE
 6. ✅ **crossplane-bootstrap** - COMPLETE
-7. **gitops-repository-setup** - Git repo structure (needs design)
-8. **argocd-bootstrap** - ArgoCD + GitOps workflow (needs design)
-9. **installer-future** - Polish installer for external users
+7. **gitops-repository-setup** - Git repo structure (design complete, needs tasks)
+8. **argocd-gitops-promotion** - Phase 1: Namespaced environments (ready for implementation)
+9. **argocd-crd-basic-static** - Phase 2: Basic static analysis (needs refinement)
+10. **workload-cluster-gitops** - Phase 3: Canary deployment (needs refinement)
+11. **argocd-crd-advanced-static** - Phase 4: Advanced analysis (needs refinement)
+12. **argocd-bootstrap** - ArgoCD + GitOps workflow (needs design)
+13. **installer-future** - Polish installer for external users
 
 ## Notes
 
