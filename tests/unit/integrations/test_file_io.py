@@ -34,7 +34,11 @@ class TestFileIOReadConfigFile:
 
     def test_read_existing_config_file(self, temp_config_file: Path) -> None:
         """Test reading an existing config file with valid content."""
-        content = "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\nAWS_SECRET_ACCESS_KEY=secret\nAWS_DEFAULT_REGION=us-east-1\n"
+        content = (
+            "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\n"
+            "AWS_SECRET_ACCESS_KEY=secret\n"
+            "AWS_DEFAULT_REGION=us-east-1\n"
+        )
         temp_config_file.write_text(content)
 
         file_io = FileIO(config_path=str(temp_config_file))
@@ -63,7 +67,12 @@ class TestFileIOReadConfigFile:
 
     def test_read_config_file_with_comments(self, temp_config_file: Path) -> None:
         """Test reading config file ignores comment lines."""
-        content = "# This is a comment\nAWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\n# Another comment\nAWS_SECRET_ACCESS_KEY=secret\n"
+        content = (
+            "# This is a comment\n"
+            "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\n"
+            "# Another comment\n"
+            "AWS_SECRET_ACCESS_KEY=secret\n"
+        )
         temp_config_file.write_text(content)
 
         file_io = FileIO(config_path=str(temp_config_file))
@@ -71,12 +80,17 @@ class TestFileIOReadConfigFile:
 
         assert result is not None
         assert len(result) == 2
-        assert result["AWS_ACCESS_KEY_ID"] == "AKIAIOSFODNN7EXAMPLE"
+        assert result["AWS_ACCESS_KEY_ID"] == (
+            "AKIAIOSFODNN7EXAMPLE"
+        )
         assert result["AWS_SECRET_ACCESS_KEY"] == "secret"
 
     def test_read_config_file_with_whitespace(self, temp_config_file: Path) -> None:
         """Test reading config file strips whitespace from keys and values."""
-        content = "  AWS_ACCESS_KEY_ID  =  AKIAIOSFODNN7EXAMPLE  \n  AWS_SECRET_ACCESS_KEY=secret\n"
+        content = (
+            "  AWS_ACCESS_KEY_ID  =  AKIAIOSFODNN7EXAMPLE  \n"
+            "  AWS_SECRET_ACCESS_KEY=secret\n"
+        )
         temp_config_file.write_text(content)
 
         file_io = FileIO(config_path=str(temp_config_file))
@@ -88,7 +102,11 @@ class TestFileIOReadConfigFile:
 
     def test_read_config_file_with_empty_lines(self, temp_config_file: Path) -> None:
         """Test reading config file ignores empty lines."""
-        content = "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\n\n\nAWS_SECRET_ACCESS_KEY=secret\n\n"
+        content = (
+            "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\n"
+            "\n\n"
+            "AWS_SECRET_ACCESS_KEY=secret\n\n"
+        )
         temp_config_file.write_text(content)
 
         file_io = FileIO(config_path=str(temp_config_file))
@@ -101,7 +119,11 @@ class TestFileIOReadConfigFile:
         self, temp_config_file: Path
     ) -> None:
         """Test reading config file skips malformed lines without = sign."""
-        content = "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\nMALFORMED_LINE\nAWS_SECRET_ACCESS_KEY=secret\n"
+        content = (
+            "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE\n"
+            "MALFORMED_LINE\n"
+            "AWS_SECRET_ACCESS_KEY=secret\n"
+        )
         temp_config_file.write_text(content)
 
         file_io = FileIO(config_path=str(temp_config_file))
@@ -299,7 +321,8 @@ class TestFileIOProperties:
                 min_size=1,
                 max_size=50,
                 alphabet=st.characters(
-                    whitelist_categories=("Lu", "Ll", "Nd"), whitelist_characters="_"
+                    whitelist_categories=("Lu", "Ll", "Nd"),
+                    whitelist_characters="_"
                 ),
             ),
             values=st.text(
@@ -312,7 +335,10 @@ class TestFileIOProperties:
         )
     )
     def test_property_write_and_read_roundtrip(self, config: dict) -> None:
-        """Property: Writing and reading config should preserve all data (excluding whitespace-only values)."""
+        """Property: Writing and reading config should preserve all data.
+
+        Excludes whitespace-only values.
+        """
         with tempfile.TemporaryDirectory() as tmpdir:
             config_file = Path(tmpdir) / "mk8"
             file_io = FileIO(config_path=str(config_file))
