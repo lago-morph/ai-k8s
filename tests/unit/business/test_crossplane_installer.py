@@ -490,3 +490,141 @@ class TestCrossplaneStatus:
         assert status.installed is True
         assert status.version == "1.14.0"
         assert status.ready is True
+
+
+class TestCrossplaneInstallerVerboseMode:
+    """Tests for verbose mode output."""
+
+    @patch.object(CrossplaneInstaller, "_wait_for_crossplane_ready")
+    @patch.object(CrossplaneInstaller, "_get_crossplane_values")
+    def test_install_crossplane_verbose(
+        self,
+        mock_get_values: Mock,
+        mock_wait: Mock,
+        mock_helm: Mock,
+        mock_kubectl: Mock,
+        mock_cred_manager: Mock,
+    ) -> None:
+        """Test install_crossplane with verbose output."""
+        mock_output = Mock()
+        mock_output.verbose = True
+        installer = CrossplaneInstaller(
+            helm_client=mock_helm,
+            kubectl_client=mock_kubectl,
+            credential_manager=mock_cred_manager,
+            output=mock_output,
+        )
+        mock_get_values.return_value = {}
+
+        installer.install_crossplane()
+
+        # Verify verbose messages were called
+        assert mock_output.info.call_count >= 3
+
+    @patch.object(CrossplaneInstaller, "_wait_for_provider_ready")
+    @patch.object(CrossplaneInstaller, "_apply_yaml_resource")
+    @patch.object(CrossplaneInstaller, "_get_aws_provider_yaml")
+    def test_install_aws_provider_verbose(
+        self,
+        mock_get_yaml: Mock,
+        mock_apply: Mock,
+        mock_wait: Mock,
+        mock_helm: Mock,
+        mock_kubectl: Mock,
+        mock_cred_manager: Mock,
+    ) -> None:
+        """Test install_aws_provider with verbose output."""
+        mock_output = Mock()
+        mock_output.verbose = True
+        installer = CrossplaneInstaller(
+            helm_client=mock_helm,
+            kubectl_client=mock_kubectl,
+            credential_manager=mock_cred_manager,
+            output=mock_output,
+        )
+        mock_get_yaml.return_value = "provider yaml"
+
+        installer.install_aws_provider()
+
+        # Verify verbose message was called
+        assert any(
+            "Creating Provider" in str(c) for c in mock_output.info.call_args_list
+        )
+
+    @patch.object(CrossplaneInstaller, "_wait_for_provider_config_ready")
+    @patch.object(CrossplaneInstaller, "_apply_yaml_resource")
+    @patch.object(CrossplaneInstaller, "_get_provider_config_yaml")
+    @patch.object(CrossplaneInstaller, "_create_aws_secret")
+    def test_configure_aws_provider_verbose_with_credentials(
+        self,
+        mock_create_secret: Mock,
+        mock_get_config: Mock,
+        mock_apply: Mock,
+        mock_wait: Mock,
+        mock_helm: Mock,
+        mock_kubectl: Mock,
+        mock_cred_manager: Mock,
+    ) -> None:
+        """Test configure_aws_provider with verbose and provided credentials."""
+        mock_output = Mock()
+        mock_output.verbose = True
+        installer = CrossplaneInstaller(
+            helm_client=mock_helm,
+            kubectl_client=mock_kubectl,
+            credential_manager=mock_cred_manager,
+            output=mock_output,
+        )
+        mock_get_config.return_value = "config yaml"
+        creds = AWSCredentials(
+            access_key_id="AKIATEST",
+            secret_access_key="secret",
+            region="us-east-1",
+        )
+
+        installer.configure_aws_provider(credentials=creds)
+
+        # Verify verbose messages were called
+        assert any(
+            "Creating AWS" in str(c) for c in mock_output.info.call_args_list
+        )
+        assert any(
+            "ProviderConfig" in str(c) for c in mock_output.info.call_args_list
+        )
+
+    @patch.object(CrossplaneInstaller, "_wait_for_provider_config_ready")
+    @patch.object(CrossplaneInstaller, "_apply_yaml_resource")
+    @patch.object(CrossplaneInstaller, "_get_provider_config_yaml")
+    @patch.object(CrossplaneInstaller, "_create_aws_secret")
+    def test_configure_aws_provider_verbose_without_credentials(
+        self,
+        mock_create_secret: Mock,
+        mock_get_config: Mock,
+        mock_apply: Mock,
+        mock_wait: Mock,
+        mock_helm: Mock,
+        mock_kubectl: Mock,
+        mock_cred_manager: Mock,
+    ) -> None:
+        """Test configure_aws_provider with verbose and no credentials."""
+        mock_output = Mock()
+        mock_output.verbose = True
+        installer = CrossplaneInstaller(
+            helm_client=mock_helm,
+            kubectl_client=mock_kubectl,
+            credential_manager=mock_cred_manager,
+            output=mock_output,
+        )
+        mock_get_config.return_value = "config yaml"
+        creds = AWSCredentials(
+            access_key_id="AKIATEST",
+            secret_access_key="secret",
+            region="us-east-1",
+        )
+        mock_cred_manager.get_credentials.return_value = creds
+
+        installer.configure_aws_provider()
+
+        # Verify verbose message about retrieving credentials
+        assert any(
+            "Retrieving AWS" in str(c) for c in mock_output.info.call_args_list
+        )
