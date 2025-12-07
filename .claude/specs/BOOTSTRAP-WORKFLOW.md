@@ -1,6 +1,32 @@
 # Bootstrap Cluster Workflow
 
-This document describes the complete workflow for setting up the bootstrap cluster and provisioning the AWS management cluster using GitOps.
+## Document Purpose
+
+This document serves as a **high-level orchestration guide** that shows how the four bootstrap specifications work together to create a fully operational management cluster. It provides:
+
+- The complete sequence of bootstrap operations
+- The mk8 CLI command catalog for bootstrap
+- An end-to-end workflow example
+- The relationship between bootstrap and ongoing GitOps management
+
+## Relationship to Other Documents
+
+| Document | Purpose | Relationship |
+|----------|---------|--------------|
+| **This Document** | Orchestration workflow and CLI reference | Shows how specs work together |
+| **ADR-001** | ArgoCD testing approaches analysis | Explains why we chose namespaced environments |
+| **ADR-002** | ArgoCD testing implementation strategy | Documents the 4-phase testing approach |
+| **argocd-gitops-promotion** | Phase 1: Namespaced environment promotion | Defines how ArgoCD CRDs are managed post-bootstrap |
+| **Individual Specs** | Detailed requirements/design/tasks | Implementation details for each component |
+
+### Key Distinction: Bootstrap vs. Steady-State
+
+- **Bootstrap Phase** (this document): One-time setup to create the management cluster
+- **Steady-State Phase** (argocd-gitops-promotion): Ongoing management of ArgoCD CRDs using dev/staging/prod promotion
+
+The `argocd-config/` GitOps repository structure serves BOTH phases:
+- During bootstrap: Initial ArgoCD configuration is deployed
+- After bootstrap: ArgoCD CRDs are tested and promoted through dev/staging/prod environments
 
 ## Overview
 
@@ -186,6 +212,58 @@ The recommended implementation order follows the dependency chain:
 3. **gitops-repository-setup** (independent, but logically after #2)
 4. **argocd-bootstrap** (depends on #1, #2, #3)
 
+---
+
+## Steady-State Phase: Ongoing ArgoCD Management
+
+After the bootstrap process completes and the management cluster is operational, ArgoCD CRD management transitions to a **dev/staging/prod promotion workflow**. This is documented in the `argocd-gitops-promotion` spec.
+
+### Post-Bootstrap ArgoCD Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    Management Cluster (Steady-State)             │
+└─────────────────────────────────────────────────────────────────┘
+
+argocd-dev namespace
+├─ ArgoCD Dev Instance
+├─ Dev Projects, ApplicationSets, Applications
+└─ Watches: feature branches
+
+argocd-staging namespace
+├─ ArgoCD Staging Instance
+├─ Staging Projects, ApplicationSets, Applications
+└─ Watches: staging branch
+
+argocd namespace (prod)
+├─ ArgoCD Production Instance
+├─ Prod Projects, ApplicationSets, Applications
+└─ Watches: main branch
+
+┌─────────────────────────────────────────────────────────────────┐
+│              Promotion Workflow (Dev → Staging → Prod)           │
+│         See: .claude/specs/argocd-gitops-promotion/              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### How Bootstrap Enables Steady-State
+
+The bootstrap process (specifically `argocd-bootstrap` and `gitops-repository-setup`) creates the foundation for the ongoing promotion workflow:
+
+1. **GitOps Repository Structure**: Created during bootstrap with `argocd-config/base/` and `argocd-config/overlays/`
+2. **Initial ArgoCD Instance**: Installed in the `argocd` namespace (production)
+3. **Dev/Staging Namespaces**: Created during bootstrap handoff
+4. **Dev/Staging ArgoCD Instances**: Deployed as part of the initial management cluster setup
+
+After bootstrap completes, changes to ArgoCD CRDs follow the promotion workflow:
+- Feature branch → Dev environment (test changes safely)
+- PR to staging branch → Staging environment (integration testing)
+- PR to main branch → Production environment (controlled rollout)
+
+**For details on the promotion workflow, see**: `.claude/specs/argocd-gitops-promotion/`
+
+---
+
 ## Migration from Original Spec
 
 The original `local-bootstrap-cluster` spec has been marked as deprecated. All requirements have been distributed across the four new specs:
@@ -195,10 +273,52 @@ The original `local-bootstrap-cluster` spec has been marked as deprecated. All r
 - **New requirements** → gitops-repository-setup
 - **New requirements** → argocd-bootstrap
 
+---
+
+## Related Architecture Decisions
+
+The bootstrap workflow and subsequent ArgoCD management approach are informed by architectural decisions documented in:
+
+### ADR-001: ArgoCD Testing Approaches Analysis
+**Status**: FROZEN (Reference Document)
+
+Analyzes four approaches for safely testing ArgoCD CRD changes:
+1. Ephemeral Preview Environments
+2. Static Analysis and Policy Engine
+3. Hybrid Staged Rollout with Canary Testing
+4. **Namespaced Environment Promotion** ← Selected approach
+
+**Key Finding**: For single management cluster scenarios (our case), Approach 4 (Namespaced Environments) combined with static analysis provides the best balance of safety, practicality, and resource efficiency.
+
+**Location**: `.claude/architecture/ADR-001-argocd-testing-approaches-analysis.md`
+
+### ADR-002: ArgoCD Testing Implementation Strategy
+**Status**: CONTEXT-ONLY (Decision Log)
+
+Documents the decision-making process and rationale for the 4-phase implementation:
+- **Phase 1**: Management Cluster Namespaced Environments (argocd-gitops-promotion)
+- **Phase 2**: Basic Static Analysis (schema validation + safety policies)
+- **Phase 3**: Workload Cluster Canary Deployment
+- **Phase 4**: Advanced Static Analysis (change detection + blast radius)
+
+**Key Decision**: ArgoCD installation is managed by mk8 orchestrator (bootstrap), while ArgoCD configuration (CRDs) is managed via GitOps with namespaced promotion.
+
+**Location**: `.claude/architecture/ADR-002-argocd-testing-implementation-strategy.md`
+
+---
+
 ## Next Steps
 
+### For Bootstrap Implementation
 For each spec:
 1. Review and approve requirements
 2. Create design document
 3. Create implementation tasks
 4. Execute tasks following TDD methodology
+
+### For Ongoing Management
+After bootstrap is complete:
+1. Implement Phase 1: Namespaced environment promotion (argocd-gitops-promotion)
+2. Implement Phase 2: Basic static analysis
+3. Implement Phase 3: Workload cluster canary deployment
+4. Implement Phase 4: Advanced static analysis
