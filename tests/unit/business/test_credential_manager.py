@@ -446,3 +446,582 @@ class TestCredentialManagerProperties:
         mock_file_io.write_config_file.assert_called_once()
         saved_config = mock_file_io.write_config_file.call_args[0][0]
         assert saved_config["AWS_ACCESS_KEY_ID"] == "AKIAIOSFODNN7EXAMPLE"
+
+
+class TestCredentialManagerUpdateCredentialsAdvanced:
+    """Advanced tests for CredentialManager.update_credentials()."""
+
+    def test_update_from_mk8_env_vars(
+        self,
+        credential_manager: CredentialManager,
+        mock_file_io: Mock,
+        mock_output: Mock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test update_credentials uses MK8_* env vars."""
+        mock_file_io.read_config_file.return_value = {
+            "AWS_ACCESS_KEY_ID": "OLD_KEY",
+            "AWS_SECRET_ACCESS_KEY": "old_secret",
+            "AWS_DEFAULT_REGION": "us-west-1",
+        }
+
+        monkeypatch.setenv("MK8_AWS_ACCESS_KEY_ID", "NEW_KEY")
+        monkeypatch.setenv("MK8_AWS_SECRET_ACCESS_KEY", "new_secret")
+        monkeypatch.setenv("MK8_AWS_DEFAULT_REGION", "us-east-1")
+
+        creds = credential_manager.update_credentials()
+
+        assert creds.access_key_id == "NEW_KEY"
+        assert creds.secret_access_key == "new_secret"
+        assert creds.region == "us-east-1"
+        mock_file_io.write_config_file.assert_called_once()
+        mock_output.info.assert_any_call(
+            "Credentials configured from MK8_AWS_* environment variables"
+        )
+        mock_output.info.assert_any_call("Credentials have been updated")
+
+    def test_update_with_same_credentials(
+        self,
+        credential_manager: CredentialManager,
+        mock_file_io: Mock,
+        mock_output: Mock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test update_credentials reports no change when credentials same."""
+        mock_file_io.read_config_file.return_value = {
+            "AWS_ACCESS_KEY_ID": "SAME_KEY",
+            "AWS_SECRET_ACCESS_KEY": "same_secret",
+            "AWS_DEFAULT_REGION": "us-east-1",
+        }
+
+        monkeypatch.setenv("MK8_AWS_ACCESS_KEY_ID", "SAME_KEY")
+        monkeypatch.setenv("MK8_AWS_SECRET_ACCESS_KEY", "same_secret")
+        monkeypatch.setenv("MK8_AWS_DEFAULT_REGION", "us-east-1")
+
+        creds = credential_manager.update_credentials()
+
+        assert creds.access_key_id == "SAME_KEY"
+        mock_output.info.assert_any_call("Credentials are already up to date")
+
+    @patch("mk8.business.credential_manager.click.prompt")
+    @patch("mk8.business.credential_manager.click.echo")
+    def test_update_from_aws_env_vars_use_them(
+        self,
+        mock_echo: Mock,
+        mock_prompt: Mock,
+        credential_manager: CredentialManager,
+        mock_file_io: Mock,
+        mock_output: Mock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test update_credentials with AWS_* env vars and user chooses to use them."""
+        mock_file_io.read_config_file.return_value = None
+        mock_prompt.return_value = "1"  # Use env vars
+
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "AWS_KEY")
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "aws_secret")
+        monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
+
+        creds = credential_manager.update_credentials()
+
+        assert creds.access_key_id == "AWS_KEY"
+        mock_file_io.write_config_file.assert_called_once()
+        mock_output.info.assert_any_call(
+            "Credentials saved from AWS_* environment variables"
+        )
+
+    @patch("mk8.business.credential_manager.click.prompt")
+    @patch("mk8.business.credential_manager.click.echo")
+    def test_update_from_aws_env_vars_enter_manually(
+        self,
+        mock_echo: Mock,
+        mock_prompt: Mock,
+        credential_manager: CredentialManager,
+        mock_file_io: Mock,
+        mock_output: Mock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test update_credentials with AWS_* env vars but user enters manually."""
+        mock_file_io.read_config_file.return_value = None
+        # First prompt: choice, then manual entry prompts
+        mock_prompt.side_effect = [
+            "2",  # Enter manually
+            "MANUAL_KEY",
+            "manual_secret",
+            "us-west-2",
+        ]
+
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "AWS_KEY")
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "aws_secret")
+        monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
+
+        creds = credential_manager.update_credentials()
+
+        assert creds.access_key_id == "MANUAL_KEY"
+        assert creds.secret_access_key == "manual_secret"
+        assert creds.region == "us-west-2"
+        mock_file_io.write_config_file.assert_called_once()
+
+    @patch("mk8.business.credential_manager.click.prompt")
+    @patch("mk8.business.credential_manager.click.echo")
+    @patch("mk8.business.credential_manager.sys.exit")
+    def test_update_from_aws_env_vars_exit(
+        self,
+        mock_exit: Mock,
+        mock_echo: Mock,
+        mock_prompt: Mock,
+        credential_manager: CredentialManager,
+        mock_file_io: Mock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test update_credentials with AWS_* env vars and user exits."""
+        mock_file_io.read_config_file.return_value = None
+        mock_prompt.return_value = "3"  # Exit
+
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "AWS_KEY")
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "aws_secret")
+        monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
+
+        credential_manager.update_credentials()
+
+        mock_exit.assert_called_with(0)
+
+    @patch("mk8.business.credential_manager.click.prompt")
+    @patch("mk8.business.credential_manager.click.echo")
+    def test_update_interactive_entry(
+        self,
+        mock_echo: Mock,
+        mock_prompt: Mock,
+        credential_manager: CredentialManager,
+        mock_file_io: Mock,
+        mock_output: Mock,
+    ) -> None:
+        """Test update_credentials with interactive entry."""
+        mock_file_io.read_config_file.return_value = None
+        # First prompt: choice, then manual entry prompts
+        mock_prompt.side_effect = [
+            "1",  # Enter manually
+            "INTERACTIVE_KEY",
+            "interactive_secret",
+            "eu-west-1",
+        ]
+
+        creds = credential_manager.update_credentials()
+
+        assert creds.access_key_id == "INTERACTIVE_KEY"
+        assert creds.secret_access_key == "interactive_secret"
+        assert creds.region == "eu-west-1"
+        mock_file_io.write_config_file.assert_called_once()
+
+    @patch("mk8.business.credential_manager.click.prompt")
+    @patch("mk8.business.credential_manager.click.echo")
+    @patch("mk8.business.credential_manager.sys.exit")
+    def test_update_interactive_exit(
+        self,
+        mock_exit: Mock,
+        mock_echo: Mock,
+        mock_prompt: Mock,
+        credential_manager: CredentialManager,
+        mock_file_io: Mock,
+    ) -> None:
+        """Test update_credentials with interactive exit."""
+        mock_file_io.read_config_file.return_value = None
+        mock_prompt.return_value = "2"  # Exit
+
+        credential_manager.update_credentials()
+
+        mock_exit.assert_called_with(0)
+
+
+class TestCredentialManagerGetCredentialsAdvanced:
+    """Advanced tests for CredentialManager.get_credentials()."""
+
+    @patch("mk8.business.credential_manager.click.prompt")
+    @patch("mk8.business.credential_manager.click.echo")
+    def test_get_from_aws_env_vars_use_them(
+        self,
+        mock_echo: Mock,
+        mock_prompt: Mock,
+        credential_manager: CredentialManager,
+        mock_file_io: Mock,
+        mock_output: Mock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test get_credentials with AWS_* env vars and user chooses to use them."""
+        mock_file_io.read_config_file.return_value = None
+        mock_prompt.return_value = "1"  # Use env vars
+
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "AWS_KEY")
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "aws_secret")
+        monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
+
+        creds = credential_manager.get_credentials()
+
+        assert creds.access_key_id == "AWS_KEY"
+        mock_file_io.write_config_file.assert_called_once()
+        mock_output.info.assert_called_with(
+            "Credentials saved from AWS_* environment variables"
+        )
+
+    @patch("mk8.business.credential_manager.click.prompt")
+    @patch("mk8.business.credential_manager.click.echo")
+    def test_get_from_aws_env_vars_enter_manually(
+        self,
+        mock_echo: Mock,
+        mock_prompt: Mock,
+        credential_manager: CredentialManager,
+        mock_file_io: Mock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test get_credentials with AWS_* env vars but user enters manually."""
+        mock_file_io.read_config_file.return_value = None
+        # First prompt: choice, then manual entry prompts
+        mock_prompt.side_effect = [
+            "2",  # Enter manually
+            "MANUAL_KEY",
+            "manual_secret",
+            "us-west-2",
+        ]
+
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "AWS_KEY")
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "aws_secret")
+        monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
+
+        creds = credential_manager.get_credentials()
+
+        assert creds.access_key_id == "MANUAL_KEY"
+        assert creds.secret_access_key == "manual_secret"
+        assert creds.region == "us-west-2"
+
+    @patch("mk8.business.credential_manager.click.prompt")
+    @patch("mk8.business.credential_manager.click.echo")
+    @patch("mk8.business.credential_manager.sys.exit")
+    def test_get_from_aws_env_vars_exit(
+        self,
+        mock_exit: Mock,
+        mock_echo: Mock,
+        mock_prompt: Mock,
+        credential_manager: CredentialManager,
+        mock_file_io: Mock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test get_credentials with AWS_* env vars and user exits."""
+        mock_file_io.read_config_file.return_value = None
+        mock_prompt.return_value = "3"  # Exit
+
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "AWS_KEY")
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "aws_secret")
+        monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
+
+        credential_manager.get_credentials()
+
+        mock_exit.assert_called_with(0)
+
+    @patch("mk8.business.credential_manager.click.prompt")
+    @patch("mk8.business.credential_manager.click.echo")
+    def test_get_interactive_entry(
+        self,
+        mock_echo: Mock,
+        mock_prompt: Mock,
+        credential_manager: CredentialManager,
+        mock_file_io: Mock,
+    ) -> None:
+        """Test get_credentials with interactive entry."""
+        mock_file_io.read_config_file.return_value = None
+        # First prompt: choice, then manual entry prompts
+        mock_prompt.side_effect = [
+            "1",  # Enter manually
+            "INTERACTIVE_KEY",
+            "interactive_secret",
+            "eu-west-1",
+        ]
+
+        creds = credential_manager.get_credentials()
+
+        assert creds.access_key_id == "INTERACTIVE_KEY"
+        assert creds.secret_access_key == "interactive_secret"
+        assert creds.region == "eu-west-1"
+
+    @patch("mk8.business.credential_manager.click.prompt")
+    @patch("mk8.business.credential_manager.click.echo")
+    @patch("mk8.business.credential_manager.sys.exit")
+    def test_get_interactive_exit(
+        self,
+        mock_exit: Mock,
+        mock_echo: Mock,
+        mock_prompt: Mock,
+        credential_manager: CredentialManager,
+        mock_file_io: Mock,
+    ) -> None:
+        """Test get_credentials with interactive exit."""
+        mock_file_io.read_config_file.return_value = None
+        mock_prompt.return_value = "2"  # Exit
+
+        credential_manager.get_credentials()
+
+        mock_exit.assert_called_with(0)
+
+
+class TestCredentialManagerValidateCredentialsAdvanced:
+    """Advanced tests for CredentialManager.validate_credentials()."""
+
+    def test_validate_calls_aws_client(
+        self,
+        credential_manager: CredentialManager,
+        mock_aws_client: Mock,
+    ) -> None:
+        """Test validate_credentials calls AWS client."""
+        mock_aws_client.validate_credentials.return_value = ValidationResult(
+            success=True, account_id="123456789012"
+        )
+
+        creds = AWSCredentials(
+            access_key_id="AKIATEST",
+            secret_access_key="secret",
+            region="us-east-1",
+        )
+
+        result = credential_manager.validate_credentials(creds)
+
+        assert result.success is True
+        assert result.account_id == "123456789012"
+        mock_aws_client.validate_credentials.assert_called_once_with(
+            "AKIATEST", "secret", "us-east-1"
+        )
+
+
+class TestCredentialManagerPrivateMethods:
+    """Tests for CredentialManager private methods."""
+
+    def test_check_credentials_changed_returns_true_when_old_none(
+        self, credential_manager: CredentialManager
+    ) -> None:
+        """Test _check_credentials_changed returns True when old is None."""
+        new_creds = AWSCredentials(
+            access_key_id="KEY",
+            secret_access_key="secret",
+            region="us-east-1",
+        )
+
+        result = credential_manager._check_credentials_changed(None, new_creds)
+
+        assert result is True
+
+    def test_check_credentials_changed_returns_true_when_access_key_differs(
+        self, credential_manager: CredentialManager
+    ) -> None:
+        """Test _check_credentials_changed returns True when access key differs."""
+        old_creds = AWSCredentials(
+            access_key_id="OLD_KEY",
+            secret_access_key="secret",
+            region="us-east-1",
+        )
+        new_creds = AWSCredentials(
+            access_key_id="NEW_KEY",
+            secret_access_key="secret",
+            region="us-east-1",
+        )
+
+        result = credential_manager._check_credentials_changed(old_creds, new_creds)
+
+        assert result is True
+
+    def test_check_credentials_changed_returns_true_when_secret_differs(
+        self, credential_manager: CredentialManager
+    ) -> None:
+        """Test _check_credentials_changed returns True when secret differs."""
+        old_creds = AWSCredentials(
+            access_key_id="KEY",
+            secret_access_key="old_secret",
+            region="us-east-1",
+        )
+        new_creds = AWSCredentials(
+            access_key_id="KEY",
+            secret_access_key="new_secret",
+            region="us-east-1",
+        )
+
+        result = credential_manager._check_credentials_changed(old_creds, new_creds)
+
+        assert result is True
+
+    def test_check_credentials_changed_returns_true_when_region_differs(
+        self, credential_manager: CredentialManager
+    ) -> None:
+        """Test _check_credentials_changed returns True when region differs."""
+        old_creds = AWSCredentials(
+            access_key_id="KEY",
+            secret_access_key="secret",
+            region="us-east-1",
+        )
+        new_creds = AWSCredentials(
+            access_key_id="KEY",
+            secret_access_key="secret",
+            region="us-west-2",
+        )
+
+        result = credential_manager._check_credentials_changed(old_creds, new_creds)
+
+        assert result is True
+
+    def test_check_credentials_changed_returns_false_when_same(
+        self, credential_manager: CredentialManager
+    ) -> None:
+        """Test _check_credentials_changed returns False when credentials same."""
+        old_creds = AWSCredentials(
+            access_key_id="KEY",
+            secret_access_key="secret",
+            region="us-east-1",
+        )
+        new_creds = AWSCredentials(
+            access_key_id="KEY",
+            secret_access_key="secret",
+            region="us-east-1",
+        )
+
+        result = credential_manager._check_credentials_changed(old_creds, new_creds)
+
+        assert result is False
+
+    def test_save_credentials_calls_file_io(
+        self,
+        credential_manager: CredentialManager,
+        mock_file_io: Mock,
+    ) -> None:
+        """Test _save_credentials calls file_io.write_config_file."""
+        creds = AWSCredentials(
+            access_key_id="KEY",
+            secret_access_key="secret",
+            region="us-east-1",
+        )
+
+        credential_manager._save_credentials(creds)
+
+        mock_file_io.write_config_file.assert_called_once_with(creds.to_dict())
+
+    def test_read_from_mk8_env_vars(
+        self,
+        credential_manager: CredentialManager,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test _read_from_mk8_env_vars reads MK8_AWS_* variables."""
+        monkeypatch.setenv("MK8_AWS_ACCESS_KEY_ID", "KEY")
+        monkeypatch.setenv("MK8_AWS_SECRET_ACCESS_KEY", "secret")
+        monkeypatch.setenv("MK8_AWS_DEFAULT_REGION", "us-east-1")
+
+        creds = credential_manager._read_from_mk8_env_vars()
+
+        assert creds is not None
+        assert creds.access_key_id == "KEY"
+        assert creds.secret_access_key == "secret"
+        assert creds.region == "us-east-1"
+
+    def test_read_from_aws_env_vars(
+        self,
+        credential_manager: CredentialManager,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test _read_from_aws_env_vars reads AWS_* variables."""
+        monkeypatch.setenv("AWS_ACCESS_KEY_ID", "KEY")
+        monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "secret")
+        monkeypatch.setenv("AWS_DEFAULT_REGION", "us-east-1")
+
+        creds = credential_manager._read_from_aws_env_vars()
+
+        assert creds is not None
+        assert creds.access_key_id == "KEY"
+        assert creds.secret_access_key == "secret"
+        assert creds.region == "us-east-1"
+
+    @patch("mk8.business.credential_manager.click.prompt")
+    @patch("mk8.business.credential_manager.click.echo")
+    def test_prompt_for_env_var_usage_option_1(
+        self,
+        mock_echo: Mock,
+        mock_prompt: Mock,
+        credential_manager: CredentialManager,
+    ) -> None:
+        """Test _prompt_for_env_var_usage returns USE_ENV_VARS for option 1."""
+        mock_prompt.return_value = "1"
+
+        result = credential_manager._prompt_for_env_var_usage()
+
+        assert result == PromptChoice.USE_ENV_VARS
+
+    @patch("mk8.business.credential_manager.click.prompt")
+    @patch("mk8.business.credential_manager.click.echo")
+    def test_prompt_for_env_var_usage_option_2(
+        self,
+        mock_echo: Mock,
+        mock_prompt: Mock,
+        credential_manager: CredentialManager,
+    ) -> None:
+        """Test _prompt_for_env_var_usage returns ENTER_MANUALLY for option 2."""
+        mock_prompt.return_value = "2"
+
+        result = credential_manager._prompt_for_env_var_usage()
+
+        assert result == PromptChoice.ENTER_MANUALLY
+
+    @patch("mk8.business.credential_manager.click.prompt")
+    @patch("mk8.business.credential_manager.click.echo")
+    def test_prompt_for_env_var_usage_option_3(
+        self,
+        mock_echo: Mock,
+        mock_prompt: Mock,
+        credential_manager: CredentialManager,
+    ) -> None:
+        """Test _prompt_for_env_var_usage returns EXIT for option 3."""
+        mock_prompt.return_value = "3"
+
+        result = credential_manager._prompt_for_env_var_usage()
+
+        assert result == PromptChoice.EXIT
+
+    @patch("mk8.business.credential_manager.click.prompt")
+    @patch("mk8.business.credential_manager.click.echo")
+    def test_prompt_for_manual_entry_option_1(
+        self,
+        mock_echo: Mock,
+        mock_prompt: Mock,
+        credential_manager: CredentialManager,
+    ) -> None:
+        """Test _prompt_for_manual_entry returns ENTER_MANUALLY for option 1."""
+        mock_prompt.return_value = "1"
+
+        result = credential_manager._prompt_for_manual_entry(allow_env_option=False)
+
+        assert result == PromptChoice.ENTER_MANUALLY
+
+    @patch("mk8.business.credential_manager.click.prompt")
+    @patch("mk8.business.credential_manager.click.echo")
+    def test_prompt_for_manual_entry_option_2(
+        self,
+        mock_echo: Mock,
+        mock_prompt: Mock,
+        credential_manager: CredentialManager,
+    ) -> None:
+        """Test _prompt_for_manual_entry returns EXIT for option 2."""
+        mock_prompt.return_value = "2"
+
+        result = credential_manager._prompt_for_manual_entry(allow_env_option=False)
+
+        assert result == PromptChoice.EXIT
+
+    @patch("mk8.business.credential_manager.click.prompt")
+    @patch("mk8.business.credential_manager.click.echo")
+    def test_interactive_credential_entry(
+        self,
+        mock_echo: Mock,
+        mock_prompt: Mock,
+        credential_manager: CredentialManager,
+    ) -> None:
+        """Test _interactive_credential_entry prompts for credentials."""
+        mock_prompt.side_effect = ["KEY", "secret", "us-east-1"]
+
+        creds = credential_manager._interactive_credential_entry()
+
+        assert creds.access_key_id == "KEY"
+        assert creds.secret_access_key == "secret"
+        assert creds.region == "us-east-1"
+        assert mock_prompt.call_count == 3
