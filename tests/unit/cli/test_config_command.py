@@ -272,3 +272,51 @@ class TestConfigCommand:
         assert result.exit_code == 0
         # Should still succeed but show warning
         assert result.output
+
+    @patch("mk8.cli.commands.config.CredentialManager")
+    @patch("mk8.cli.commands.config.CrossplaneManager")
+    @patch("mk8.cli.commands.config.FileIO")
+    @patch("mk8.cli.commands.config.AWSClient")
+    @patch("mk8.cli.commands.config.KubectlClient")
+    def test_config_command_handles_keyboard_interrupt(
+        self,
+        mock_kubectl_cls: Mock,
+        mock_aws_cls: Mock,
+        mock_file_io_cls: Mock,
+        mock_crossplane_cls: Mock,
+        mock_cred_mgr_cls: Mock,
+    ) -> None:
+        """Test config command handles keyboard interrupt."""
+        mock_cred_mgr = Mock()
+        mock_cred_mgr.update_credentials.side_effect = KeyboardInterrupt()
+        mock_cred_mgr_cls.return_value = mock_cred_mgr
+
+        runner = CliRunner()
+        result = runner.invoke(config, [])
+
+        assert result.exit_code == ExitCode.KEYBOARD_INTERRUPT.value
+        assert "cancelled" in result.output.lower()
+
+    @patch("mk8.cli.commands.config.CredentialManager")
+    @patch("mk8.cli.commands.config.CrossplaneManager")
+    @patch("mk8.cli.commands.config.FileIO")
+    @patch("mk8.cli.commands.config.AWSClient")
+    @patch("mk8.cli.commands.config.KubectlClient")
+    def test_config_command_handles_unexpected_error(
+        self,
+        mock_kubectl_cls: Mock,
+        mock_aws_cls: Mock,
+        mock_file_io_cls: Mock,
+        mock_crossplane_cls: Mock,
+        mock_cred_mgr_cls: Mock,
+    ) -> None:
+        """Test config command handles unexpected errors."""
+        mock_cred_mgr = Mock()
+        mock_cred_mgr.update_credentials.side_effect = RuntimeError("Unexpected error")
+        mock_cred_mgr_cls.return_value = mock_cred_mgr
+
+        runner = CliRunner()
+        result = runner.invoke(config, [])
+
+        assert result.exit_code == ExitCode.GENERAL_ERROR.value
+        assert "Unexpected error" in result.output
