@@ -390,3 +390,125 @@ class TestFileIOProperties:
             if os.name != "nt":
                 result = file_io.check_file_permissions(str(config_file))
                 assert result is True
+
+
+class TestFileIOReadConfigFileErrors:
+    """Tests for FileIO.read_config_file() error handling."""
+
+    @patch("builtins.open", side_effect=PermissionError("Permission denied"))
+    def test_read_config_file_permission_error(self, mock_open_func: Mock) -> None:
+        """Test read_config_file raises ConfigurationError on permission error."""
+        file_io = FileIO(config_path="/tmp/test_config")
+
+        # Create the file so exists() returns True
+        with patch.object(Path, "exists", return_value=True):
+            with pytest.raises(ConfigurationError, match="Failed to read config file"):
+                file_io.read_config_file()
+
+    @patch("builtins.open", side_effect=IOError("I/O error"))
+    def test_read_config_file_io_error(self, mock_open_func: Mock) -> None:
+        """Test read_config_file raises ConfigurationError on I/O error."""
+        file_io = FileIO(config_path="/tmp/test_config")
+
+        with patch.object(Path, "exists", return_value=True):
+            with pytest.raises(ConfigurationError, match="Failed to read config file"):
+                file_io.read_config_file()
+
+
+class TestFileIOWriteConfigFileErrors:
+    """Tests for FileIO.write_config_file() error handling."""
+
+    @patch("mk8.integrations.file_io.FileIO.ensure_config_directory")
+    @patch("builtins.open", side_effect=PermissionError("Permission denied"))
+    def test_write_config_file_permission_error(
+        self, mock_open_func: Mock, mock_ensure: Mock
+    ) -> None:
+        """Test write_config_file raises ConfigurationError on permission error."""
+        file_io = FileIO(config_path="/tmp/test_config")
+        config = {"KEY": "value"}
+
+        with pytest.raises(ConfigurationError, match="Failed to write config file"):
+            file_io.write_config_file(config)
+
+    @patch("mk8.integrations.file_io.FileIO.ensure_config_directory")
+    @patch("builtins.open", side_effect=IOError("Disk full"))
+    def test_write_config_file_io_error(
+        self, mock_open_func: Mock, mock_ensure: Mock
+    ) -> None:
+        """Test write_config_file raises ConfigurationError on I/O error."""
+        file_io = FileIO(config_path="/tmp/test_config")
+        config = {"KEY": "value"}
+
+        with pytest.raises(ConfigurationError, match="Failed to write config file"):
+            file_io.write_config_file(config)
+
+
+class TestFileIOSetSecurePermissionsErrors:
+    """Tests for FileIO.set_secure_permissions() error handling."""
+
+    def test_set_secure_permissions_nonexistent_file(self) -> None:
+        """Test set_secure_permissions raises error for nonexistent file."""
+        file_io = FileIO()
+
+        with pytest.raises(
+            ConfigurationError, match="Cannot set permissions on nonexistent file"
+        ):
+            file_io.set_secure_permissions("/nonexistent/file")
+
+    @patch("os.name", "nt")
+    def test_set_secure_permissions_windows(self, temp_config_file: Path) -> None:
+        """Test set_secure_permissions on Windows (skips chmod)."""
+        temp_config_file.write_text("test")
+        file_io = FileIO()
+
+        # Should not raise on Windows
+        file_io.set_secure_permissions(str(temp_config_file))
+
+    @patch("os.name", "posix")
+    @patch.object(Path, "chmod", side_effect=OSError("Permission denied"))
+    def test_set_secure_permissions_chmod_error(
+        self, mock_chmod: Mock, temp_config_file: Path
+    ) -> None:
+        """Test set_secure_permissions raises error when chmod fails."""
+        temp_config_file.write_text("test")
+        file_io = FileIO(config_path=str(temp_config_file))
+
+        with pytest.raises(
+            ConfigurationError, match="Failed to set secure permissions"
+        ):
+            file_io.set_secure_permissions(str(temp_config_file))
+
+
+class TestFileIOCheckFilePermissionsErrors:
+    """Tests for FileIO.check_file_permissions() error handling."""
+
+    def test_check_file_permissions_nonexistent_file(self) -> None:
+        """Test check_file_permissions returns False for nonexistent file."""
+        file_io = FileIO()
+
+        result = file_io.check_file_permissions("/nonexistent/file")
+
+        assert result is False
+
+    @patch("os.name", "nt")
+    def test_check_file_permissions_windows(self, temp_config_file: Path) -> None:
+        """Test check_file_permissions on Windows always returns True."""
+        temp_config_file.write_text("test")
+        file_io = FileIO()
+
+        result = file_io.check_file_permissions(str(temp_config_file))
+
+        assert result is True
+
+    @patch("os.name", "posix")
+    @patch.object(Path, "stat", side_effect=OSError("Permission denied"))
+    def test_check_file_permissions_stat_error(
+        self, mock_stat: Mock, temp_config_file: Path
+    ) -> None:
+        """Test check_file_permissions returns False on stat error."""
+        temp_config_file.write_text("test")
+        file_io = FileIO(config_path=str(temp_config_file))
+
+        result = file_io.check_file_permissions(str(temp_config_file))
+
+        assert result is False
