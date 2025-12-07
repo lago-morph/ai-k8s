@@ -1,6 +1,7 @@
 """Integration tests for end-to-end CLI execution."""
 
 import pytest
+from unittest.mock import patch, Mock
 from click.testing import CliRunner
 
 from mk8.cli.main import cli, main
@@ -38,12 +39,37 @@ class TestCLIExecution:
         assert "mk8 version" in result.output
         assert Version.get_version() in result.output
 
-    def test_config_command_placeholder(self, runner):
+    @patch("mk8.cli.commands.config.AWSClient")
+    @patch("mk8.cli.commands.config.KubectlClient")
+    def test_config_command_placeholder(
+        self, mock_kubectl: Mock, mock_aws: Mock, runner
+    ):
         """Test config command placeholder execution."""
-        result = runner.invoke(cli, ["config"])
+        from mk8.business.credential_models import ValidationResult
+
+        # Mock AWS client to return successful validation
+        mock_aws_instance = mock_aws.return_value
+        mock_aws_instance.validate_credentials.return_value = ValidationResult(
+            success=True, account_id="123456789012"
+        )
+
+        # Mock kubectl client
+        mock_kubectl_instance = mock_kubectl.return_value
+        mock_kubectl_instance.cluster_exists.return_value = False
+
+        # Provide environment variables to avoid prompting
+        result = runner.invoke(
+            cli,
+            ["config"],
+            env={
+                "MK8_AWS_ACCESS_KEY_ID": "AKIAIOSFODNN7EXAMPLE",
+                "MK8_AWS_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+                "MK8_AWS_DEFAULT_REGION": "us-east-1",
+            },
+        )
 
         assert result.exit_code == 0
-        assert "Config command - placeholder implementation" in result.output
+        assert "config" in result.output.lower()
 
     def test_bootstrap_group_without_subcommand(self, runner):
         """Test bootstrap group shows help when no subcommand provided."""
@@ -93,14 +119,34 @@ class TestCLIExecution:
         result2 = runner.invoke(cli, ["--help"])
         assert result2.exit_code == 0
 
-        # Execute config
-        result3 = runner.invoke(cli, ["config"])
-        assert result3.exit_code == 0
+        # Execute config with environment variables and mocking
+        with patch("mk8.cli.commands.config.AWSClient") as mock_aws, patch(
+            "mk8.cli.commands.config.KubectlClient"
+        ) as mock_kubectl:
+            from mk8.business.credential_models import ValidationResult
+
+            mock_aws_instance = mock_aws.return_value
+            mock_aws_instance.validate_credentials.return_value = ValidationResult(
+                success=True, account_id="123456789012"
+            )
+            mock_kubectl_instance = mock_kubectl.return_value
+            mock_kubectl_instance.cluster_exists.return_value = False
+
+            result3 = runner.invoke(
+                cli,
+                ["config"],
+                env={
+                    "MK8_AWS_ACCESS_KEY_ID": "AKIAIOSFODNN7EXAMPLE",
+                    "MK8_AWS_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+                    "MK8_AWS_DEFAULT_REGION": "us-east-1",
+                },
+            )
+            assert result3.exit_code == 0
 
         # All should succeed independently
         assert "mk8 version" in result1.output
         assert "Commands:" in result2.output
-        assert "Config command" in result3.output
+        assert "Configuring AWS credentials" in result3.output
 
     def test_cli_handles_keyboard_interrupt_gracefully(self, runner):
         """Test that CLI handles KeyboardInterrupt gracefully."""

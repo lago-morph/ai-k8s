@@ -1,6 +1,7 @@
 """Integration tests for flexible option placement."""
 
 import pytest
+from unittest.mock import patch, Mock
 from click.testing import CliRunner
 
 from mk8.cli.main import cli
@@ -136,14 +137,36 @@ class TestOptionPlacementIntegration:
         assert result.exit_code == 0
         assert "mk8 version" in result.output
 
-    def test_config_command_with_options(self, runner):
+    @patch("mk8.cli.commands.config.AWSClient")
+    @patch("mk8.cli.commands.config.KubectlClient")
+    def test_config_command_with_options(
+        self, mock_kubectl: Mock, mock_aws: Mock, runner
+    ):
         """Test config command with various option placements."""
+        from mk8.business.credential_models import ValidationResult
+
+        # Mock AWS client
+        mock_aws_instance = mock_aws.return_value
+        mock_aws_instance.validate_credentials.return_value = ValidationResult(
+            success=True, account_id="123456789012"
+        )
+
+        # Mock kubectl client
+        mock_kubectl_instance = mock_kubectl.return_value
+        mock_kubectl_instance.cluster_exists.return_value = False
+
+        env_vars = {
+            "MK8_AWS_ACCESS_KEY_ID": "AKIAIOSFODNN7EXAMPLE",
+            "MK8_AWS_SECRET_ACCESS_KEY": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+            "MK8_AWS_DEFAULT_REGION": "us-east-1",
+        }
+
         # Option before
-        result1 = runner.invoke(cli, ["--verbose", "config"])
+        result1 = runner.invoke(cli, ["--verbose", "config"], env=env_vars)
         assert result1.exit_code == 0
 
         # Option after
-        result2 = runner.invoke(cli, ["config", "--verbose"])
+        result2 = runner.invoke(cli, ["config", "--verbose"], env=env_vars)
         assert result2.exit_code == 0
 
     def test_option_placement_consistency(self, runner):
