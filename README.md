@@ -80,15 +80,22 @@ mk8 is in **active development** with core functionality complete and tested.
 | **Prerequisite Verification** | ✅ Complete | 53 tests | 97% |
 | **AWS Credentials Management** | ✅ Complete | 121 tests | 100% |
 | **Kubeconfig File Handling** | ✅ Complete | 49 tests | 100% |
+| **Local Kind Cluster Management** | ✅ Complete | 0 tests* | - |
+| **Crossplane Bootstrap** | ✅ Complete | 0 tests* | - |
 
-**Total:** 273 tests passing with 95%+ overall coverage
+**Total:** 273 tests passing with 95%+ overall coverage  
+*Implementation complete, comprehensive test suite planned
 
 ### 🚧 In Development
 
-- **Local Kind Cluster Management** - Design complete, implementation starting
-- **Crossplane Bootstrap** - Requirements defined
-- **GitOps Repository Setup** - Requirements defined
+- **Tutorial: Create S3 Bucket** - Design complete, ready for implementation
+- **GitOps Repository Setup** - Design complete, ready for implementation
+
+### 📋 Planned
+
 - **ArgoCD Bootstrap** - Requirements defined
+- **Management Cluster Provisioning** - Planned
+- **Workload Cluster Management** - Planned
 
 ### 📋 Roadmap
 
@@ -99,17 +106,23 @@ mk8 is in **active development** with core functionality complete and tested.
    - AWS credential management
    - Kubeconfig management
 
-2. 🚧 **Phase 2: Bootstrap Cluster** (In Progress)
+2. ✅ **Phase 2: Bootstrap Cluster** (Complete)
    - Local kind cluster lifecycle
    - Crossplane installation
    - AWS provider configuration
+   - Helm integration
 
-3. 📋 **Phase 3: Management Cluster** (Planned)
-   - EKS cluster provisioning via Crossplane
-   - ArgoCD installation
+3. � **Pchase 3: Documentation & Tutorials** (In Progress)
+   - Tutorial: Create S3 bucket with Crossplane
+   - Documentation site framework
+   - User guides and examples
+
+4. 📋 **Phase 4: GitOps & Management Cluster** (Planned)
    - GitOps repository setup
+   - ArgoCD installation
+   - EKS management cluster provisioning
 
-4. 📋 **Phase 4: Workload Clusters** (Planned)
+5. 📋 **Phase 5: Workload Clusters** (Planned)
    - Declarative cluster management
    - Multi-environment support
    - Application deployment workflows
@@ -123,10 +136,12 @@ mk8 is in **active development** with core functionality complete and tested.
 Before installing mk8, ensure you have:
 
 - **Python 3.8+** - [Download](https://www.python.org/downloads/)
-- **Docker** - [Install Docker](https://docs.docker.com/engine/install/)
+- **Docker** - [Install Docker](https://docs.docker.com/engine/install/) (must be running)
 - **kubectl** - [Install kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 - **kind** - [Install kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
-- **AWS Account** - With appropriate permissions for EKS
+- **Helm** - [Install Helm](https://helm.sh/docs/intro/install/) (for Crossplane installation)
+- **AWS CLI** - [Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) (optional, for verification)
+- **AWS Account** - With appropriate IAM permissions for S3, EKS, etc.
 
 ### From Source
 
@@ -155,6 +170,30 @@ mk8 verify
 # Verify with detailed output
 mk8 verify --verbose
 ```
+
+---
+
+## ⚡ Quick Start
+
+Get started with mk8 in 5 minutes:
+
+```bash
+# 1. Verify prerequisites
+mk8 verify
+
+# 2. Configure AWS credentials
+mk8 config
+
+# 3. Create bootstrap cluster
+mk8 bootstrap create
+
+# 4. Install Crossplane
+mk8 crossplane install
+
+# 5. You're ready! Now you can provision AWS resources with Crossplane
+```
+
+See the [Usage](#-usage) section below for detailed examples.
 
 ---
 
@@ -213,17 +252,74 @@ $ mk8 config
 ✓ Crossplane secret synchronized
 ```
 
-### Bootstrap Cluster Management (Coming Soon)
+### Bootstrap Cluster Management
+
+Create and manage a local Kubernetes cluster for Crossplane:
 
 ```bash
 # Create local bootstrap cluster
-mk8 bootstrap create
+$ mk8 bootstrap create
+Creating bootstrap cluster...
+✓ Cluster 'mk8-bootstrap' created successfully
+✓ Kubeconfig updated
+✓ Cluster is ready
+
+# Create with specific Kubernetes version
+$ mk8 bootstrap create --kubernetes-version v1.28.0
+
+# Force recreate if cluster exists
+$ mk8 bootstrap create --force-recreate
 
 # Check cluster status
-mk8 bootstrap status
+$ mk8 bootstrap status
+Bootstrap Cluster Status:
+  Exists: Yes
+  Ready: Yes
+  Kubernetes Version: v1.29.0
+  Context: kind-mk8-bootstrap
 
 # Delete bootstrap cluster
-mk8 bootstrap delete
+$ mk8 bootstrap delete
+Are you sure you want to delete the bootstrap cluster? [y/N]: y
+✓ Cluster deleted successfully
+✓ Kubeconfig cleaned up
+
+# Delete without confirmation
+$ mk8 bootstrap delete --yes
+```
+
+### Crossplane Management
+
+Install and manage Crossplane on the bootstrap cluster:
+
+```bash
+# Install Crossplane with AWS provider
+$ mk8 crossplane install
+Installing Crossplane...
+✓ Crossplane installed successfully
+✓ AWS Provider installed
+✓ ProviderConfig created
+✓ Crossplane is ready
+
+# Install specific Crossplane version
+$ mk8 crossplane install --version 1.14.0
+
+# Check Crossplane status
+$ mk8 crossplane status
+Crossplane Status:
+  Installed: Yes
+  Version: 1.14.5
+  Pods Ready: 3/3
+  AWS Provider: Healthy
+  ProviderConfig: Configured
+
+# Uninstall Crossplane
+$ mk8 crossplane uninstall
+Are you sure you want to uninstall Crossplane? [y/N]: y
+✓ Crossplane uninstalled successfully
+
+# Uninstall without confirmation
+$ mk8 crossplane uninstall --yes
 ```
 
 ---
@@ -273,7 +369,9 @@ mk8/
 ├── mk8/                          # Main package
 │   ├── cli/                      # CLI interface
 │   │   ├── commands/             # Command implementations
+│   │   │   ├── bootstrap.py      # Bootstrap cluster commands
 │   │   │   ├── config.py         # AWS credentials command
+│   │   │   ├── crossplane.py     # Crossplane commands
 │   │   │   ├── verify.py         # Prerequisite verification
 │   │   │   └── version.py        # Version command
 │   │   ├── main.py               # CLI entry point
@@ -283,13 +381,18 @@ mk8/
 │   │   ├── logging.py            # Logging configuration
 │   │   └── version.py            # Version management
 │   ├── business/                 # Business logic
+│   │   ├── bootstrap_manager.py  # Bootstrap cluster orchestration
 │   │   ├── credential_manager.py # AWS credential orchestration
+│   │   ├── crossplane_installer.py # Crossplane installation
 │   │   ├── crossplane_manager.py # Crossplane secret sync
 │   │   └── verification.py       # Installation verification
 │   └── integrations/             # External tool clients
 │       ├── aws_client.py         # AWS STS validation
 │       ├── file_io.py            # Secure file operations
+│       ├── helm_client.py        # Helm operations
+│       ├── kind_client.py        # Kind cluster operations
 │       ├── kubeconfig.py         # Kubeconfig management
+│       ├── kubectl_client.py     # Kubectl operations
 │       └── prerequisites.py      # Prerequisite checking
 ├── tests/                        # Comprehensive test suite
 │   ├── unit/                     # Unit tests (273 tests)
@@ -300,7 +403,11 @@ mk8/
 │   └── integration/              # End-to-end tests (planned)
 ├── .claude/                      # AI-assisted development
 │   ├── specs/                    # Feature specifications
+│   │   ├── tutorial-01-create-s3-bucket/  # Tutorial spec
+│   │   └── ...                   # Other specs
 │   └── steering/                 # Development guidelines
+├── docs/                         # Documentation (planned)
+│   └── tutorials/                # Tutorial content
 ├── setup.py                      # Package configuration
 ├── pyproject.toml                # Modern Python packaging
 └── requirements.txt              # Dependencies
@@ -428,6 +535,9 @@ mk8 is built with:
 - [Click](https://click.palletsprojects.com/) - CLI framework
 - [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) - AWS SDK
 - [PyYAML](https://pyyaml.org/) - YAML processing
+- [kind](https://kind.sigs.k8s.io/) - Local Kubernetes clusters
+- [Helm](https://helm.sh/) - Kubernetes package manager
+- [Crossplane](https://www.crossplane.io/) - Infrastructure as code
 - [Hypothesis](https://hypothesis.readthedocs.io/) - Property-based testing
 - [pytest](https://pytest.org/) - Testing framework
 
