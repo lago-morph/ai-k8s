@@ -184,9 +184,10 @@ class TestVerificationManagerProperties:
     def test_property_failed_checks_include_instructions(
         self, docker_missing, kind_missing, kubectl_missing
     ):
-        """
-        Feature: installer, Property 8: Failed checks include instructions
-        For any failed prerequisite check, verify installation instructions are included.
+        """Feature: installer, Property 8: Failed checks include instructions.
+
+        For any failed prerequisite check, verify installation instructions
+        are included.
         """
         manager = VerificationManager()
 

@@ -127,7 +127,7 @@ class TestVerificationResult:
         assert result.is_verified() is False
 
     def test_is_verified_when_nothing_satisfied(self):
-        """Test is_verified returns False when neither mk8 nor prerequisites are satisfied."""
+        """Test is_verified returns False when neither satisfied."""
         result = VerificationResult(
             mk8_installed=False,
             prerequisites_ok=False,
