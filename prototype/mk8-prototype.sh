@@ -10,6 +10,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Source libraries
 source "${SCRIPT_DIR}/lib/common.sh"
 source "${SCRIPT_DIR}/lib/config.sh"
+source "${SCRIPT_DIR}/lib/bootstrap.sh"
+source "${SCRIPT_DIR}/lib/crossplane.sh"
 
 # Version information
 readonly VERSION="0.1.0-prototype"
@@ -75,19 +77,19 @@ cmd_config() {
     validate_aws_credentials
 }
 
-# Placeholder for bootstrap commands (implemented in lib/bootstrap.sh)
+# Bootstrap commands (implemented in lib/bootstrap.sh)
 cmd_bootstrap() {
     local subcommand="${1:-}"
 
     case "$subcommand" in
         create)
-            log_error "Bootstrap create not yet implemented" "$EXIT_GENERAL_ERROR"
+            bootstrap_create
             ;;
         status)
-            log_error "Bootstrap status not yet implemented" "$EXIT_GENERAL_ERROR"
+            bootstrap_status
             ;;
         delete)
-            log_error "Bootstrap delete not yet implemented" "$EXIT_GENERAL_ERROR"
+            bootstrap_delete
             ;;
         *)
             log_error "Unknown bootstrap subcommand: '$subcommand'\nValid subcommands: create, status, delete" "$EXIT_INVALID_ARGS"
@@ -95,22 +97,22 @@ cmd_bootstrap() {
     esac
 }
 
-# Placeholder for crossplane commands (implemented in lib/crossplane.sh)
+# Crossplane commands (implemented in lib/crossplane.sh)
 cmd_crossplane() {
     local subcommand="${1:-}"
 
     case "$subcommand" in
         install)
-            log_error "Crossplane install not yet implemented" "$EXIT_GENERAL_ERROR"
+            crossplane_install
             ;;
         status)
-            log_error "Crossplane status not yet implemented" "$EXIT_GENERAL_ERROR"
+            crossplane_status
             ;;
         create-s3)
-            log_error "Crossplane create-s3 not yet implemented" "$EXIT_GENERAL_ERROR"
+            crossplane_create_s3
             ;;
         delete-s3)
-            log_error "Crossplane delete-s3 not yet implemented" "$EXIT_GENERAL_ERROR"
+            crossplane_delete_s3
             ;;
         *)
             log_error "Unknown crossplane subcommand: '$subcommand'\nValid subcommands: install, status, create-s3, delete-s3" "$EXIT_INVALID_ARGS"
