@@ -1,0 +1,15 @@
+# ShellCheck configuration for mk8-prototype
+# See https://www.shellcheck.net/wiki/ for more information
+
+# Shell dialect (bash)
+shell=bash
+
+# Disable specific checks that conflict with our coding style
+
+# SC2250: Prefer putting braces around variable references
+# Standard $var is acceptable and more readable than ${var} in most cases
+disable=SC2250
+
+# SC2034: Variable appears unused
+# Exit codes and other constants may be defined early for later use
+disable=SC2034
