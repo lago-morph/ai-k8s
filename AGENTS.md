@@ -1,382 +1,211 @@
 # AI Agent Context Guide
 
-This file provides orientation for AI agents working on the mk8 project. Read this first when starting a new session.
+**Read this file first when starting a new session. This is the comprehensive base context for all AI agents working on mk8.**
 
-## Quick Project Overview
+## Project Overview
 
-**mk8** is a Python CLI tool for managing Kubernetes infrastructure on AWS using a multi-tier cluster architecture with Crossplane. It automates the creation of:
-1. Local bootstrap cluster (kind)
-2. AWS management cluster (EKS)
-3. AWS workload clusters (EKS)
+**mk8** is a Python CLI tool for managing Kubernetes infrastructure on AWS using Crossplane.
 
-**Version**: 0.1.0 (Alpha)
-**Language**: Python 3.8+
-**Development**: Spec-driven, test-driven development (TDD)
+- **Version**: 0.1.0 (Alpha)
+- **Language**: Python 3.8+
+- **Development**: Spec-driven, test-driven development (TDD)
+- **Test Coverage**: 95%+ (273+ tests passing)
 
-## Essential Reading (In Order)
+## Essential Context Files
 
-### 1. Start Here - Project Documentation
-```
-README.md                              # Installation, quick start, development setup
-.claude/steering/product.md            # What mk8 does, architecture, features
-.claude/steering/tech.md               # Tech stack, coding standards, best practices
-.claude/steering/structure.md          # Project organization, module architecture
-```
+Read these for complete project understanding:
 
-### 2. Specifications (Feature Design)
-```
-.claude/specs/                         # All feature specifications
-├── mk8-cli/                          # CLI framework (COMPLETE)
-│   ├── requirements.md               # EARS format requirements
-│   ├── design.md                     # Architecture and components
-│   └── tasks.md                      # Implementation plan
-├── aws-credentials-management/       # AWS credential handling (PLANNED)
-├── kubeconfig-file-handling/         # kubectl config management (PLANNED)
-└── local-bootstrap-cluster/          # Bootstrap cluster lifecycle (PLANNED)
-```
+1. **This file (AGENTS.md)** - Base context, workflows, requirements
+2. **README.md** - Installation, quick start, development setup
+3. **.claude/steering/product.md** - What mk8 does, architecture, features
+4. **.claude/steering/tech.md** - Tech stack, coding standards, testing
+5. **.claude/steering/structure.md** - Project organization, modules
+6. **.claude/specs/SPECS-STATUS.md** - Current spec status and priorities
 
-### 3. Implementation Status
-```
-mk8/                                   # Main package (1,033+ lines)
-├── cli/                              # ✅ COMPLETE - CLI framework
-│   ├── main.py                       # Entry point, Click setup, routing
-│   ├── output.py                     # Output formatting
-│   └── commands/                     # Command handlers
-│       ├── version.py                # ✅ COMPLETE
-│       ├── verify.py                 # ✅ COMPLETE - Prerequisite verification
-│       ├── config.py                 # ✅ COMPLETE - AWS credentials
-│       ├── bootstrap.py              # ✅ COMPLETE - Bootstrap cluster lifecycle
-│       └── crossplane.py             # ✅ COMPLETE - Crossplane management
-├── core/                             # ✅ COMPLETE - Core infrastructure
-│   ├── errors.py                     # Exception hierarchy, exit codes
-│   ├── logging.py                    # Logger with verbose support
-│   └── version.py                    # Semantic versioning
-├── business/                         # ✅ COMPLETE - Business logic
-│   ├── verification.py               # ✅ Prerequisite verification orchestration
-│   ├── credential_manager.py         # ✅ AWS credential management
-│   ├── crossplane_manager.py         # ✅ Crossplane secret sync
-│   ├── bootstrap_manager.py          # ✅ Bootstrap cluster orchestration
-│   └── crossplane_installer.py       # ✅ Crossplane installation (382 lines)
-└── integrations/                     # ✅ COMPLETE - External clients
-    ├── prerequisites.py              # ✅ Prerequisite checking
-    ├── aws_client.py                 # ✅ AWS STS validation
-    ├── file_io.py                    # ✅ Secure file operations
-    ├── kubeconfig.py                 # ✅ Kubeconfig management
-    ├── kind_client.py                # ✅ kind cluster operations (415 lines)
-    ├── kubectl_client.py             # ✅ kubectl operations (200 lines)
-    └── helm_client.py                # ✅ Helm operations (235 lines)
-```
+## Current Project Status
 
-### 4. Tests (273+ tests, 95%+ coverage)
-```
-tests/
-├── unit/                             # ✅ All passing
-│   ├── cli/                          # CLI layer tests
-│   │   ├── test_main.py
-│   │   ├── test_output.py
-│   │   └── test_commands.py          # All commands tested
-│   ├── core/                         # Core layer tests
-│   │   ├── test_errors.py
-│   │   ├── test_logging.py
-│   │   └── test_version.py
-│   ├── business/                     # Business logic tests
-│   │   ├── test_verification.py      # 53 tests (42 unit + 11 property)
-│   │   ├── test_credential_manager.py # 121 tests (105 unit + 16 property)
-│   │   ├── test_crossplane_manager.py
-│   │   ├── test_bootstrap_manager.py
-│   │   └── test_crossplane_installer.py
-│   └── integrations/                 # Integration layer tests
-│       ├── test_prerequisites.py
-│       ├── test_aws_client.py
-│       ├── test_file_io.py
-│       ├── test_kubeconfig.py        # 49 tests (32 unit + 17 property)
-│       ├── test_kind_client.py
-│       ├── test_kubectl_client.py
-│       └── test_helm_client.py
-└── integration/                      # 🚧 Future end-to-end tests
+- **CLI Framework**: ✅ Complete (100% coverage)
+- **Bootstrap Cluster**: ✅ Complete (kind + Crossplane)
+- **Tutorial System**: 🚧 In Progress (Tutorial 01 at 96%)
+- **Next Priority**: Complete tutorials, begin GitOps features
+
+For detailed status, see `.claude/specs/SPECS-STATUS.md`
+
+---
+
+## Spec-Driven Development Workflow
+
+This project uses a three-phase methodology for feature development.
+
+### Workflow Phases
+
+**Phase 1: Requirements** → **Phase 2: Design** → **Phase 3: Tasks** → **Implementation**
+
+### Key Rules
+
+- **Never skip phases** - must complete Requirements → Design → Tasks in order
+- **Always get explicit approval** - clear "yes", "approved", or "looks good" required between phases
+- **One task at a time** - no automatic progression to next tasks
+- **Code focus only** - tasks involve writing, modifying, or testing code exclusively
+- **Spec separation** - this workflow creates planning artifacts, not production code
+
+### Phase 1: Requirements
+
+**File**: `.claude/specs/{feature_name}/requirements.md`
+
+**Process**:
+1. Generate requirements based on user idea WITHOUT sequential questions first
+2. Use EARS format for acceptance criteria
+3. Ask: "Do the requirements look good? If so, we can move on to the design."
+4. Iterate until explicit approval received
+
+**Format**:
+```markdown
+# Requirements Document
+
+## Introduction
+[Feature summary]
+
+## Requirements
+
+### Requirement 1
+**User Story:** As a [role], I want [feature], so that [benefit]
+
+#### Acceptance Criteria
+1. WHEN [event] THEN [system] SHALL [response]
+2. IF [precondition] THEN [system] SHALL [response]
 ```
 
-## Development Context
+### Phase 2: Design
 
-### Current State
-- **CLI Framework**: ✅ Complete with 100% test coverage
-- **Prerequisite Verification**: ✅ Complete with 97% test coverage (53 tests)
-- **AWS Credentials Management**: ✅ Complete with 100% test coverage (121 tests)
-- **Kubeconfig Management**: ✅ Complete with 100% test coverage (49 tests)
-- **Bootstrap Cluster**: ✅ Complete (local kind cluster lifecycle)
-- **Crossplane Bootstrap**: ✅ Complete (Helm-based installation, AWS provider setup)
-- **Tutorial System**: 🚧 In Progress (Tutorial 01 at 96% completion)
-- **Project Structure**: ✅ Complete
-- **Specs**: 16 features (6 complete, 1 in progress, 3 design complete, 2 requirements only, 3 draft, 1 planned, 1 deprecated)
-- **Virtual Environment**: `.venv/` (Python 3.12.3)
-- **Test Coverage**: 95%+ overall (273+ tests passing)
+**File**: `.claude/specs/{feature_name}/design.md`
 
-### Active Development
-- Following **Spec-Driven Development** (Requirements → Design → Tasks → Implementation)
-- Following **Test-Driven Development** (Red-Green-Refactor, batched for efficiency)
-- Using **Click** for CLI framework
-- Using **Hypothesis** for property-based testing (100+ examples per property)
-- Code style: **Black** (line-length=88)
-- Type checking: **mypy** (strict mode)
-- Coverage requirement: **80% minimum** (currently 95%+)
-- Current focus: **Tutorial development** and **documentation**
+**Prerequisites**: Requirements document must be approved
 
-### Spec-Driven Workflow
-This project uses a three-phase methodology for feature development:
+**Process**:
+1. Conduct necessary research and build context
+2. Create comprehensive design with all required sections
+3. Include Mermaid diagrams when appropriate
+4. Ask: "Does the design look good? If so, we can move on to the implementation plan."
+5. Iterate until explicit approval received
 
-1. **Requirements Phase**: User stories with EARS format acceptance criteria
-2. **Design Phase**: Architecture, components, data models, Mermaid diagrams
-3. **Tasks Phase**: Numbered implementation tasks with requirement traceability
+**Required Sections**:
+- Overview
+- Architecture
+- Components and Interfaces
+- Data Models
+- Error Handling
+- Testing Strategy
 
-**Key Rules**:
-- Never skip phases (Requirements → Design → Tasks)
-- Each phase requires explicit approval before proceeding
-- Tasks are executed one at a time with status tracking
-- All specs live in `.claude/specs/{feature-name}/`
-- Status files track progress for in-progress features
+### Phase 3: Tasks
 
-### Key Workflows
+**File**: `.claude/specs/{feature_name}/tasks.md`
 
-**Running Tests**:
-```bash
-.venv/bin/pytest tests/unit/ -v              # All tests with coverage
-.venv/bin/pytest tests/unit/cli/ -v --no-cov # CLI tests only
-.venv/bin/pytest --cov=mk8 --cov-report=html # With HTML report
+**Prerequisites**: Design document must be approved
+
+**Process**:
+1. Convert design into actionable coding tasks
+2. Use numbered checkbox list format (max two hierarchy levels)
+3. Each task must reference specific requirements
+4. Ask: "Do the tasks look good?"
+5. Iterate until explicit approval received
+
+**Format**:
+```markdown
+# Implementation Plan
+
+- [ ] 1. Set up project structure
+  - Create directory structure
+  - _Requirements: 1.1_
+
+- [ ] 2. Implement data models
+- [ ] 2.1 Create core interfaces
+  - Write TypeScript interfaces
+  - _Requirements: 2.1, 3.3_
+
+- [ ] 2.2 Implement User model
+  - Write User class
+  - Create unit tests
+  - _Requirements: 1.2_
 ```
 
-**Code Quality**:
-```bash
-.venv/bin/black mk8/ tests/                  # Format code
-.venv/bin/flake8 mk8/ tests/                 # Lint code
-.venv/bin/mypy mk8/                          # Type check
+### Task Execution
+
+**Pre-Execution Requirements**:
+- ALWAYS read requirements.md, design.md, and tasks.md before executing
+- Executing without context leads to inaccurate implementations
+
+**Process**:
+1. If task has sub-tasks, start with sub-tasks
+2. Focus on ONE task only - do not implement other tasks
+3. Verify implementation against requirements
+4. Ask user for approval of changes
+5. Mark task complete by changing `[ ]` to `[x]`
+6. Stop and wait for next instruction
+
+**Critical Rule**: Execute one task at a time. Once finished, stop. Don't automatically continue.
+
+### Task Questions
+
+Users may ask about tasks without wanting execution:
+- Provide information without starting execution
+- Recommend next task if asked
+- Don't automatically start execution for informational requests
+
+### Workflow Diagram
+
+```mermaid
+stateDiagram-v2
+  [*] --> Requirements : Initial Creation
+
+  Requirements : Write Requirements
+  Design : Write Design
+  Tasks : Write Tasks
+
+  Requirements --> ReviewReq : Complete Requirements
+  ReviewReq --> Requirements : Feedback/Changes
+  ReviewReq --> Design : Explicit Approval
+  
+  Design --> ReviewDesign : Complete Design
+  ReviewDesign --> Design : Feedback/Changes
+  ReviewDesign --> Tasks : Explicit Approval
+  
+  Tasks --> ReviewTasks : Complete Tasks
+  ReviewTasks --> Tasks : Feedback/Changes
+  ReviewTasks --> [*] : Explicit Approval
+  
+  Execute : Execute Task
+  
+  state "Entry Points" as EP {
+      [*] --> Requirements : Update
+      [*] --> Design : Update
+      [*] --> Tasks : Update
+      [*] --> Execute : Execute task
+  }
+  
+  Execute --> [*] : Complete
 ```
 
-**Git Operations**:
-```bash
-# IMPORTANT: Always disable git pager to avoid blocking
-git --no-pager log --oneline -10             # View recent commits
-git --no-pager status                        # Check status
-git --no-pager diff                          # View changes
-git --no-pager log --oneline --graph -10     # View commit graph
-```
+---
 
-**Running CLI**:
-```bash
-.venv/bin/mk8 --help                         # Via installed package
-.venv/bin/mk8 version                        # Check version
-.venv/bin/mk8 verify                         # Verify prerequisites
-.venv/bin/mk8 config                         # Configure AWS credentials
-.venv/bin/mk8 bootstrap create               # Create bootstrap cluster
-.venv/bin/mk8 bootstrap status               # Check cluster status
-.venv/bin/mk8 crossplane install             # Install Crossplane
-.venv/bin/mk8 crossplane status              # Check Crossplane status
-python -m mk8 --help                         # Via module
-```
+## Development Requirements
 
-## Architecture Quick Reference
+### Mandatory Pre-Commit Checks
 
-### Layered Architecture
-```
-CLI Layer          → Click-based parsing, routing, help
-Command Layer      → Command handlers (bootstrap, config, version)
-Business Logic     → Core functionality (future)
-Integration Layer  → External clients (kind, kubectl, AWS) (future)
-Infrastructure     → Logging, errors, I/O
-```
-
-### Error Handling Pattern
-```python
-# All custom errors inherit from MK8Error
-# Always include suggestions for remediation
-raise PrerequisiteError(
-    "Docker is not running",
-    suggestions=["Start Docker Desktop", "Run 'systemctl start docker'"]
-)
-```
-
-### Testing Pattern - Token-Efficient TDD
-
-**Batched Test-Driven Development**:
-To optimize token usage while maintaining TDD rigor, follow this approach:
-
-1. **Batch Test Creation**: Write all tests for a component/layer at once
-2. **Red Phase**: Run tests to verify they all fail
-3. **Green Phase**: Implement component to make all tests pass
-4. **Refactor**: Clean up code while keeping tests green
-
-**Why This Works**:
-- Reduces context switching between test and implementation
-- Allows seeing full test suite structure upfront
-- Minimizes file reads and redundant explanations
-- Maintains TDD benefits (tests first, fail-pass cycle)
-- More efficient token usage without sacrificing correctness
-
-**Implementation Order**:
-- Group by architectural layer (data models → integrations → business logic → CLI)
-- Complete one component fully before moving to next
-- Property tests can replace many unit tests (one property = dozens of examples)
-- Defer integration tests to checkpoints between major phases
-
-**Example**:
-```python
-# Phase 1: Write all tests for FileIO
-def test_read_config_file(): ...
-def test_write_config_file(): ...
-def test_secure_permissions(): ...
-
-# Phase 2: Run tests (all should fail)
-# Phase 3: Implement FileIO to pass all tests
-# Phase 4: Refactor if needed
-
-## Common Tasks
-
-### Adding a New Feature
-1. Read spec: `.claude/specs/<feature>/requirements.md`
-2. Read design: `.claude/specs/<feature>/design.md`
-3. Follow tasks: `.claude/specs/<feature>/tasks.md`
-4. Write tests first (TDD)
-5. Implement incrementally
-6. Maintain >80% coverage
-
-### Understanding a Module
-1. Read module docstring
-2. Check tests: `tests/unit/<module>/test_*.py`
-3. Review related spec if exists
-
-### Finding Configuration
-- **Package**: `setup.py`, `pyproject.toml`
-- **Testing**: `pyproject.toml` [tool.pytest.ini_options]
-- **Linting**: `.flake8`
-- **Type Checking**: `pyproject.toml` [tool.mypy]
-- **Formatting**: `pyproject.toml` [tool.black]
-- **Claude Code**: `.claude/settings.json`
-
-## Important Patterns
-
-### File Structure Conventions
-- **Tests mirror source**: `tests/unit/cli/test_main.py` ↔ `mk8/cli/main.py`
-- **One test class per source class**: `class TestFeature` tests `class Feature`
-- **Descriptive test names**: `test_method_with_invalid_input_raises_error`
-
-### Documentation Requirements
-- **Docstrings**: All public functions and classes
-- **Type hints**: All function signatures (mypy strict mode)
-- **Error messages**: Always include suggestions
-- **Comments**: Only for non-obvious logic
-
-### Import Organization
-```python
-# Standard library
-import sys
-from typing import Optional
-
-# Third-party
-import click
-from dataclasses import dataclass
-
-# Local
-from mk8.core.errors import MK8Error
-from mk8.cli.output import OutputFormatter
-```
-
-## When You Get Stuck
-
-1. **Check specs**: `.claude/specs/<feature>/` for requirements and design
-2. **Check steering docs**: `.claude/steering/` for guidelines
-3. **Check tests**: Often show usage examples
-4. **Check existing code**: Similar patterns elsewhere
-5. **Read pyproject.toml**: Tool configurations
-
-## Next Steps (Likely Tasks)
-
-Based on current state, you'll probably work on:
-
-1. **Tutorial 01 - Create S3 Bucket** - Complete and test tutorial
-   - Spec: `.claude/specs/tutorial-01-create-s3-bucket/`
-   - Status: 96% complete (24/25 tasks), needs end-to-end testing
-   - Next: Manual testing, error scenario validation, quality review
-
-2. **GitOps Repository Setup** - Implement repository structure
-   - Spec: `.claude/specs/gitops-repository-setup/`
-   - Status: Design complete, tasks defined, ready for implementation
-
-3. **ArgoCD Bootstrap** - Implement ArgoCD installation
-   - Spec: `.claude/specs/argocd-bootstrap/`
-   - Status: Requirements complete, needs design & tasks
-
-4. **Documentation Site** - Tutorial framework
-   - Spec: `.claude/specs/documentation-site/`
-   - Status: Requirements incomplete, needs completion
-
-## Key Constraints
-
-- ✅ All file operations allowed within repository
-- ✅ pytest, black, flake8, mypy allowed via `.venv/bin/`
-- ⚠️ Must follow TDD (write tests first)
-- ⚠️ Must maintain 80% coverage minimum
-- ⚠️ Must pass all quality checks (black, flake8, mypy)
-
-## ⚠️ MANDATORY QUALITY REQUIREMENTS FOR AI AGENTS
-
-**CRITICAL: These are non-negotiable requirements. Failure to follow these will result in broken code in the repository.**
-
-### Before ANY Commit to Git
-
-You MUST run and pass ALL of the following checks:
-
-1. **Black Formatting** (MANDATORY)
-   ```bash
-   .venv/bin/black mk8/ tests/
-   ```
-   - **Requirement**: NO output (all files already formatted)
-   - **Action**: If files are reformatted, commit the formatting changes separately
-   - **Never commit**: Unformatted Python code
-
-2. **Flake8 Linting** (MANDATORY)
-   ```bash
-   .venv/bin/flake8 mk8/ tests/
-   ```
-   - **Requirement**: ZERO warnings or errors
-   - **Action**: Fix ALL issues before committing
-   - **Never commit**: Code with linting violations
-
-3. **Mypy Type Checking** (MANDATORY)
-   ```bash
-   .venv/bin/mypy mk8/
-   ```
-   - **Requirement**: ZERO type errors
-   - **Action**: Fix ALL type errors before committing
-   - **Never commit**: Code with type errors
-
-4. **Pytest Unit Tests** (MANDATORY)
-   ```bash
-   .venv/bin/pytest tests/unit/ -v
-   ```
-   - **Requirement**: ALL tests must PASS
-   - **Requirement**: Coverage must be ≥80% (currently 95%+)
-   - **Action**: Fix ALL failing tests before committing
-   - **Never commit**: Code that breaks existing tests
-
-### Workflow for AI Agents
-
-**EVERY TIME you modify Python code:**
+**CRITICAL**: Run ALL four checks before EVERY commit. Never commit code that fails any check.
 
 ```bash
-# Step 1: Format code
+# 1. Format code (must show no changes)
 .venv/bin/black mk8/ tests/
 
-# Step 2: Check linting
+# 2. Lint code (must show zero issues)
 .venv/bin/flake8 mk8/ tests/
 
-# Step 3: Check types
+# 3. Type check (must show zero errors)
 .venv/bin/mypy mk8/
 
-# Step 4: Run tests
+# 4. Run tests (must all pass, ≥80% coverage)
 .venv/bin/pytest tests/unit/ -v
-
-# Step 5: Only if ALL checks pass, then commit
-git add <files>
-git commit -m "message"
 ```
 
 **If ANY check fails:**
@@ -386,119 +215,137 @@ git commit -m "message"
 - ✅ Re-run all checks
 - ✅ Only commit when everything passes
 
-### Why This Matters
+### Testing Requirements
 
-- **Black**: Ensures consistent code style across the project
-- **Flake8**: Catches common bugs, style issues, and code smells
-- **Mypy**: Prevents type-related bugs and improves code quality
-- **Pytest**: Ensures code works correctly and doesn't break existing functionality
+- ⚠️ **MANDATORY**: Write tests first (TDD)
+- ⚠️ **MANDATORY**: Maintain ≥80% coverage (currently 95%+)
+- ⚠️ **MANDATORY**: All tests must pass before commit
+- Use Hypothesis for property-based testing (100+ examples per property)
 
-**Breaking these rules breaks the build for everyone and wastes time.**
+### Code Quality Requirements
+
+- ⚠️ **MANDATORY**: Black formatting (line-length=88)
+- ⚠️ **MANDATORY**: Flake8 linting (zero violations)
+- ⚠️ **MANDATORY**: Mypy type checking (strict mode, zero errors)
+- ⚠️ **MANDATORY**: Type hints on all function signatures
+- ⚠️ **MANDATORY**: Docstrings on all public functions/classes
+
+### Git Requirements
+
+- ⚠️ **CRITICAL**: Always use `git --no-pager` to prevent blocking
+- Never commit unformatted code
+- Never commit code with linting violations
+- Never commit code with type errors
+- Never commit code that breaks tests
+
+---
+
+## Test-Driven Development (Batched for Efficiency)
+
+To optimize token usage while maintaining TDD rigor:
+
+1. **Batch Test Creation**: Write all tests for a component/layer at once
+2. **Red Phase**: Run tests to verify they all fail
+3. **Green Phase**: Implement component to make all tests pass
+4. **Refactor**: Clean up code while keeping tests green
+
+**Benefits**:
+- Reduces context switching
+- Allows seeing full test suite structure upfront
+- Minimizes redundant file reads
+- Maintains TDD benefits (tests first, fail-pass cycle)
+- More efficient token usage
+
+**Implementation Order**:
+- Group by architectural layer (data models → integrations → business logic → CLI)
+- Complete one component fully before moving to next
+- Property tests can replace many unit tests (one property = dozens of examples)
+- Defer integration tests to checkpoints between major phases
+
+---
+
+## Architecture Quick Reference
+
+### Layered Architecture
+
+```
+CLI Layer (Click)
+    ↓
+Command Layer (handlers)
+    ↓
+Business Logic (orchestration)
+    ↓
+Integration Layer (external tools)
+    ↓
+Infrastructure (logging, errors, I/O)
+```
+
+### Error Handling Pattern
+
+```python
+# All custom errors inherit from MK8Error
+# Always include suggestions for remediation
+raise PrerequisiteError(
+    "Docker is not running",
+    suggestions=["Start Docker Desktop", "Run 'systemctl start docker'"]
+)
+```
+
+---
 
 ## Quick Command Reference
 
+### Testing
 ```bash
-# MANDATORY: Run before EVERY commit (in this order)
-.venv/bin/black mk8/ tests/          # 1. Format code
-.venv/bin/flake8 mk8/ tests/         # 2. Check linting (must be zero issues)
-.venv/bin/mypy mk8/                  # 3. Check types (must be zero errors)
-.venv/bin/pytest tests/unit/ -v     # 4. Run tests (must all pass)
-
-# Testing
 .venv/bin/pytest tests/unit/ -v
 .venv/bin/pytest --cov=mk8 --cov-report=html
+```
 
-# Code quality (individual checks)
+### Code Quality
+```bash
 .venv/bin/black mk8/ tests/
 .venv/bin/flake8 mk8/ tests/
 .venv/bin/mypy mk8/
+```
 
-# Git (ALWAYS use --no-pager to avoid blocking)
+### Git (always use --no-pager)
+```bash
 git --no-pager status
 git --no-pager log --oneline -10
 git --no-pager diff
-git add <files>
-git commit -m "message"
-git push
+```
 
-# Install/reinstall
-.venv/bin/pip install -e ".[dev]"
-
-# Run CLI
+### Run CLI
+```bash
 .venv/bin/mk8 --help
 .venv/bin/mk8 version
 ```
 
+---
+
+## When You Get Stuck
+
+1. Check `.claude/specs/<feature>/` for requirements and design
+2. Check `.claude/steering/` for detailed guidelines
+3. Check tests for usage examples
+4. Check existing code for similar patterns
+5. Read `pyproject.toml` for tool configurations
+
+---
+
 ## Session Start Checklist
 
-When starting a new session:
 - [ ] Read this file (AGENTS.md)
-- [ ] **Check project status**: Read `.claude/specs/SPECS-STATUS.md` to understand what's complete, in progress, and planned
-- [ ] **Check active work**: If a spec is in progress, read its `STATUS.md` file (e.g., `.claude/specs/installer/STATUS.md`)
-- [ ] Skim `.claude/steering/product.md` for project context
-- [ ] Skim `.claude/steering/tech.md` for coding standards
-- [ ] Check `.claude/specs/` for relevant feature specs
-- [ ] Run tests to verify environment: `.venv/bin/pytest tests/unit/ -v`
-- [ ] Understand current task from user or review spec tasks.md files
+- [ ] Check `.claude/specs/SPECS-STATUS.md` for current priorities
+- [ ] If working on a spec, read its requirements.md, design.md, tasks.md
+- [ ] Run `.venv/bin/pytest tests/unit/ -v` to verify environment
+- [ ] Understand current task from user
 
-## Critical Git Usage Rules
+---
 
-**ALWAYS use `--no-pager` flag with git commands to prevent blocking:**
+## Important Notes
 
-```bash
-# ✅ CORRECT - Will not block
-git --no-pager log --oneline -10
-git --no-pager status
-git --no-pager diff
-git --no-pager log --oneline --graph -10
-
-# ❌ WRONG - Will block and cause issues
-git log --oneline -10
-git status
-git diff
-```
-
-This is critical because the pager (less/more) will block execution waiting for user input.
-
-## Project Status Files
-
-The project uses status tracking files to maintain context across sessions:
-
-### `.claude/specs/SPECS-STATUS.md`
-- **Purpose**: High-level overview of all feature specs
-- **Contains**: Completion status, task counts, implementation order
-- **When to read**: Start of every session to understand project state
-- **CRITICAL**: Must be updated whenever specs are added, deleted, moved, worked on, or completed
-
-### `.claude/specs/{feature-name}/STATUS.md`
-- **Purpose**: Detailed status for in-progress features
-- **Contains**: Completed work, failing tests, next steps, file structure
-- **When to read**: When working on a specific feature
-- **Example**: `.claude/specs/installer/STATUS.md` tracks the installer MVP implementation
-
-### Status Indicators
-- ✅ **COMPLETE**: Feature fully implemented and tested
-- 🚧 **IN PROGRESS**: Active development with partial completion
-- 📋 **PLANNED**: Design and tasks complete, ready for implementation
-- 📝 **REQUIREMENTS ONLY**: Needs design and task planning
-- ⚠️ **INCOMPLETE**: Tests exist but implementation missing
-- ❌ **FAILING**: Tests failing, needs attention
-
-### Maintaining SPECS-STATUS.md
-
-**IMPORTANT**: Whenever you work on specs, you MUST update `.claude/specs/SPECS-STATUS.md`:
-
-**Update when:**
-- Adding a new spec (add to appropriate section)
-- Completing a phase (requirements → design → tasks → implementation)
-- Starting work on a spec (move to "In Progress" section)
-- Completing a spec (move to "Completed Specs" section)
-- Deprecating or removing a spec (update or remove entry)
-- Changing spec status or task counts
-
-**What to update:**
-- Spec status and phase completion
-- Task counts (completed/total)
-- File listings (requirements.md, design.md, tasks.md, STATUS.md)
-- Summary statistics at the bottom
-- Implementation order if priorities change
+- **This file**: Comprehensive base context - do not enhance or duplicate
+- **CLAUDE.md**: Points to this file - do not duplicate content there
+- **Detailed guidelines**: In steering files - reference, don't duplicate
+- **Implementation details**: In structure.md - reference, don't duplicate
