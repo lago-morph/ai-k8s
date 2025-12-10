@@ -193,12 +193,34 @@ These specs implement safe testing and promotion of ArgoCD CRD changes. See `.cl
 - Shows how the 4 bootstrap specs work together
 - Provides implementation order and dependencies
 
+## Draft Specs (Not Yet Reviewed)
+
+These specs are in draft status and require review and refinement before proceeding to design phase:
+
+### 📝 github-workflow-automation
+- **Status**: DRAFT - NOT REVIEWED
+- **Files**: requirements.md, CONTEXT.md
+- **Description**: GitHub MCP server integration for issue-driven development workflow
+- **Purpose**: Enable AI agents to discover issues, develop solutions, create PRs, and complete workflow
+- **Related**: ADR-003 (GitHub MCP server decision)
+- **Next Steps**: Review requirements, refine based on feedback, proceed to design
+
+### 📝 testing-verification-tools
+- **Status**: DRAFT - NOT REVIEWED
+- **Files**: requirements.md, CONTEXT.md, SCOPE-DECISIONS.md
+- **Description**: kubectl and AWS CLI integration for read-only testing verification
+- **Purpose**: Provide multiple independent verification methods during integration testing
+- **Related**: ADR-004 (kubectl/AWS CLI decision)
+- **Deferred Decisions**: Integration test framework scope, IAM policy management approach
+- **Next Steps**: Review requirements, resolve scope questions, proceed to design
+
 ## Summary Statistics
 
-- **Total Specs**: 16 (1 deprecated)
+- **Total Specs**: 18 (1 deprecated)
 - **Complete**: 6 (mk8-cli, installer, aws-credentials-management, kubeconfig-file-handling, local-kind-cluster, crossplane-bootstrap)
 - **Design Complete**: 3 (tutorial-01-create-s3-bucket, gitops-repository-setup, argocd-gitops-promotion)
 - **Requirements Complete**: 2 (argocd-bootstrap, documentation-site incomplete)
+- **Draft (Not Reviewed)**: 2 (github-workflow-automation, testing-verification-tools)
 - **Draft (Needs Refinement)**: 3 (argocd-crd-basic-static, workload-cluster-gitops, argocd-crd-advanced-static)
 - **Planned**: 1 (installer-future)
 - **Deprecated**: 1 (local-bootstrap-cluster)
@@ -208,6 +230,8 @@ These specs implement safe testing and promotion of ArgoCD CRD changes. See `.cl
 See `.claude/architecture/` for cross-cutting architectural decisions:
 - **ADR-001**: ArgoCD Testing Approaches Analysis
 - **ADR-002**: ArgoCD Testing Implementation Strategy
+- **ADR-003**: GitHub MCP Server for Issue-Driven Development Workflow
+- **ADR-004**: kubectl and AWS CLI for Read-Only Testing Verification
 
 ## Notes
 
