@@ -1,0 +1,12 @@
+{
+  "wsl": {
+    "instanceName": "mk8-test",
+    "distribution": "Ubuntu-24.04",
+    "setupScript": "prototype/setup-wsl-test-env.sh"
+  },
+  "testing": {
+    "framework": "bats",
+    "testDirectory": "prototype/tests/unit",
+    "shellcheckPaths": ["prototype/lib/*.sh", "prototype/*.sh"]
+  }
+}
