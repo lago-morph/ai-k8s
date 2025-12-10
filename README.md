@@ -344,6 +344,27 @@ pytest tests/unit/integrations/
 pytest tests/unit/business/
 ```
 
+### Prototype Testing (Bash/BATS)
+
+The `prototype/` directory contains a bash-based reference implementation. Use the universal test runners:
+
+```powershell
+# Windows - Quick setup
+.\scripts\run-tests.ps1 -Setup
+
+# Run tests
+.\scripts\run-tests.ps1
+```
+
+```bash
+# Linux/macOS
+./scripts/test-runner.sh
+```
+
+**Documentation:**
+- [WSL-SETUP.md](WSL-SETUP.md) - Complete setup guide with quick start
+- [REUSABLE-WSL-TESTING-PATTERN.md](REUSABLE-WSL-TESTING-PATTERN.md) - Use this pattern in other projects
+
 ### Code Quality
 
 mk8 maintains high code quality standards:
