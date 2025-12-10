@@ -100,57 +100,57 @@ teardown() {
 # Test: Bootstrap create command routes correctly
 @test "invoking 'bootstrap create' command routes to bootstrap handler" {
     run "$CLI_SCRIPT" bootstrap create
-    # Should fail because bootstrap create is not yet implemented, but routing works
+    # Should fail because Docker is not available in test environment, but routing works
     assert_failure
-    assert_output_contains "Bootstrap create not yet implemented"
+    assert_output_contains "Creating bootstrap cluster with isolated kubeconfig"
 }
 
 # Test: Bootstrap status command routes correctly
 @test "invoking 'bootstrap status' command routes to bootstrap handler" {
     run "$CLI_SCRIPT" bootstrap status
-    # Should fail because bootstrap status is not yet implemented, but routing works
+    # Should fail because cluster doesn't exist, but routing works
     assert_failure
-    assert_output_contains "Bootstrap status not yet implemented"
+    assert_output_contains "Checking bootstrap cluster status"
 }
 
 # Test: Bootstrap delete command routes correctly
 @test "invoking 'bootstrap delete' command routes to bootstrap handler" {
     run "$CLI_SCRIPT" bootstrap delete
-    # Should fail because bootstrap delete is not yet implemented, but routing works
-    assert_failure
-    assert_output_contains "Bootstrap delete not yet implemented"
+    # Should succeed because delete handles non-existent clusters gracefully
+    assert_success
+    assert_output_contains "Deleting bootstrap cluster"
 }
 
 # Test: Crossplane install command routes correctly
 @test "invoking 'crossplane install' command routes to crossplane handler" {
     run "$CLI_SCRIPT" crossplane install
-    # Should fail because crossplane install is not yet implemented, but routing works
+    # Should fail because bootstrap cluster doesn't exist, but routing works
     assert_failure
-    assert_output_contains "Crossplane install not yet implemented"
+    assert_output_contains "Installing Crossplane via Helm"
 }
 
 # Test: Crossplane status command routes correctly
 @test "invoking 'crossplane status' command routes to crossplane handler" {
     run "$CLI_SCRIPT" crossplane status
-    # Should fail because crossplane status is not yet implemented, but routing works
+    # Should fail because bootstrap cluster doesn't exist, but routing works
     assert_failure
-    assert_output_contains "Crossplane status not yet implemented"
+    assert_output_contains "Checking Crossplane status"
 }
 
 # Test: Crossplane create-s3 command routes correctly
 @test "invoking 'crossplane create-s3' command routes to crossplane handler" {
     run "$CLI_SCRIPT" crossplane create-s3
-    # Should fail because crossplane create-s3 is not yet implemented, but routing works
+    # Should fail because bootstrap cluster doesn't exist, but routing works
     assert_failure
-    assert_output_contains "Crossplane create-s3 not yet implemented"
+    assert_output_contains "Creating S3 bucket via Crossplane"
 }
 
 # Test: Crossplane delete-s3 command routes correctly
 @test "invoking 'crossplane delete-s3' command routes to crossplane handler" {
     run "$CLI_SCRIPT" crossplane delete-s3
-    # Should fail because crossplane delete-s3 is not yet implemented, but routing works
+    # Should fail because bootstrap cluster doesn't exist, but routing works
     assert_failure
-    assert_output_contains "Crossplane delete-s3 not yet implemented"
+    assert_output_contains "Deleting S3 bucket via Crossplane"
 }
 
 # ==============================================================================
@@ -271,19 +271,19 @@ teardown() {
 # Test: Bootstrap with extra arguments
 @test "invoking 'bootstrap create' with extra arguments still routes correctly" {
     run "$CLI_SCRIPT" bootstrap create extra-arg
-    # Implementation not complete, but routing should work
+    # Implementation is complete, should fail due to Docker not being available
     assert_failure
     # Should route to bootstrap create, not complain about extra-arg at CLI level
-    assert_output_contains "Bootstrap create not yet implemented"
+    assert_output_contains "Creating bootstrap cluster with isolated kubeconfig"
 }
 
 # Test: Crossplane with extra arguments
 @test "invoking 'crossplane install' with extra arguments still routes correctly" {
     run "$CLI_SCRIPT" crossplane install extra-arg
-    # Implementation not complete, but routing should work
+    # Implementation is complete, should fail due to bootstrap cluster not existing
     assert_failure
     # Should route to crossplane install, not complain about extra-arg at CLI level
-    assert_output_contains "Crossplane install not yet implemented"
+    assert_output_contains "Installing Crossplane via Helm"
 }
 
 # ==============================================================================
