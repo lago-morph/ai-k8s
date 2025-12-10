@@ -421,6 +421,20 @@ clear_bucket_state() {
 crossplane_create_s3() {
     log_info "Creating S3 bucket via Crossplane"
     
+    # Check prerequisites
+    check_prereq "kubectl"
+    check_prereq "aws"
+    
+    # Get kubeconfig path
+    local kubeconfig
+    kubeconfig="$(get_kubeconfig_path)"
+    
+    if [[ ! -f "${kubeconfig}" ]]; then
+        log_error "Kubeconfig not found: ${kubeconfig}" \
+            "Create bootstrap cluster first with: mk8-prototype.sh bootstrap create"
+        return 6
+    fi
+    
     # Check if bucket already exists
     if [[ -f "${STATE_FILE}" ]]; then
         local existing_bucket
@@ -435,10 +449,72 @@ crossplane_create_s3() {
     bucket_name="$(generate_bucket_name)"
     log_info "Generated bucket name: ${bucket_name}"
     
-    # TODO: Implement MRD creation and verification
-    log_error "S3 bucket creation not yet fully implemented" \
-        "This requires AWS Provider configuration (task 13)"
-    return 6
+    # Create S3 Bucket MRD
+    log_info "Creating S3 Bucket MRD"
+    log_command "kubectl --kubeconfig ${kubeconfig} apply -f -"
+    
+    cat <<EOF | kubectl --kubeconfig "${kubeconfig}" apply -f -
+apiVersion: s3.aws.upbound.io/v1beta1
+kind: Bucket
+metadata:
+  name: ${bucket_name}
+spec:
+  forProvider:
+    region: ${MK8_AWS_REGION:-us-east-1}
+  providerConfigRef:
+    name: ${PROVIDER_CONFIG_NAME}
+EOF
+    
+    if [[ $? -ne 0 ]]; then
+        log_error "Failed to create S3 Bucket MRD"
+        return 6
+    fi
+    
+    log_success "S3 Bucket MRD created"
+    
+    # Wait for MRD to be ready
+    log_info "Waiting for S3 Bucket to be ready..."
+    local max_wait=120
+    local waited=0
+    while [[ $waited -lt $max_wait ]]; do
+        local ready_status
+        ready_status=$(kubectl --kubeconfig "${kubeconfig}" get bucket "${bucket_name}" -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' 2>/dev/null || echo "")
+        
+        if [[ "${ready_status}" == "True" ]]; then
+            log_success "S3 Bucket is ready"
+            break
+        fi
+        
+        sleep 5
+        waited=$((waited + 5))
+    done
+    
+    if [[ $waited -ge $max_wait ]]; then
+        log_error "Timeout waiting for S3 Bucket to be ready"
+        return 6
+    fi
+    
+    # Display MRD status
+    log_info "S3 Bucket MRD status:"
+    kubectl --kubeconfig "${kubeconfig}" get bucket "${bucket_name}"
+    
+    # Verify bucket creation with AWS CLI
+    log_info "Verifying bucket creation with AWS CLI"
+    log_command "aws s3api head-bucket --bucket ${bucket_name}"
+    
+    if with_mk8_aws_env "aws s3api head-bucket --bucket ${bucket_name}" 2>/dev/null; then
+        log_success "Bucket verified in AWS: ${bucket_name}"
+    else
+        log_error "Failed to verify bucket in AWS" \
+            "Bucket may not be fully created yet"
+        return 6
+    fi
+    
+    # Save bucket name to state file
+    save_bucket_state "${bucket_name}"
+    
+    log_success "S3 bucket created successfully: ${bucket_name}"
+    return 0
 }
 
 #######################################
@@ -453,6 +529,20 @@ crossplane_create_s3() {
 crossplane_delete_s3() {
     log_info "Deleting S3 bucket via Crossplane"
     
+    # Check prerequisites
+    check_prereq "kubectl"
+    check_prereq "aws"
+    
+    # Get kubeconfig path
+    local kubeconfig
+    kubeconfig="$(get_kubeconfig_path)"
+    
+    if [[ ! -f "${kubeconfig}" ]]; then
+        log_error "Kubeconfig not found: ${kubeconfig}" \
+            "Create bootstrap cluster first with: mk8-prototype.sh bootstrap create"
+        return 6
+    fi
+    
     # Check if bucket exists
     if [[ ! -f "${STATE_FILE}" ]]; then
         log_error "No bucket found in state file" \
@@ -464,8 +554,40 @@ crossplane_delete_s3() {
     bucket_name="$(load_bucket_state)"
     log_info "Deleting bucket: ${bucket_name}"
     
-    # TODO: Implement MRD deletion and verification
-    log_error "S3 bucket deletion not yet fully implemented" \
-            "This requires AWS Provider configuration (task 13)"
-    return 6
+    # Delete S3 Bucket MRD
+    log_info "Deleting S3 Bucket MRD"
+    log_command "kubectl --kubeconfig ${kubeconfig} delete bucket ${bucket_name}"
+    
+    if kubectl --kubeconfig "${kubeconfig}" delete bucket "${bucket_name}"; then
+        log_success "S3 Bucket MRD deleted"
+    else
+        log_error "Failed to delete S3 Bucket MRD"
+        return 6
+    fi
+    
+    # Wait for bucket to be deleted from AWS
+    log_info "Waiting for bucket to be deleted from AWS..."
+    local max_wait=120
+    local waited=0
+    while [[ $waited -lt $max_wait ]]; do
+        if ! with_mk8_aws_env "aws s3api head-bucket --bucket ${bucket_name}" 2>/dev/null; then
+            log_success "Bucket deleted from AWS"
+            break
+        fi
+        
+        sleep 5
+        waited=$((waited + 5))
+    done
+    
+    if [[ $waited -ge $max_wait ]]; then
+        log_error "Timeout waiting for bucket to be deleted from AWS" \
+            "Bucket may still exist in AWS"
+        return 6
+    fi
+    
+    # Clear state file
+    clear_bucket_state
+    
+    log_success "S3 bucket deleted successfully: ${bucket_name}"
+    return 0
 }
