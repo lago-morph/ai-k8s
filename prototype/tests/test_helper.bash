@@ -125,3 +125,14 @@ assert_output_not_contains() {
         return 1
     fi
 }
+
+# Assert that stderr contains a string
+# Usage: assert_stderr_contains "expected_string"
+assert_stderr_contains() {
+    local expected="$1"
+    if [[ ! "$stderr" =~ $expected ]]; then
+        echo "Expected stderr to contain: $expected" >&2
+        echo "Actual stderr: $stderr" >&2
+        return 1
+    fi
+}

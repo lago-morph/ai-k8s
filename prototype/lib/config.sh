@@ -4,11 +4,9 @@
 
 set -euo pipefail
 
-# Get script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-
-# Source common utilities
-source "${SCRIPT_DIR}/lib/common.sh"
+# Source common utilities (relative to this file's directory)
+LIB_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${LIB_DIR}/common.sh"
 
 # Required MK8_* environment variables
 readonly REQUIRED_MK8_VARS=(

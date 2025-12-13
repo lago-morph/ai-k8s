@@ -112,7 +112,7 @@ mk8 is in **active development** with core functionality complete and tested.
    - AWS provider configuration
    - Helm integration
 
-3. � **Pchase 3: Documentation & Tutorials** (In Progress)
+3. 🚧 **Phase 3: Documentation & Tutorials** (In Progress)
    - Tutorial: Create S3 bucket with Crossplane
    - Documentation site framework
    - User guides and examples
@@ -344,26 +344,13 @@ pytest tests/unit/integrations/
 pytest tests/unit/business/
 ```
 
-### Prototype Testing (Bash/BATS)
+### Prototype Reference Implementation
 
-The `prototype/` directory contains a bash-based reference implementation. Use the universal test runners:
+The `prototype/` directory contains a bash-based reference implementation for educational purposes. 
 
-```powershell
-# Windows - Quick setup
-.\scripts\run-tests.ps1 -Setup
+**For prototype documentation, see:** [prototype/README.md](prototype/README.md)
 
-# Run tests
-.\scripts\run-tests.ps1
-```
-
-```bash
-# Linux/macOS
-./scripts/test-runner.sh
-```
-
-**Documentation:**
-- [WSL-SETUP.md](WSL-SETUP.md) - Complete setup guide with quick start
-- [REUSABLE-WSL-TESTING-PATTERN.md](REUSABLE-WSL-TESTING-PATTERN.md) - Use this pattern in other projects
+The prototype demonstrates core mk8 workflows using transparent bash scripts, making it ideal for learning and debugging.
 
 ### Code Quality
 

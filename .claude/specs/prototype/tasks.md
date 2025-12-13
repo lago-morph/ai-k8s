@@ -86,13 +86,10 @@
   - Implement get_kubeconfig_path() helper
   - Ensure consistent cluster naming across operations
   - Log all kind and kubectl commands before execution
+  - Update CLI tests to reflect bootstrap implementation
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 7.1, 7.2, 7.3_
 
-
-
-
-
-- [ ] 11. Unit tests for bootstrap cluster management
+- [x] 11. Unit tests for bootstrap cluster management
   - Write tests for get_kubeconfig_path() helper
   - Write tests for cluster name consistency
   - Write tests for kubeconfig isolation (never modifies ~/.kube/config)
@@ -101,8 +98,6 @@
   - Verify all tests pass with BATS
   - Run shellcheck on lib/bootstrap.sh
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 7.1, 7.2, 7.3_
-
-
 
 - [x] 12. Implement Crossplane installation
   - Create lib/crossplane.sh module
@@ -181,7 +176,7 @@
   - Include troubleshooting section
   - _Requirements: 6.3, 6.4_
 
-- [ ] 20. Comprehensive integration tests
+- [x] 20. Comprehensive integration tests
   - Write end-to-end test: CLI parsing workflow (no args, help, invalid commands, version)
   - Write end-to-end test: AWS credentials validation workflow (missing vars, invalid creds, valid creds)
   - Write end-to-end test: Bootstrap cluster lifecycle (create, status, delete)
@@ -196,7 +191,7 @@
   - Generate test coverage report
   - _Requirements: All_
 
-- [ ] 21. Final validation and cleanup
+- [x] 21. Final validation and cleanup
   - Run all unit tests with BATS and verify 100% pass rate
   - Run all integration tests and verify 100% pass rate
   - Run shellcheck on all bash scripts (zero violations)
