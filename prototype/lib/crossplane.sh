@@ -10,8 +10,8 @@ set -euo pipefail
 CROSSPLANE_NAMESPACE="crossplane-system"
 CROSSPLANE_RELEASE="crossplane"
 CROSSPLANE_CHART="crossplane-stable/crossplane"
-CROSSPLANE_VERSION="1.14.0"
-AWS_PROVIDER="upbound/provider-aws-s3"
+CROSSPLANE_VERSION="2.1.3"
+AWS_PROVIDER="ghcr.io/crossplane-contrib/provider-aws:v0.55.0"
 PROVIDER_CONFIG_NAME="default"
 STATE_FILE="${HOME}/.config/mk8-prototype-state"
 BUCKET_PREFIX="test-s3-bucket"
@@ -112,7 +112,7 @@ aws_secret_access_key = $MK8_AWS_SECRET_ACCESS_KEY'"
 apiVersion: pkg.crossplane.io/v1
 kind: Provider
 metadata:
-  name: provider-aws-s3
+  name: provider-aws
 spec:
   package: ${AWS_PROVIDER}
 EOF
@@ -122,10 +122,10 @@ EOF
     
     # Wait for Provider to be installed
     log_info "Waiting for AWS Provider to be installed..."
-    log_command "kubectl --kubeconfig ${kubeconfig_path} wait --for=condition=Installed provider.pkg.crossplane.io/provider-aws-s3 --timeout=300s"
+    log_command "kubectl --kubeconfig ${kubeconfig_path} wait --for=condition=Installed provider.pkg.crossplane.io/provider-aws --timeout=300s"
     kubectl --kubeconfig "$kubeconfig_path" wait \
         --for=condition=Installed \
-        provider.pkg.crossplane.io/provider-aws-s3 \
+        provider.pkg.crossplane.io/provider-aws \
         --timeout=300s
     
     # Create ProviderConfig
@@ -136,6 +136,7 @@ apiVersion: aws.crossplane.io/v1beta1
 kind: ProviderConfig
 metadata:
   name: ${PROVIDER_CONFIG_NAME}
+  namespace: ${CROSSPLANE_NAMESPACE}
 spec:
   credentials:
     source: Secret
@@ -143,7 +144,6 @@ spec:
       namespace: ${CROSSPLANE_NAMESPACE}
       name: aws-secret
       key: credentials
-  region: ${MK8_AWS_REGION:-us-east-1}
 EOF
     
     log_command "kubectl --kubeconfig ${kubeconfig_path} apply -f ${providerconfig_manifest}"
@@ -165,10 +165,10 @@ verify_aws_provider() {
     
     # Wait for Provider to be healthy
     log_info "Waiting for AWS Provider to be healthy..."
-    log_command "kubectl --kubeconfig ${kubeconfig_path} wait --for=condition=Healthy provider.pkg.crossplane.io/provider-aws-s3 --timeout=300s"
+    log_command "kubectl --kubeconfig ${kubeconfig_path} wait --for=condition=Healthy provider.pkg.crossplane.io/provider-aws --timeout=300s"
     if ! kubectl --kubeconfig "$kubeconfig_path" wait \
         --for=condition=Healthy \
-        provider.pkg.crossplane.io/provider-aws-s3 \
+        provider.pkg.crossplane.io/provider-aws \
         --timeout=300s; then
         log_error "AWS Provider failed to become healthy within timeout"
     fi
@@ -262,10 +262,11 @@ crossplane_create_s3() {
 apiVersion: s3.aws.crossplane.io/v1beta1
 kind: Bucket
 metadata:
+  namespace: default
   name: ${bucket_name}
 spec:
   forProvider:
-    region: ${MK8_AWS_REGION:-us-east-1}
+    locationConstraint: ${MK8_AWS_REGION:-us-east-1}
   providerConfigRef:
     name: ${PROVIDER_CONFIG_NAME}
 EOF
