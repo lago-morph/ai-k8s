@@ -1,54 +1,40 @@
-# Spec Development Agent Configuration
+# ⚠️ DO NOT ADD CONTENT TO THIS FILE
 
-**IMPORTANT**: This file should remain minimal. All base context is in AGENTS.md.
+**ALL content belongs in AGENTS.md, not here.**
 
-## Role
+This file exists only to redirect you to the correct location.
 
-You are a specialized agent for spec-driven development. Your role is to guide users through the three-phase spec creation workflow (Requirements → Design → Tasks) and handle task execution.
+---
 
-## Base Context
+## Read AGENTS.md First
 
-**Read AGENTS.md first** - it contains:
-- Complete spec workflow (Requirements, Design, Tasks phases)
+**[AGENTS.md](AGENTS.md)** contains ALL base context:
+- Complete spec workflow (Requirements → Design → Tasks)
 - Task execution process
-- All development requirements and constraints
+- Development requirements
 - Testing requirements
-- Code quality requirements
+- Code quality standards
+- Command reference
+- Everything you need
 
-**Do not duplicate content from AGENTS.md in this file.**
+---
 
-## Your Specific Responsibilities
+## Why This File Exists
 
-1. **Spec Creation**: Guide users through Requirements → Design → Tasks workflow
-2. **Task Execution**: Execute individual tasks from completed specs
-3. **Approval Gates**: Ensure explicit user approval between each phase
-4. **One Task at a Time**: Never execute multiple tasks automatically
+Historical reasons. It should remain minimal and redirect to AGENTS.md.
 
-## Key Constraints
+**If you think something should be added here, add it to AGENTS.md instead.**
 
-- MUST follow sequential workflow (Requirements → Design → Tasks)
-- MUST receive explicit approval before proceeding between phases
-- MUST execute only ONE task at a time
-- MUST read all spec files (requirements.md, design.md, tasks.md) before executing tasks
-- MUST NOT tell user about workflow steps or which phase you're in
-- MUST NOT make direct code changes as part of spec workflow - only create planning artifacts
+---
 
-## File Structure
+## Quick Links
 
-```
-.claude/specs/{feature_name}/
-├── requirements.md  # User stories with EARS acceptance criteria
-├── design.md        # Architecture, components, data models
-└── tasks.md         # Numbered checkbox implementation tasks
-```
+- **Base Context**: [AGENTS.md](AGENTS.md)
+- **Project Overview**: [README.md](README.md)
+- **Current Specs**: [.claude/specs/SPECS-STATUS.md](.claude/specs/SPECS-STATUS.md)
+- **Product Context**: [.claude/steering/product.md](.claude/steering/product.md)
+- **Tech Standards**: [.claude/steering/tech.md](.claude/steering/tech.md)
 
-## User Prompt
+---
 
-I'm ready to help you create or work with feature specs. I can:
-
-1. **Create a new feature spec** - Transform your idea into requirements, design, and tasks
-2. **Update an existing spec** - Modify requirements, design, or implementation plans  
-3. **Execute tasks** - Implement specific coding tasks from your task list
-4. **Answer questions** - Provide information about existing specs or tasks
-
-What would you like to work on today?
+**Remember: AGENTS.md is the single source of truth. Read it first.**

@@ -112,7 +112,7 @@ mk8 is in **active development** with core functionality complete and tested.
    - AWS provider configuration
    - Helm integration
 
-3. � **Pchase 3: Documentation & Tutorials** (In Progress)
+3. 🚧 **Phase 3: Documentation & Tutorials** (In Progress)
    - Tutorial: Create S3 bucket with Crossplane
    - Documentation site framework
    - User guides and examples
@@ -343,6 +343,14 @@ pytest tests/unit/cli/
 pytest tests/unit/integrations/
 pytest tests/unit/business/
 ```
+
+### Prototype Reference Implementation
+
+The `prototype/` directory contains a bash-based reference implementation for educational purposes. 
+
+**For prototype documentation, see:** [prototype/README.md](prototype/README.md)
+
+The prototype demonstrates core mk8 workflows using transparent bash scripts, making it ideal for learning and debugging.
 
 ### Code Quality
 

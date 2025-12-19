@@ -208,35 +208,23 @@ stateDiagram-v2
 .venv/bin/pytest tests/unit/ -v
 ```
 
-**If ANY check fails:**
-- ❌ DO NOT commit
-- ❌ DO NOT push
-- ✅ Fix the issues first
-- ✅ Re-run all checks
-- ✅ Only commit when everything passes
+**If ANY check fails: Fix it, re-run all checks, then commit.**
 
-### Testing Requirements
+### Code Quality Standards
 
-- ⚠️ **MANDATORY**: Write tests first (TDD)
-- ⚠️ **MANDATORY**: Maintain ≥80% coverage (currently 95%+)
-- ⚠️ **MANDATORY**: All tests must pass before commit
-- Use Hypothesis for property-based testing (100+ examples per property)
+- **Black formatting** (line-length=88) - zero violations
+- **Flake8 linting** - zero violations
+- **Mypy type checking** (strict mode) - zero errors
+- **Type hints** on all function signatures
+- **Docstrings** on all public functions/classes
+- **Test coverage** ≥80% (currently 95%+)
+- **TDD approach** - write tests first
+- **Hypothesis** for property-based testing (100+ examples per property)
 
-### Code Quality Requirements
+### Git Best Practices
 
-- ⚠️ **MANDATORY**: Black formatting (line-length=88)
-- ⚠️ **MANDATORY**: Flake8 linting (zero violations)
-- ⚠️ **MANDATORY**: Mypy type checking (strict mode, zero errors)
-- ⚠️ **MANDATORY**: Type hints on all function signatures
-- ⚠️ **MANDATORY**: Docstrings on all public functions/classes
-
-### Git Requirements
-
-- ⚠️ **CRITICAL**: Always use `git --no-pager` to prevent blocking
-- Never commit unformatted code
-- Never commit code with linting violations
-- Never commit code with type errors
-- Never commit code that breaks tests
+- Always use `git --no-pager` to prevent blocking
+- Never commit code that fails any of the four checks above
 
 ---
 
@@ -295,11 +283,34 @@ raise PrerequisiteError(
 
 ## Quick Command Reference
 
-### Testing
+### Testing (Python)
 ```bash
 .venv/bin/pytest tests/unit/ -v
 .venv/bin/pytest --cov=mk8 --cov-report=html
 ```
+
+### Testing (Prototype - Bash/BATS)
+
+**CRITICAL**: Use the universal test runners - they handle platform detection automatically.
+
+```powershell
+# Windows PowerShell - ALWAYS use this
+.\scripts\run-tests.ps1                    # Run all tests
+.\scripts\run-tests.ps1 test_file.bats     # Run specific test
+.\scripts\run-tests.ps1 -Shellcheck        # Run shellcheck
+.\scripts\run-tests.ps1 -Setup             # Set up WSL instance
+```
+
+```bash
+# Linux/macOS - ALWAYS use this
+./scripts/test-runner.sh                   # Run all tests
+./scripts/test-runner.sh test_file.bats    # Run specific test
+./scripts/test-runner.sh --shellcheck      # Run shellcheck
+```
+
+**⚠️ NEVER run bash directly on Windows** - it uses the default WSL instance and violates credential isolation.
+
+**See `.claude/steering/wsl-testing.md` for complete guidelines and forbidden commands.**
 
 ### Code Quality
 ```bash

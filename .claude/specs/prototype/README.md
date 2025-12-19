@@ -134,6 +134,7 @@ When you're done, clean up the resources:
 - Standard AWS_* variables are only set temporarily within subshells when calling AWS CLI
 
 ## Configuration Files
+
 ### AWS Credentials
 
 The prototype looks for AWS credentials in this order:
@@ -171,7 +172,6 @@ mk8-prototype.sh          # Main CLI entry point
 │   ├── mk8-bootstrap     # Isolated kubeconfig (created by bootstrap)
 │   └── env-mk8-aws-template  # AWS credentials template
 └── env-bootstrap.sh      # Environment setup utility
-```
 ```
 
 ### Design Principles

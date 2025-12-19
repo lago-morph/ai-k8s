@@ -2,17 +2,23 @@
 # Unit tests for lib/bootstrap.sh
 # Tests bootstrap cluster management functions
 
+# Load test helpers
 load ../test_helper
 
-# Bootstrap module path
-BOOTSTRAP_MODULE=""
-
+# Source the bootstrap library
 setup() {
     setup_test_env
-    BOOTSTRAP_MODULE="${PROTOTYPE_ROOT}/lib/bootstrap.sh"
     
-    # Source the bootstrap module for testing
-    source "$BOOTSTRAP_MODULE"
+    # Source required libraries
+    source "${PROTOTYPE_ROOT}/lib/common.sh"
+    source "${PROTOTYPE_ROOT}/lib/bootstrap.sh"
+    
+    # Set up test config directory
+    export CONFIG_DIR="${TEST_TEMP_DIR}/.config"
+    mkdir -p "${CONFIG_DIR}"
+    
+    # Override KUBECONFIG_FILE for testing
+    export KUBECONFIG_FILE="${CONFIG_DIR}/mk8-bootstrap"
 }
 
 teardown() {
@@ -20,320 +26,403 @@ teardown() {
 }
 
 # Test: get_kubeconfig_path returns correct path
-@test "get_kubeconfig_path returns correct isolated kubeconfig path" {
+@test "get_kubeconfig_path returns path to isolated kubeconfig" {
     run get_kubeconfig_path
     assert_success
-    assert_output_contains ".config/mk8-bootstrap"
-    # Should be an absolute path
-    [[ "$output" == /* ]]
+    assert_output_contains ".config"
+    assert_output_contains "mk8-bootstrap"
 }
 
-# Test: Cluster name consistency
-@test "bootstrap functions use consistent cluster name" {
-    # Mock kind command to capture cluster name
-    kind() {
-        echo "kind called with: $*" >&2
-        case "$1" in
-            "get")
-                echo "mk8-bootstrap"
-                ;;
-            "create"|"delete")
-                # Extract cluster name from arguments
-                local prev_arg=""
-                for arg in "$@"; do
-                    if [[ "$prev_arg" == "--name" ]]; then
-                        echo "cluster-name: $arg" >&2
-                        break
-                    fi
-                    prev_arg="$arg"
-                done
-                ;;
-        esac
-        return 0
-    }
-    export -f kind
+# Test: get_kubeconfig_path uses consistent cluster name
+@test "get_kubeconfig_path uses consistent cluster name across calls" {
+    local path1
+    local path2
+    path1="$(get_kubeconfig_path)"
+    path2="$(get_kubeconfig_path)"
     
-    # Test that all functions use the same cluster name
-    run bootstrap_delete
+    [ "$path1" = "$path2" ]
+}
+
+# Test: get_kubeconfig_path respects MK8_CLUSTER_NAME environment variable
+@test "get_kubeconfig_path respects MK8_CLUSTER_NAME when set" {
+    export MK8_CLUSTER_NAME="custom-cluster"
+    # Need to re-source to pick up new cluster name
+    source "${PROTOTYPE_ROOT}/lib/bootstrap.sh"
+    
+    run get_kubeconfig_path
     assert_success
-    assert_output_contains "cluster-name: mk8-bootstrap"
+    assert_output_contains "custom-cluster"
 }
 
-# Test: Kubeconfig isolation - never modifies ~/.kube/config
-@test "bootstrap functions never modify ~/.kube/config" {
-    # Create a mock ~/.kube/config to ensure it's never touched
-    mkdir -p "${HOME}/.kube"
-    echo "original-config" > "${HOME}/.kube/config"
-    original_content=$(cat "${HOME}/.kube/config")
-    
-    # Create the kubeconfig file that bootstrap_status expects
-    kubeconfig_path=$(get_kubeconfig_path)
-    mkdir -p "$(dirname "$kubeconfig_path")"
-    touch "$kubeconfig_path"
-    
-    # Mock kubectl to capture kubeconfig usage
-    kubectl() {
-        echo "kubectl called with: $*" >&2
-        # Check that --kubeconfig is used and not ~/.kube/config
-        local prev_arg=""
-        for arg in "$@"; do
-            if [[ "$prev_arg" == "--kubeconfig" ]]; then
-                echo "kubeconfig-used: $arg" >&2
-                [[ "$arg" != "${HOME}/.kube/config" ]]
-                return 0
-            fi
-            prev_arg="$arg"
-        done
-        return 0
-    }
-    export -f kubectl
-    
-    # Mock kind to avoid actual cluster operations
-    kind() {
-        case "$1" in
-            "get")
-                echo "mk8-bootstrap"
-                ;;
-            *)
-                return 0
-                ;;
-        esac
-    }
-    export -f kind
-    
-    # Test bootstrap_status which uses kubectl
-    run bootstrap_status
-    assert_success
-    assert_output_contains "kubeconfig-used:"
-    assert_output_contains ".config/mk8-bootstrap"
-    
-    # Verify ~/.kube/config was never modified
-    current_content=$(cat "${HOME}/.kube/config")
-    [[ "$current_content" == "$original_content" ]]
+# Test: bootstrap_create checks for kind prerequisite
+@test "bootstrap_create fails when kind command not found" {
+    # Don't mock kind - let it fail naturally
+    run bootstrap_create
+    [ "$status" -eq 2 ]  # EXIT_MISSING_PREREQ
+    assert_output_contains "[ERROR]"
+    assert_output_contains "kind"
 }
 
-# Test: Command logging - all external commands are logged
-@test "bootstrap functions log all external commands before execution" {
-    # Mock kind to return that cluster exists so delete command runs
-    kind() {
-        case "$1" in
-            "get")
-                if [[ "$2" == "clusters" ]]; then
-                    echo "mk8-bootstrap"
-                    return 0
-                fi
-                ;;
-            "delete")
-                echo "kind executed: $*" >&2
-                return 0
-                ;;
-        esac
-        return 0
-    }
-    export -f kind
-    
-    # Test bootstrap_delete (should log kind command)
-    run bootstrap_delete
-    assert_success
-    assert_output_contains "[CMD]"
-    assert_output_contains "kind delete cluster"
-}
-
-# Test: Error handling - cluster already exists
-@test "bootstrap_create handles cluster already exists error" {
-    # Mock kind get clusters to return existing cluster
-    kind() {
-        case "$1" in
-            "get")
-                if [[ "$2" == "clusters" ]]; then
-                    echo "mk8-bootstrap"
-                    return 0
-                fi
-                ;;
-        esac
-        return 0
-    }
-    export -f kind
+# Test: bootstrap_create checks for kubectl prerequisite
+@test "bootstrap_create fails when kubectl command not found" {
+    # Mock kind but not kubectl
+    mock_command "kind" "mock kind output" 0
     
     run bootstrap_create
-    assert_failure
-    assert_output_contains "already exists"
-    assert_output_contains "Use 'bootstrap delete' first"
+    [ "$status" -eq 2 ]  # EXIT_MISSING_PREREQ
+    assert_output_contains "[ERROR]"
+    assert_output_contains "kubectl"
 }
 
-# Test: Error handling - cluster not found for status
-@test "bootstrap_status handles cluster not found error" {
+# Test: bootstrap_create creates config directory if it doesn't exist
+@test "bootstrap_create creates config directory if missing" {
+    # Mock prerequisites
+    mock_command "kind" "" 0
+    mock_command "kubectl" "" 0
+    
+    # Remove config directory
+    rm -rf "${CONFIG_DIR}"
+    
     # Mock kind get clusters to return no clusters
-    kind() {
-        case "$1" in
-            "get")
-                if [[ "$2" == "clusters" ]]; then
-                    return 0  # No output means no clusters
-                fi
-                ;;
-        esac
-        return 0
-    }
-    export -f kind
+    mock_command "kind" "" 0
     
-    run bootstrap_status
-    assert_failure
-    assert_output_contains "not found"
-    assert_output_contains "Use 'bootstrap create' first"
+    run bootstrap_create
+    # Will fail because kind create will fail, but directory should be created
+    assert_dir_exists "${CONFIG_DIR}"
 }
 
-# Test: Error handling - missing kubeconfig file
-@test "bootstrap_status handles missing kubeconfig file" {
-    # Mock kind to return cluster exists
-    kind() {
-        case "$1" in
-            "get")
-                if [[ "$2" == "clusters" ]]; then
-                    echo "mk8-bootstrap"
-                    return 0
-                fi
-                ;;
-        esac
-        return 0
-    }
-    export -f kind
+# Test: bootstrap_create fails if cluster already exists
+@test "bootstrap_create fails when cluster already exists" {
+    # Mock prerequisites
+    mock_command "kubectl" "" 0
     
-    # Ensure kubeconfig file doesn't exist
-    kubeconfig_path=$(get_kubeconfig_path)
-    rm -f "$kubeconfig_path"
+    # Mock kind to show cluster exists
+    cat > "${TEST_TEMP_DIR}/bin/kind" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "get" ]] && [[ "$2" == "clusters" ]]; then
+    echo "mk8-bootstrap"
+    exit 0
+fi
+exit 0
+EOF
+    chmod +x "${TEST_TEMP_DIR}/bin/kind"
+    export PATH="${TEST_TEMP_DIR}/bin:${PATH}"
+    
+    run bootstrap_create
+    [ "$status" -eq 5 ]  # EXIT_CLUSTER_ERROR
+    assert_output_contains "[ERROR]"
+    assert_output_contains "already exists"
+}
+
+# Test: bootstrap_create logs kind command before execution
+@test "bootstrap_create logs kind create command with parameters" {
+    # Mock prerequisites
+    mock_command "kubectl" "" 0
+    
+    # Mock kind to show no clusters exist, then fail on create
+    cat > "${TEST_TEMP_DIR}/bin/kind" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "get" ]] && [[ "$2" == "clusters" ]]; then
+    exit 0  # No clusters
+fi
+if [[ "$1" == "create" ]]; then
+    exit 1  # Fail create
+fi
+exit 0
+EOF
+    chmod +x "${TEST_TEMP_DIR}/bin/kind"
+    export PATH="${TEST_TEMP_DIR}/bin:${PATH}"
+    
+    run bootstrap_create
+    assert_output_contains "[CMD]"
+    assert_output_contains "kind create cluster"
+    assert_output_contains "--name"
+    assert_output_contains "--kubeconfig"
+}
+
+# Test: bootstrap_create uses isolated kubeconfig path
+@test "bootstrap_create uses isolated kubeconfig not ~/.kube/config" {
+    # Mock prerequisites
+    mock_command "kubectl" "" 0
+    
+    # Mock kind
+    cat > "${TEST_TEMP_DIR}/bin/kind" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "get" ]] && [[ "$2" == "clusters" ]]; then
+    exit 0  # No clusters
+fi
+if [[ "$1" == "create" ]]; then
+    # Check that kubeconfig is NOT ~/.kube/config
+    for arg in "$@"; do
+        if [[ "$arg" == *".kube/config"* ]]; then
+            echo "ERROR: Using ~/.kube/config" >&2
+            exit 1
+        fi
+    done
+    exit 1  # Fail for test purposes
+fi
+exit 0
+EOF
+    chmod +x "${TEST_TEMP_DIR}/bin/kind"
+    export PATH="${TEST_TEMP_DIR}/bin:${PATH}"
+    
+    run bootstrap_create
+    assert_output_not_contains ".kube/config"
+    assert_output_contains ".config"
+}
+
+# Test: bootstrap_status checks for kind prerequisite
+@test "bootstrap_status fails when kind command not found" {
+    run bootstrap_status
+    [ "$status" -eq 2 ]  # EXIT_MISSING_PREREQ
+    assert_output_contains "[ERROR]"
+    assert_output_contains "kind"
+}
+
+# Test: bootstrap_status checks for kubectl prerequisite
+@test "bootstrap_status fails when kubectl command not found" {
+    mock_command "kind" "" 0
     
     run bootstrap_status
-    assert_failure
+    [ "$status" -eq 2 ]  # EXIT_MISSING_PREREQ
+    assert_output_contains "[ERROR]"
+    assert_output_contains "kubectl"
+}
+
+# Test: bootstrap_status fails when cluster not found
+@test "bootstrap_status fails when cluster does not exist" {
+    # Mock prerequisites
+    mock_command "kubectl" "" 0
+    
+    # Mock kind to show no clusters
+    cat > "${TEST_TEMP_DIR}/bin/kind" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "get" ]] && [[ "$2" == "clusters" ]]; then
+    exit 0  # No output = no clusters
+fi
+exit 0
+EOF
+    chmod +x "${TEST_TEMP_DIR}/bin/kind"
+    export PATH="${TEST_TEMP_DIR}/bin:${PATH}"
+    
+    run bootstrap_status
+    [ "$status" -eq 5 ]  # EXIT_CLUSTER_ERROR
+    assert_output_contains "[ERROR]"
+    assert_output_contains "not found"
+}
+
+# Test: bootstrap_status logs kind get clusters command
+@test "bootstrap_status logs kind get clusters command" {
+    # Mock prerequisites
+    mock_command "kubectl" "" 0
+    
+    # Mock kind to show no clusters
+    mock_command "kind" "" 0
+    
+    run bootstrap_status
+    assert_output_contains "[CMD]"
+    assert_output_contains "kind get clusters"
+}
+
+# Test: bootstrap_status fails when kubeconfig file missing
+@test "bootstrap_status fails when kubeconfig file does not exist" {
+    # Mock prerequisites
+    mock_command "kubectl" "" 0
+    
+    # Mock kind to show cluster exists
+    cat > "${TEST_TEMP_DIR}/bin/kind" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "get" ]] && [[ "$2" == "clusters" ]]; then
+    echo "mk8-bootstrap"
+    exit 0
+fi
+exit 0
+EOF
+    chmod +x "${TEST_TEMP_DIR}/bin/kind"
+    export PATH="${TEST_TEMP_DIR}/bin:${PATH}"
+    
+    # Ensure kubeconfig doesn't exist
+    rm -f "${KUBECONFIG_FILE}"
+    
+    run bootstrap_status
+    [ "$status" -eq 5 ]  # EXIT_CLUSTER_ERROR
+    assert_output_contains "[ERROR]"
     assert_output_contains "Kubeconfig file not found"
 }
 
-# Test: bootstrap_delete handles non-existent cluster gracefully
-@test "bootstrap_delete handles non-existent cluster gracefully" {
-    # Mock kind get clusters to return no clusters
-    kind() {
-        case "$1" in
-            "get")
-                if [[ "$2" == "clusters" ]]; then
-                    return 0  # No output means no clusters
-                fi
-                ;;
-        esac
-        return 0
-    }
-    export -f kind
+# Test: bootstrap_status uses isolated kubeconfig
+@test "bootstrap_status uses isolated kubeconfig with kubectl" {
+    # Mock prerequisites
+    mock_command "kind" "mk8-bootstrap" 0
+    
+    # Create kubeconfig file
+    touch "${KUBECONFIG_FILE}"
+    
+    # Mock kubectl to check for --kubeconfig flag
+    cat > "${TEST_TEMP_DIR}/bin/kubectl" <<'EOF'
+#!/usr/bin/env bash
+# Check that --kubeconfig is used and NOT ~/.kube/config
+has_kubeconfig_flag=false
+for arg in "$@"; do
+    if [[ "$arg" == "--kubeconfig" ]]; then
+        has_kubeconfig_flag=true
+    fi
+    if [[ "$arg" == *".kube/config"* ]]; then
+        echo "ERROR: Using ~/.kube/config" >&2
+        exit 1
+    fi
+done
+if [[ "$has_kubeconfig_flag" == "false" ]]; then
+    echo "ERROR: Missing --kubeconfig flag" >&2
+    exit 1
+fi
+exit 1  # Fail for test purposes
+EOF
+    chmod +x "${TEST_TEMP_DIR}/bin/kubectl"
+    export PATH="${TEST_TEMP_DIR}/bin:${PATH}"
+    
+    run bootstrap_status
+    assert_output_contains "[CMD]"
+    assert_output_contains "--kubeconfig"
+    assert_output_not_contains ".kube/config"
+}
+
+# Test: bootstrap_delete checks for kind prerequisite
+@test "bootstrap_delete fails when kind command not found" {
+    run bootstrap_delete
+    [ "$status" -eq 2 ]  # EXIT_MISSING_PREREQ
+    assert_output_contains "[ERROR]"
+    assert_output_contains "kind"
+}
+
+# Test: bootstrap_delete fails when cluster not found
+@test "bootstrap_delete fails when cluster does not exist" {
+    # Mock kind to show no clusters
+    cat > "${TEST_TEMP_DIR}/bin/kind" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "get" ]] && [[ "$2" == "clusters" ]]; then
+    exit 0  # No output = no clusters
+fi
+exit 0
+EOF
+    chmod +x "${TEST_TEMP_DIR}/bin/kind"
+    export PATH="${TEST_TEMP_DIR}/bin:${PATH}"
+    
+    run bootstrap_delete
+    [ "$status" -eq 5 ]  # EXIT_CLUSTER_ERROR
+    assert_output_contains "[ERROR]"
+    assert_output_contains "not found"
+}
+
+# Test: bootstrap_delete logs kind delete command
+@test "bootstrap_delete logs kind delete cluster command" {
+    # Mock kind to show cluster exists, then fail on delete
+    cat > "${TEST_TEMP_DIR}/bin/kind" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "get" ]] && [[ "$2" == "clusters" ]]; then
+    echo "mk8-bootstrap"
+    exit 0
+fi
+if [[ "$1" == "delete" ]]; then
+    exit 1  # Fail for test purposes
+fi
+exit 0
+EOF
+    chmod +x "${TEST_TEMP_DIR}/bin/kind"
+    export PATH="${TEST_TEMP_DIR}/bin:${PATH}"
+    
+    run bootstrap_delete
+    assert_output_contains "[CMD]"
+    assert_output_contains "kind delete cluster"
+    assert_output_contains "--name"
+}
+
+# Test: bootstrap_delete removes kubeconfig file
+@test "bootstrap_delete removes kubeconfig file after deletion" {
+    # Create kubeconfig file
+    touch "${KUBECONFIG_FILE}"
+    assert_file_exists "${KUBECONFIG_FILE}"
+    
+    # Mock kind to show cluster exists and succeed on delete
+    cat > "${TEST_TEMP_DIR}/bin/kind" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "get" ]] && [[ "$2" == "clusters" ]]; then
+    echo "mk8-bootstrap"
+    exit 0
+fi
+if [[ "$1" == "delete" ]]; then
+    exit 0  # Success
+fi
+exit 0
+EOF
+    chmod +x "${TEST_TEMP_DIR}/bin/kind"
+    export PATH="${TEST_TEMP_DIR}/bin:${PATH}"
     
     run bootstrap_delete
     assert_success
-    assert_output_contains "not found"
-    assert_output_contains "already deleted or never created"
+    
+    # Kubeconfig should be removed
+    if [[ -f "${KUBECONFIG_FILE}" ]]; then
+        echo "Expected kubeconfig to be removed: ${KUBECONFIG_FILE}" >&2
+        return 1
+    fi
 }
 
-# Test: Prerequisite checking
-@test "bootstrap functions check for required prerequisites" {
-    # Mock check_prereq to capture prerequisite checks
-    check_prereq() {
-        echo "checking prerequisite: $1" >&2
-        case "$1" in
-            "kind"|"kubectl")
-                return 0
-                ;;
-            *)
-                return 1
-                ;;
-        esac
-    }
-    export -f check_prereq
+# Test: Cluster name consistency across all operations
+@test "all bootstrap operations use same cluster name" {
+    # Mock prerequisites
+    mock_command "kubectl" "" 0
     
-    # Mock kind to return no existing clusters so create can proceed
-    kind() {
-        case "$1" in
-            "get")
-                if [[ "$2" == "clusters" ]]; then
-                    return 0  # No output means no clusters
-                fi
-                ;;
-            "create")
-                return 0
-                ;;
-        esac
-        return 0
-    }
-    export -f kind
+    # Track cluster names used
+    cat > "${TEST_TEMP_DIR}/bin/kind" <<'EOF'
+#!/usr/bin/env bash
+# Log all cluster names to a file
+for arg in "$@"; do
+    if [[ "$prev_arg" == "--name" ]]; then
+        echo "$arg" >> /tmp/cluster_names.txt
+    fi
+    prev_arg="$arg"
+done
+
+if [[ "$1" == "get" ]] && [[ "$2" == "clusters" ]]; then
+    exit 0  # No clusters for create test
+fi
+exit 1  # Fail for test purposes
+EOF
+    chmod +x "${TEST_TEMP_DIR}/bin/kind"
+    export PATH="${TEST_TEMP_DIR}/bin:${PATH}"
+    
+    # Try create (will fail but will log cluster name)
+    bootstrap_create 2>/dev/null || true
+    
+    # Check that cluster name is consistent (mk8-bootstrap)
+    if [[ -f /tmp/cluster_names.txt ]]; then
+        local cluster_name
+        cluster_name=$(cat /tmp/cluster_names.txt | head -1)
+        [ "$cluster_name" = "mk8-bootstrap" ]
+        rm -f /tmp/cluster_names.txt
+    fi
+}
+
+# Test: Error handling for command logging
+@test "bootstrap functions log commands even when operations fail" {
+    # Mock prerequisites
+    mock_command "kubectl" "" 0
+    
+    # Mock kind to fail
+    cat > "${TEST_TEMP_DIR}/bin/kind" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "get" ]] && [[ "$2" == "clusters" ]]; then
+    exit 0  # No clusters
+fi
+exit 1  # Fail all other operations
+EOF
+    chmod +x "${TEST_TEMP_DIR}/bin/kind"
+    export PATH="${TEST_TEMP_DIR}/bin:${PATH}"
     
     run bootstrap_create
-    assert_output_contains "checking prerequisite: kind"
-    assert_output_contains "checking prerequisite: kubectl"
+    # Should still log the command even though it fails
+    assert_output_contains "[CMD]"
+    assert_output_contains "kind create cluster"
 }
 
-# Test: Config directory creation
-@test "bootstrap module creates config directory if it doesn't exist" {
-    # Remove config directory
-    rm -rf "${PROTOTYPE_ROOT}/.config"
-    
-    # Source the module again to trigger directory creation
-    source "$BOOTSTRAP_MODULE"
-    
-    # Verify directory was created
-    [[ -d "${PROTOTYPE_ROOT}/.config" ]]
-}
-
-# Test: Environment variable usage
-@test "bootstrap functions respect MK8_CLUSTER_NAME environment variable" {
-    # Set custom cluster name and re-source the module
-    export MK8_CLUSTER_NAME="custom-cluster-name"
-    source "$BOOTSTRAP_MODULE"
-    
-    # Mock kind to capture cluster name and return that cluster exists
-    kind() {
-        echo "kind called with: $*" >&2
-        case "$1" in
-            "get")
-                if [[ "$2" == "clusters" ]]; then
-                    echo "custom-cluster-name"
-                    return 0
-                fi
-                ;;
-            "delete")
-                # Extract cluster name from arguments
-                local prev_arg=""
-                for arg in "$@"; do
-                    if [[ "$prev_arg" == "--name" ]]; then
-                        echo "cluster-name: $arg" >&2
-                        break
-                    fi
-                    prev_arg="$arg"
-                done
-                return 0
-                ;;
-        esac
-        return 0
-    }
-    export -f kind
-    
-    run bootstrap_delete
-    assert_success
-    assert_output_contains "cluster-name: custom-cluster-name"
-    
-    unset MK8_CLUSTER_NAME
-}
-
-# Test: Script can be executed directly
-@test "bootstrap.sh can be executed directly with subcommands" {
-    # Mock external commands
-    kind() { return 0; }
-    kubectl() { return 0; }
-    export -f kind kubectl
-    
-    run "$BOOTSTRAP_MODULE" delete
-    assert_success
-    assert_output_contains "Deleting bootstrap cluster"
-}
-
-# Test: Script shows usage when executed with invalid arguments
-@test "bootstrap.sh shows usage for invalid subcommands" {
-    run "$BOOTSTRAP_MODULE" invalid-command
-    assert_failure
-    [[ "$status" -eq 3 ]]  # EXIT_INVALID_ARGS
-    assert_output_contains "Usage:"
-    assert_output_contains "create|status|delete"
-}

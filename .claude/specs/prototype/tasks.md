@@ -77,6 +77,8 @@
   - _Requirements: 7.4, 7.5, 8.9, 8.10, 8.11_
 
 - [x] 10. Implement bootstrap cluster management
+
+
   - Create lib/bootstrap.sh module
   - Implement bootstrap_create() with isolated kubeconfig
   - Implement bootstrap_status() using isolated kubeconfig

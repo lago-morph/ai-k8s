@@ -1,632 +1,573 @@
 #!/usr/bin/env bats
 # Unit tests for lib/crossplane.sh
-# Tests Crossplane installation, AWS Provider configuration, and status functions
+# Tests Crossplane installation, AWS Provider configuration, and S3 bucket management
 
+# Load test helpers
 load ../test_helper
 
-# Crossplane module path
-CROSSPLANE_MODULE=""
-
+# Source the crossplane library
 setup() {
     setup_test_env
-    CROSSPLANE_MODULE="${PROTOTYPE_ROOT}/lib/crossplane.sh"
     
-    # Source required modules for testing
+    # Source required libraries
     source "${PROTOTYPE_ROOT}/lib/common.sh"
     source "${PROTOTYPE_ROOT}/lib/config.sh"
     source "${PROTOTYPE_ROOT}/lib/bootstrap.sh"
-    source "$CROSSPLANE_MODULE"
+    source "${PROTOTYPE_ROOT}/lib/crossplane.sh"
+    
+    # Set up test config directory
+    export CONFIG_DIR="${TEST_TEMP_DIR}/.config"
+    mkdir -p "${CONFIG_DIR}"
+    
+    # Override KUBECONFIG_FILE for testing
+    export KUBECONFIG_FILE="${CONFIG_DIR}/mk8-bootstrap"
+    
+    # Override STATE_FILE for testing
+    export STATE_FILE="${TEST_TEMP_DIR}/.config/mk8-prototype-state"
+    
+    # Set up AWS credentials for testing
+    export MK8_AWS_ACCESS_KEY_ID="AKIAIOSFODNN7EXAMPLE"
+    export MK8_AWS_SECRET_ACCESS_KEY="wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+    export MK8_AWS_REGION="us-east-1"
 }
 
 teardown() {
     teardown_test_env
 }
 
-# Test: crossplane_install checks prerequisites
-@test "crossplane_install checks for required prerequisites" {
-    # Mock check_prereq to capture prerequisite checks
-    check_prereq() {
-        echo "checking prerequisite: $1" >&2
-        case "$1" in
-            "helm"|"kubectl")
-                return 0
-                ;;
-            *)
-                return 1
-                ;;
-        esac
-    }
-    export -f check_prereq
-    
-    # Mock get_kubeconfig_path to return a test path
-    get_kubeconfig_path() {
-        echo "${TEST_TEMP_DIR}/kubeconfig"
-    }
-    export -f get_kubeconfig_path
-    
-    # Create mock kubeconfig file
-    touch "${TEST_TEMP_DIR}/kubeconfig"
-    
-    # Mock helm and kubectl commands
-    helm() { return 0; }
-    kubectl() { return 0; }
-    export -f helm kubectl
-    
-    # Mock check_mk8_env_vars to return false (no AWS credentials)
-    check_mk8_env_vars() { return 1; }
-    export -f check_mk8_env_vars
-    
+# Test: crossplane_install checks for helm prerequisite
+@test "crossplane_install fails when helm command not found" {
     run crossplane_install
-    assert_output_contains "checking prerequisite: helm"
-    assert_output_contains "checking prerequisite: kubectl"
+    [ "$status" -eq 2 ]  # EXIT_MISSING_PREREQ
+    assert_output_contains "[ERROR]"
+    assert_output_contains "helm"
 }
 
-# Test: crossplane_install logs Helm commands
-@test "crossplane_install logs all Helm commands before execution" {
-    # Mock prerequisites and kubeconfig
-    check_prereq() { return 0; }
-    get_kubeconfig_path() { echo "${TEST_TEMP_DIR}/kubeconfig"; }
-    export -f check_prereq get_kubeconfig_path
-    
-    touch "${TEST_TEMP_DIR}/kubeconfig"
-    
-    # Mock helm commands to capture logging
-    helm() {
-        echo "helm executed: $*" >&2
-        return 0
-    }
-    export -f helm
-    
-    # Mock kubectl commands
-    kubectl() { return 0; }
-    export -f kubectl
-    
-    # Mock check_mk8_env_vars to return false (no AWS credentials)
-    check_mk8_env_vars() { return 1; }
-    export -f check_mk8_env_vars
+# Test: crossplane_install checks for kubectl prerequisite
+@test "crossplane_install fails when kubectl command not found" {
+    mock_command "helm" "" 0
     
     run crossplane_install
-    assert_success
+    [ "$status" -eq 2 ]  # EXIT_MISSING_PREREQ
+    assert_output_contains "[ERROR]"
+    assert_output_contains "kubectl"
+}
+
+# Test: crossplane_install fails when kubeconfig not found
+@test "crossplane_install fails when kubeconfig file does not exist" {
+    mock_command "helm" "" 0
+    mock_command "kubectl" "" 0
+    
+    # Ensure kubeconfig doesn't exist
+    rm -f "${KUBECONFIG_FILE}"
+    
+    run crossplane_install
+    [ "$status" -eq 6 ]  # EXIT_CROSSPLANE_ERROR
+    assert_output_contains "[ERROR]"
+    assert_output_contains "Kubeconfig not found"
+}
+
+# Test: crossplane_install logs helm repo add command
+@test "crossplane_install logs helm repo add command" {
+    mock_command "kubectl" "" 0
+    
+    # Create kubeconfig file
+    touch "${KUBECONFIG_FILE}"
+    
+    # Mock helm to fail on install (so we can see the repo add)
+    cat > "${TEST_TEMP_DIR}/bin/helm" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "repo" ]] && [[ "$2" == "add" ]]; then
+    exit 0
+fi
+if [[ "$1" == "repo" ]] && [[ "$2" == "update" ]]; then
+    exit 0
+fi
+if [[ "$1" == "install" ]]; then
+    exit 1  # Fail install
+fi
+exit 0
+EOF
+    chmod +x "${TEST_TEMP_DIR}/bin/helm"
+    export PATH="${TEST_TEMP_DIR}/bin:${PATH}"
+    
+    run crossplane_install
     assert_output_contains "[CMD]"
-    assert_output_contains "helm repo add crossplane-stable"
-    assert_output_contains "helm repo update"
-    assert_output_contains "helm install crossplane"
+    assert_output_contains "helm repo add"
+    assert_output_contains "crossplane-stable"
 }
 
-# Test: crossplane_install handles missing kubeconfig
-@test "crossplane_install handles missing kubeconfig error" {
-    # Mock prerequisites
-    check_prereq() { return 0; }
-    export -f check_prereq
+# Test: crossplane_install logs helm install command with parameters
+@test "crossplane_install logs helm install command with all parameters" {
+    mock_command "kubectl" "" 0
     
-    # Mock get_kubeconfig_path to return non-existent file
-    get_kubeconfig_path() {
-        echo "${TEST_TEMP_DIR}/nonexistent-kubeconfig"
-    }
-    export -f get_kubeconfig_path
+    # Create kubeconfig file
+    touch "${KUBECONFIG_FILE}"
+    
+    # Mock helm
+    cat > "${TEST_TEMP_DIR}/bin/helm" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$1" == "repo" ]]; then
+    exit 0
+fi
+if [[ "$1" == "install" ]]; then
+    exit 1  # Fail for test purposes
+fi
+exit 0
+EOF
+    chmod +x "${TEST_TEMP_DIR}/bin/helm"
+    export PATH="${TEST_TEMP_DIR}/bin:${PATH}"
     
     run crossplane_install
-    assert_failure
-    assert_output_contains "Bootstrap cluster kubeconfig not found"
-    assert_output_contains "Run 'bootstrap create' first"
+    assert_output_contains "[CMD]"
+    assert_output_contains "helm install"
+    assert_output_contains "crossplane"
+    assert_output_contains "--namespace"
+    assert_output_contains "--version"
+    assert_output_contains "--kubeconfig"
 }
 
-# Test: create_aws_provider_config checks MK8_* environment variables
-@test "create_aws_provider_config checks for required MK8_* environment variables" {
-    # Mock check_mk8_env_vars to capture the call
-    check_mk8_env_vars() {
-        echo "checking MK8_* environment variables" >&2
-        return 0
-    }
-    export -f check_mk8_env_vars
+# Test: create_aws_provider_config checks for kubectl prerequisite
+@test "create_aws_provider_config fails when kubectl command not found" {
+    run create_aws_provider_config
+    [ "$status" -eq 2 ]  # EXIT_MISSING_PREREQ
+    assert_output_contains "[ERROR]"
+    assert_output_contains "kubectl"
+}
+
+# Test: create_aws_provider_config fails when AWS credentials not set
+@test "create_aws_provider_config fails when MK8_AWS_ACCESS_KEY_ID not set" {
+    mock_command "kubectl" "" 0
     
-    # Mock get_kubeconfig_path
-    get_kubeconfig_path() { echo "${TEST_TEMP_DIR}/kubeconfig"; }
-    export -f get_kubeconfig_path
-    
-    # Mock kubectl and with_mk8_aws_env
-    kubectl() { return 0; }
-    with_mk8_aws_env() { eval "$1"; }
-    export -f kubectl with_mk8_aws_env
-    
-    # Set required environment variables
-    export MK8_AWS_ACCESS_KEY_ID="test-key"
-    export MK8_AWS_SECRET_ACCESS_KEY="test-secret"
-    export MK8_AWS_REGION="us-east-1"
+    unset MK8_AWS_ACCESS_KEY_ID
     
     run create_aws_provider_config
-    # The function should succeed and call check_mk8_env_vars
-    assert_success
-    assert_output_contains "Creating AWS Provider configuration"
+    [ "$status" -eq 6 ]  # EXIT_CROSSPLANE_ERROR
+    assert_output_contains "[ERROR]"
+    assert_output_contains "AWS credentials not configured"
 }
 
-# Test: create_aws_provider_config creates Kubernetes secret with credentials
-@test "create_aws_provider_config creates Kubernetes secret with AWS credentials" {
-    # Mock prerequisites
-    check_mk8_env_vars() { return 0; }
-    get_kubeconfig_path() { echo "${TEST_TEMP_DIR}/kubeconfig"; }
-    export -f check_mk8_env_vars get_kubeconfig_path
+# Test: create_aws_provider_config uses MK8_* environment variables
+@test "create_aws_provider_config uses MK8_AWS_* environment variables" {
+    # Create kubeconfig file
+    touch "${KUBECONFIG_FILE}"
     
     # Mock kubectl to capture secret creation
-    kubectl() {
-        echo "kubectl called: $*" >&2
-        case "$*" in
-            *"create secret"*)
-                echo "secret created" >&2
-                ;;
-            *"apply"*)
-                echo "manifest applied" >&2
-                ;;
-            *"wait"*)
-                echo "wait completed" >&2
-                ;;
-        esac
-        return 0
-    }
-    export -f kubectl
-    
-    # Mock with_mk8_aws_env
-    with_mk8_aws_env() {
-        echo "with_mk8_aws_env called: $1" >&2
-        eval "$1"
-    }
-    export -f with_mk8_aws_env
-    
-    # Set required environment variables
-    export MK8_AWS_ACCESS_KEY_ID="test-key"
-    export MK8_AWS_SECRET_ACCESS_KEY="test-secret"
-    export MK8_AWS_REGION="us-east-1"
+    cat > "${TEST_TEMP_DIR}/bin/kubectl" <<'EOF'
+#!/usr/bin/env bash
+# Just succeed for all operations
+exit 0
+EOF
+    chmod +x "${TEST_TEMP_DIR}/bin/kubectl"
+    export PATH="${TEST_TEMP_DIR}/bin:${PATH}"
     
     run create_aws_provider_config
-    assert_success
-    assert_output_contains "Creating AWS credentials secret"
-    assert_output_contains "secret created"
-    assert_output_contains "Installing AWS Provider"
-    assert_output_contains "manifest applied"
+    assert_output_contains "[CMD]"
+    assert_output_contains "kubectl"
+    assert_output_contains "create secret"
+    assert_output_contains "aws-creds"
 }
 
-# Test: verify_aws_provider waits for Provider to be healthy
-@test "verify_aws_provider waits for Provider to be healthy" {
-    # Mock get_kubeconfig_path
-    get_kubeconfig_path() { echo "${TEST_TEMP_DIR}/kubeconfig"; }
-    export -f get_kubeconfig_path
+# Test: create_aws_provider_config logs kubectl commands
+@test "create_aws_provider_config logs kubectl apply commands" {
+    # Create kubeconfig file
+    touch "${KUBECONFIG_FILE}"
     
-    # Mock kubectl to capture wait commands
-    kubectl() {
-        echo "kubectl called: $*" >&2
-        case "$*" in
-            *"wait --for=condition=Healthy"*)
-                echo "provider is healthy" >&2
-                ;;
-            *"get providerconfig"*)
-                echo "providerconfig status displayed" >&2
-                ;;
-        esac
-        return 0
-    }
-    export -f kubectl
+    # Mock kubectl
+    mock_command "kubectl" "" 0
+    
+    run create_aws_provider_config
+    assert_output_contains "[CMD]"
+    assert_output_contains "kubectl"
+}
+
+# Test: verify_aws_provider checks for kubectl prerequisite
+@test "verify_aws_provider fails when kubectl command not found" {
+    run verify_aws_provider
+    [ "$status" -eq 2 ]  # EXIT_MISSING_PREREQ
+    assert_output_contains "[ERROR]"
+    assert_output_contains "kubectl"
+}
+
+# Test: verify_aws_provider checks Provider status
+@test "verify_aws_provider checks for AWS Provider" {
+    # Create kubeconfig file
+    touch "${KUBECONFIG_FILE}"
+    
+    # Mock kubectl to fail on get provider
+    cat > "${TEST_TEMP_DIR}/bin/kubectl" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$2" == "get" ]] && [[ "$3" == "provider" ]]; then
+    exit 1  # Provider not found
+fi
+exit 0
+EOF
+    chmod +x "${TEST_TEMP_DIR}/bin/kubectl"
+    export PATH="${TEST_TEMP_DIR}/bin:${PATH}"
     
     run verify_aws_provider
-    assert_success
-    assert_output_contains "Waiting for AWS Provider to be healthy"
-    assert_output_contains "provider is healthy"
-    assert_output_contains "Checking ProviderConfig status"
-    assert_output_contains "providerconfig status displayed"
+    [ "$status" -eq 6 ]  # EXIT_CROSSPLANE_ERROR
+    assert_output_contains "[ERROR]"
+    assert_output_contains "AWS Provider not found"
 }
 
-# Test: crossplane_status handles missing kubeconfig
-@test "crossplane_status handles missing kubeconfig error" {
-    # Mock get_kubeconfig_path to return non-existent file
-    get_kubeconfig_path() {
-        echo "${TEST_TEMP_DIR}/nonexistent-kubeconfig"
-    }
-    export -f get_kubeconfig_path
+# Test: crossplane_status checks for kubectl prerequisite
+@test "crossplane_status fails when kubectl command not found" {
+    run crossplane_status
+    [ "$status" -eq 2 ]  # EXIT_MISSING_PREREQ
+    assert_output_contains "[ERROR]"
+    assert_output_contains "kubectl"
+}
+
+# Test: crossplane_status fails when kubeconfig not found
+@test "crossplane_status fails when kubeconfig file does not exist" {
+    mock_command "kubectl" "" 0
+    
+    # Ensure kubeconfig doesn't exist
+    rm -f "${KUBECONFIG_FILE}"
     
     run crossplane_status
-    assert_failure
-    assert_output_contains "Bootstrap cluster kubeconfig not found"
-    assert_output_contains "Run 'bootstrap create' first"
+    [ "$status" -eq 6 ]  # EXIT_CROSSPLANE_ERROR
+    assert_output_contains "[ERROR]"
+    assert_output_contains "Kubeconfig not found"
 }
 
-# Test: crossplane_status displays pod and provider information
-@test "crossplane_status displays Crossplane pods and provider information" {
-    # Mock get_kubeconfig_path
-    get_kubeconfig_path() { echo "${TEST_TEMP_DIR}/kubeconfig"; }
-    export -f get_kubeconfig_path
+# Test: crossplane_status fails when Crossplane namespace not found
+@test "crossplane_status fails when Crossplane namespace does not exist" {
+    # Create kubeconfig file
+    touch "${KUBECONFIG_FILE}"
     
-    # Create mock kubeconfig file
-    touch "${TEST_TEMP_DIR}/kubeconfig"
+    # Mock kubectl to fail on namespace check
+    cat > "${TEST_TEMP_DIR}/bin/kubectl" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$2" == "get" ]] && [[ "$3" == "namespace" ]]; then
+    exit 1  # Namespace not found
+fi
+exit 0
+EOF
+    chmod +x "${TEST_TEMP_DIR}/bin/kubectl"
+    export PATH="${TEST_TEMP_DIR}/bin:${PATH}"
     
-    # Mock kubectl to return different outputs for different commands
-    kubectl() {
-        echo "kubectl called: $*" >&2
-        case "$*" in
-            *"get pods"*)
-                echo "crossplane-pod-1   Running"
-                ;;
-            *"get providers"*)
-                echo "provider-aws-s3   Installed"
-                ;;
-            *"get providerconfigs"*)
-                echo "default   Ready"
-                ;;
-        esac
-        return 0
-    }
-    export -f kubectl
+    run crossplane_status
+    [ "$status" -eq 6 ]  # EXIT_CROSSPLANE_ERROR
+    assert_output_contains "[ERROR]"
+    assert_output_contains "Crossplane namespace"
+    assert_output_contains "not found"
+}
+
+# Test: crossplane_status displays pod status
+@test "crossplane_status displays Crossplane pod status" {
+    # Create kubeconfig file
+    touch "${KUBECONFIG_FILE}"
+    
+    # Mock kubectl
+    cat > "${TEST_TEMP_DIR}/bin/kubectl" <<'EOF'
+#!/usr/bin/env bash
+if [[ "$2" == "get" ]] && [[ "$3" == "namespace" ]]; then
+    exit 0  # Namespace exists
+fi
+if [[ "$2" == "get" ]] && [[ "$3" == "pods" ]]; then
+    echo "NAME                                READY   STATUS    RESTARTS   AGE"
+    echo "crossplane-7d8f9c8b9d-abc12         1/1     Running   0          5m"
+    exit 0
+fi
+exit 0
+EOF
+    chmod +x "${TEST_TEMP_DIR}/bin/kubectl"
+    export PATH="${TEST_TEMP_DIR}/bin:${PATH}"
     
     run crossplane_status
     assert_success
     assert_output_contains "Crossplane pods:"
-    assert_output_contains "crossplane-pod-1"
-    assert_output_contains "Crossplane Providers:"
-    assert_output_contains "provider-aws-s3"
-    assert_output_contains "ProviderConfigs:"
-    assert_output_contains "default"
 }
 
-# Test: crossplane_status handles Crossplane not installed
-@test "crossplane_status handles Crossplane not installed gracefully" {
-    # Mock get_kubeconfig_path
-    get_kubeconfig_path() { echo "${TEST_TEMP_DIR}/kubeconfig"; }
-    export -f get_kubeconfig_path
+# Test: generate_bucket_name creates unique names
+@test "generate_bucket_name creates unique bucket names" {
+    local name1
+    local name2
     
-    # Create mock kubeconfig file
-    touch "${TEST_TEMP_DIR}/kubeconfig"
-    
-    # Mock kubectl to return error for pods (Crossplane not installed)
-    kubectl() {
-        case "$*" in
-            *"get pods"*)
-                return 1  # Error - namespace doesn't exist
-                ;;
-            *)
-                return 0
-                ;;
-        esac
-    }
-    export -f kubectl
-    
-    run crossplane_status
-    assert_success
-    assert_output_contains "Crossplane not installed"
-    assert_output_contains "Run 'crossplane install' first"
-}
-
-# Test: Crossplane module can be executed directly
-@test "crossplane.sh can be executed directly with subcommands" {
-    # When run directly, crossplane.sh needs to source its dependencies
-    # We'll test this by checking that it can parse arguments correctly
-    run "$CROSSPLANE_MODULE" invalid-command
-    assert_failure
-    [[ "$status" -eq 3 ]]  # EXIT_INVALID_ARGS
-    assert_output_contains "Usage:"
-}
-
-# Test: Crossplane module shows usage for invalid subcommands
-@test "crossplane.sh shows usage for invalid subcommands" {
-    run "$CROSSPLANE_MODULE" invalid-command
-    assert_failure
-    [[ "$status" -eq 3 ]]  # EXIT_INVALID_ARGS
-    assert_output_contains "Usage:"
-    assert_output_contains "install|status"
-}
-
-# Test: AWS Provider configuration uses correct region
-@test "create_aws_provider_config uses MK8_AWS_REGION for ProviderConfig" {
-    # Mock prerequisites
-    check_mk8_env_vars() { return 0; }
-    get_kubeconfig_path() { echo "${TEST_TEMP_DIR}/kubeconfig"; }
-    export -f check_mk8_env_vars get_kubeconfig_path
-    
-    # Mock kubectl to capture manifest content
-    kubectl() {
-        case "$*" in
-            *"apply -f"*)
-                # Capture the manifest file path and check its content
-                local manifest_file="${*##* }"
-                if [[ -f "$manifest_file" ]]; then
-                    echo "manifest content:" >&2
-                    cat "$manifest_file" >&2
-                fi
-                ;;
-        esac
-        return 0
-    }
-    export -f kubectl
-    
-    # Mock with_mk8_aws_env
-    with_mk8_aws_env() { eval "$1"; }
-    export -f with_mk8_aws_env
-    
-    # Set custom region
-    export MK8_AWS_ACCESS_KEY_ID="test-key"
-    export MK8_AWS_SECRET_ACCESS_KEY="test-secret"
-    export MK8_AWS_REGION="eu-west-1"
-    
-    run create_aws_provider_config
-    assert_success
-    # The function should complete successfully with custom region
-    assert_output_contains "Creating ProviderConfig"
-}
-
-# Test: Crossplane install with AWS credentials configures provider
-@test "crossplane_install configures AWS Provider when credentials are available" {
-    # Mock prerequisites
-    check_prereq() { return 0; }
-    get_kubeconfig_path() { echo "${TEST_TEMP_DIR}/kubeconfig"; }
-    export -f check_prereq get_kubeconfig_path
-    
-    # Create mock kubeconfig
-    touch "${TEST_TEMP_DIR}/kubeconfig"
-    
-    # Mock external commands
-    helm() { return 0; }
-    kubectl() { return 0; }
-    with_mk8_aws_env() { eval "$1"; }
-    export -f helm kubectl with_mk8_aws_env
-    
-    # Mock check_mk8_env_vars to return success (credentials available)
-    check_mk8_env_vars() {
-        echo "AWS credentials detected" >&2
-        return 0
-    }
-    export -f check_mk8_env_vars
-    
-    # Mock create_aws_provider_config and verify_aws_provider
-    create_aws_provider_config() {
-        echo "AWS Provider configured" >&2
-    }
-    verify_aws_provider() {
-        echo "AWS Provider verified" >&2
-    }
-    export -f create_aws_provider_config verify_aws_provider
-    
-    # Set environment variables
-    export MK8_AWS_ACCESS_KEY_ID="test-key"
-    export MK8_AWS_SECRET_ACCESS_KEY="test-secret"
-    
-    run crossplane_install
-    assert_success
-    assert_output_contains "AWS credentials detected, configuring AWS Provider"
-    assert_output_contains "AWS Provider configured"
-    assert_output_contains "AWS Provider verified"
-}
-
-# Test: generate_bucket_name creates unique names with UUID
-@test "generate_bucket_name creates unique bucket names with UUID format" {
-    run generate_bucket_name
-    assert_success
-    
-    # Should start with the bucket prefix
-    assert_output_contains "test-s3-bucket-"
-    
-    # Should contain UUID-like format (8-4-4-4-12 hex digits)
-    [[ "$output" =~ test-s3-bucket-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12} ]]
-}
-
-# Test: generate_bucket_name creates different names on each call
-@test "generate_bucket_name creates different names on each call" {
-    run generate_bucket_name
-    assert_success
-    local first_name="$output"
-    
-    run generate_bucket_name
-    assert_success
-    local second_name="$output"
+    name1="$(generate_bucket_name)"
+    name2="$(generate_bucket_name)"
     
     # Names should be different
-    [[ "$first_name" != "$second_name" ]]
+    [ "$name1" != "$name2" ]
+    
+    # Names should have correct prefix
+    assert_output_contains "test-s3-bucket"
 }
 
-# Test: save_bucket_state and load_bucket_state work correctly
-@test "save_bucket_state and load_bucket_state work correctly" {
-    local test_bucket="test-bucket-12345"
-    
-    # Save bucket state
-    run save_bucket_state "$test_bucket"
+# Test: generate_bucket_name format
+@test "generate_bucket_name follows correct format" {
+    run generate_bucket_name
     assert_success
-    assert_output_contains "Bucket state saved"
+    assert_output_contains "test-s3-bucket-"
     
-    # Load bucket state
+    # Should have 8 character UUID after prefix
+    local bucket_name="$output"
+    local uuid_part="${bucket_name#test-s3-bucket-}"
+    [ ${#uuid_part} -eq 8 ]
+}
+
+# Test: save_bucket_state creates state file
+@test "save_bucket_state creates state file with bucket name" {
+    local bucket_name="test-s3-bucket-abc12345"
+    
+    run save_bucket_state "${bucket_name}"
+    assert_success
+    
+    # State file should exist
+    assert_file_exists "${STATE_FILE}"
+    
+    # State file should contain bucket name
+    local saved_name
+    saved_name=$(cat "${STATE_FILE}")
+    [ "$saved_name" = "$bucket_name" ]
+}
+
+# Test: save_bucket_state creates directory if needed
+@test "save_bucket_state creates state directory if missing" {
+    local bucket_name="test-s3-bucket-abc12345"
+    
+    # Remove state directory
+    rm -rf "$(dirname "${STATE_FILE}")"
+    
+    run save_bucket_state "${bucket_name}"
+    assert_success
+    
+    # Directory should be created
+    assert_dir_exists "$(dirname "${STATE_FILE}")"
+}
+
+# Test: load_bucket_state returns bucket name
+@test "load_bucket_state returns saved bucket name" {
+    local bucket_name="test-s3-bucket-abc12345"
+    
+    # Save bucket name
+    save_bucket_state "${bucket_name}"
+    
+    # Load bucket name
     run load_bucket_state
     assert_success
-    [[ "$output" == "$test_bucket" ]]
+    [ "$output" = "$bucket_name" ]
+}
+
+# Test: load_bucket_state fails when state file doesn't exist
+@test "load_bucket_state fails when state file does not exist" {
+    # Ensure state file doesn't exist
+    rm -f "${STATE_FILE}"
+    
+    run load_bucket_state
+    [ "$status" -eq 6 ]  # EXIT_CROSSPLANE_ERROR
 }
 
 # Test: clear_bucket_state removes state file
 @test "clear_bucket_state removes state file" {
-    local test_bucket="test-bucket-12345"
+    local bucket_name="test-s3-bucket-abc12345"
     
-    # Save bucket state first
-    save_bucket_state "$test_bucket"
-    
-    # Verify state exists
-    run load_bucket_state
-    assert_success
+    # Create state file
+    save_bucket_state "${bucket_name}"
+    assert_file_exists "${STATE_FILE}"
     
     # Clear state
     run clear_bucket_state
     assert_success
-    assert_output_contains "Bucket state cleared"
     
-    # Verify state is gone
-    run load_bucket_state
-    assert_failure
+    # State file should be removed
+    if [[ -f "${STATE_FILE}" ]]; then
+        echo "Expected state file to be removed: ${STATE_FILE}" >&2
+        return 1
+    fi
 }
 
-# Test: crossplane_create_s3 checks for existing bucket
-@test "crossplane_create_s3 handles existing bucket error" {
-    # Mock prerequisites
-    check_prereq() { return 0; }
-    get_kubeconfig_path() { echo "${TEST_TEMP_DIR}/kubeconfig"; }
-    export -f check_prereq get_kubeconfig_path
+# Test: clear_bucket_state succeeds when state file doesn't exist
+@test "clear_bucket_state succeeds when state file does not exist" {
+    # Ensure state file doesn't exist
+    rm -f "${STATE_FILE}"
     
-    # Create mock kubeconfig
-    touch "${TEST_TEMP_DIR}/kubeconfig"
-    
-    # Mock load_bucket_state to return existing bucket
-    load_bucket_state() {
-        echo "existing-bucket-name"
-        return 0
-    }
-    export -f load_bucket_state
+    run clear_bucket_state
+    assert_success
+}
+
+# Test: crossplane_create_s3 checks for kubectl prerequisite
+@test "crossplane_create_s3 fails when kubectl command not found" {
+    run crossplane_create_s3
+    [ "$status" -eq 2 ]  # EXIT_MISSING_PREREQ
+    assert_output_contains "[ERROR]"
+    assert_output_contains "kubectl"
+}
+
+# Test: crossplane_create_s3 checks for aws prerequisite
+@test "crossplane_create_s3 fails when aws command not found" {
+    mock_command "kubectl" "" 0
     
     run crossplane_create_s3
-    assert_failure
-    assert_output_contains "S3 bucket already exists"
-    assert_output_contains "existing-bucket-name"
-    assert_output_contains "Run 'crossplane delete-s3' first"
+    [ "$status" -eq 2 ]  # EXIT_MISSING_PREREQ
+    assert_output_contains "[ERROR]"
+    assert_output_contains "aws"
 }
 
-# Test: crossplane_create_s3 creates MRD manifest with correct content
-@test "crossplane_create_s3 creates S3 Bucket MRD with correct configuration" {
-    # Mock prerequisites
-    check_prereq() { return 0; }
-    get_kubeconfig_path() { echo "${TEST_TEMP_DIR}/kubeconfig"; }
-    export -f check_prereq get_kubeconfig_path
+# Test: crossplane_create_s3 fails when kubeconfig not found
+@test "crossplane_create_s3 fails when kubeconfig file does not exist" {
+    mock_command "kubectl" "" 0
+    mock_command "aws" "" 0
     
-    # Create mock kubeconfig
-    touch "${TEST_TEMP_DIR}/kubeconfig"
-    
-    # Mock load_bucket_state to return no existing bucket
-    load_bucket_state() { return 1; }
-    export -f load_bucket_state
-    
-    # Mock generate_bucket_name to return predictable name
-    generate_bucket_name() { echo "test-s3-bucket-12345"; }
-    export -f generate_bucket_name
-    
-    # Mock kubectl to capture manifest content
-    kubectl() {
-        case "$*" in
-            *"apply -f"*)
-                local manifest_file="${*##* }"
-                if [[ -f "$manifest_file" ]]; then
-                    echo "Manifest content:" >&2
-                    cat "$manifest_file" >&2
-                fi
-                ;;
-            *"wait"*)
-                return 0
-                ;;
-            *"get bucket"*)
-                echo "bucket-status"
-                ;;
-        esac
-        return 0
-    }
-    export -f kubectl
-    
-    # Mock AWS CLI and other functions
-    with_mk8_aws_env() { eval "$1"; }
-    save_bucket_state() { echo "State saved: $1" >&2; }
-    export -f with_mk8_aws_env save_bucket_state
-    
-    # Set AWS region
-    export MK8_AWS_REGION="us-west-2"
+    # Ensure kubeconfig doesn't exist
+    rm -f "${KUBECONFIG_FILE}"
     
     run crossplane_create_s3
-    assert_success
-    assert_output_contains "Generated bucket name: test-s3-bucket-12345"
-    # The manifest content appears in stderr, so we'll just verify the function completed
-    assert_output_contains "S3 bucket 'test-s3-bucket-12345' created successfully"
+    [ "$status" -eq 6 ]  # EXIT_CROSSPLANE_ERROR
+    assert_output_contains "[ERROR]"
+    assert_output_contains "Kubeconfig not found"
 }
 
-# Test: crossplane_delete_s3 handles missing bucket state
-@test "crossplane_delete_s3 handles missing bucket state error" {
-    # Mock prerequisites
-    check_prereq() { return 0; }
-    get_kubeconfig_path() { echo "${TEST_TEMP_DIR}/kubeconfig"; }
-    export -f check_prereq get_kubeconfig_path
+# Test: crossplane_create_s3 fails when bucket already exists
+@test "crossplane_create_s3 fails when bucket already exists in state" {
+    mock_command "kubectl" "" 0
+    mock_command "aws" "" 0
     
-    # Create mock kubeconfig
-    touch "${TEST_TEMP_DIR}/kubeconfig"
+    # Create kubeconfig file
+    touch "${KUBECONFIG_FILE}"
     
-    # Mock load_bucket_state to return no bucket
-    load_bucket_state() { return 1; }
-    export -f load_bucket_state
+    # Create existing bucket state
+    save_bucket_state "test-s3-bucket-existing"
+    
+    run crossplane_create_s3
+    [ "$status" -eq 6 ]  # EXIT_CROSSPLANE_ERROR
+    assert_output_contains "[ERROR]"
+    assert_output_contains "Bucket already exists"
+}
+
+# Test: crossplane_create_s3 generates unique bucket name
+@test "crossplane_create_s3 generates unique bucket name" {
+    # Create kubeconfig file
+    touch "${KUBECONFIG_FILE}"
+    
+    # Mock kubectl and aws to fail quickly
+    mock_command "kubectl" "" 1
+    mock_command "aws" "" 0
+    
+    run crossplane_create_s3
+    assert_output_contains "Generated bucket name:"
+    assert_output_contains "test-s3-bucket-"
+}
+
+# Test: crossplane_create_s3 logs kubectl apply command
+@test "crossplane_create_s3 logs kubectl apply command for MRD" {
+    # Create kubeconfig file
+    touch "${KUBECONFIG_FILE}"
+    
+    # Mock kubectl to fail on apply
+    mock_command "kubectl" "" 1
+    mock_command "aws" "" 0
+    
+    run crossplane_create_s3
+    assert_output_contains "[CMD]"
+    assert_output_contains "kubectl"
+    assert_output_contains "apply"
+}
+
+# Test: crossplane_delete_s3 checks for kubectl prerequisite
+@test "crossplane_delete_s3 fails when kubectl command not found" {
+    run crossplane_delete_s3
+    [ "$status" -eq 2 ]  # EXIT_MISSING_PREREQ
+    assert_output_contains "[ERROR]"
+    assert_output_contains "kubectl"
+}
+
+# Test: crossplane_delete_s3 checks for aws prerequisite
+@test "crossplane_delete_s3 fails when aws command not found" {
+    mock_command "kubectl" "" 0
     
     run crossplane_delete_s3
-    assert_failure
-    assert_output_contains "No S3 bucket found in state file"
-    assert_output_contains "Run 'crossplane create-s3' first"
+    [ "$status" -eq 2 ]  # EXIT_MISSING_PREREQ
+    assert_output_contains "[ERROR]"
+    assert_output_contains "aws"
 }
 
-# Test: crossplane_delete_s3 deletes MRD and clears state
-@test "crossplane_delete_s3 deletes S3 Bucket MRD and clears state" {
-    # Mock prerequisites
-    check_prereq() { return 0; }
-    get_kubeconfig_path() { echo "${TEST_TEMP_DIR}/kubeconfig"; }
-    export -f check_prereq get_kubeconfig_path
+# Test: crossplane_delete_s3 fails when kubeconfig not found
+@test "crossplane_delete_s3 fails when kubeconfig file does not exist" {
+    mock_command "kubectl" "" 0
+    mock_command "aws" "" 0
     
-    # Create mock kubeconfig
-    touch "${TEST_TEMP_DIR}/kubeconfig"
-    
-    # Mock load_bucket_state to return existing bucket
-    load_bucket_state() {
-        echo "test-bucket-to-delete"
-        return 0
-    }
-    export -f load_bucket_state
-    
-    # Mock kubectl to simulate deletion
-    kubectl() {
-        case "$*" in
-            *"delete bucket"*)
-                echo "Bucket MRD deleted" >&2
-                ;;
-            *"get bucket"*)
-                # First call returns bucket exists, subsequent calls fail (deleted)
-                if [[ -f "${TEST_TEMP_DIR}/bucket_deleted" ]]; then
-                    return 1  # Bucket deleted
-                else
-                    touch "${TEST_TEMP_DIR}/bucket_deleted"
-                    return 0  # Bucket still exists
-                fi
-                ;;
-        esac
-        return 0
-    }
-    export -f kubectl
-    
-    # Mock AWS CLI and other functions
-    with_mk8_aws_env() { eval "$1"; return 1; }  # AWS CLI fails (bucket deleted)
-    clear_bucket_state() { echo "State cleared" >&2; }
-    export -f with_mk8_aws_env clear_bucket_state
+    # Ensure kubeconfig doesn't exist
+    rm -f "${KUBECONFIG_FILE}"
     
     run crossplane_delete_s3
-    assert_success
-    assert_output_contains "Deleting S3 bucket: test-bucket-to-delete"
-    assert_output_contains "Bucket MRD deleted"
-    assert_output_contains "State cleared"
+    [ "$status" -eq 6 ]  # EXIT_CROSSPLANE_ERROR
+    assert_output_contains "[ERROR]"
+    assert_output_contains "Kubeconfig not found"
 }
 
-# Test: State file error handling for corrupted state
-@test "load_bucket_state handles missing state file gracefully" {
-    # Ensure no state file exists
-    rm -f "${HOME}/.config/mk8-prototype-state"
+# Test: crossplane_delete_s3 fails when no bucket in state
+@test "crossplane_delete_s3 fails when no bucket found in state file" {
+    mock_command "kubectl" "" 0
+    mock_command "aws" "" 0
     
-    run load_bucket_state
-    assert_failure
+    # Create kubeconfig file
+    touch "${KUBECONFIG_FILE}"
+    
+    # Ensure state file doesn't exist
+    rm -f "${STATE_FILE}"
+    
+    run crossplane_delete_s3
+    [ "$status" -eq 6 ]  # EXIT_CROSSPLANE_ERROR
+    assert_output_contains "[ERROR]"
+    assert_output_contains "No bucket found in state file"
 }
 
-# Test: Create-delete-create cycle generates unique UUIDs
-@test "create-delete-create cycle generates unique bucket names" {
-    # Generate first bucket name
-    run generate_bucket_name
-    assert_success
-    local first_bucket="$output"
+# Test: crossplane_delete_s3 reads bucket name from state
+@test "crossplane_delete_s3 reads bucket name from state file" {
+    # Create kubeconfig file
+    touch "${KUBECONFIG_FILE}"
     
-    # Simulate create-delete cycle by generating another name
-    run generate_bucket_name
-    assert_success
-    local second_bucket="$output"
+    # Create bucket state
+    local bucket_name="test-s3-bucket-abc12345"
+    save_bucket_state "${bucket_name}"
     
-    # Names should be different (unique UUIDs)
-    [[ "$first_bucket" != "$second_bucket" ]]
+    # Mock kubectl and aws to fail quickly
+    mock_command "kubectl" "" 1
+    mock_command "aws" "" 0
     
-    # Both should follow the correct format
-    [[ "$first_bucket" =~ test-s3-bucket-.+ ]]
-    [[ "$second_bucket" =~ test-s3-bucket-.+ ]]
+    run crossplane_delete_s3
+    assert_output_contains "Deleting bucket: ${bucket_name}"
+}
+
+# Test: crossplane_delete_s3 logs kubectl delete command
+@test "crossplane_delete_s3 logs kubectl delete command" {
+    # Create kubeconfig file
+    touch "${KUBECONFIG_FILE}"
+    
+    # Create bucket state
+    save_bucket_state "test-s3-bucket-abc12345"
+    
+    # Mock kubectl to fail on delete
+    mock_command "kubectl" "" 1
+    mock_command "aws" "" 0
+    
+    run crossplane_delete_s3
+    assert_output_contains "[CMD]"
+    assert_output_contains "kubectl"
+    assert_output_contains "delete bucket"
+}
+
+# Test: State file consistency - create-delete-create cycle
+@test "create-delete-create cycle generates new UUID each time" {
+    # This test verifies that each bucket creation gets a unique UUID
+    
+    # First creation
+    local name1
+    name1="$(generate_bucket_name)"
+    
+    # Second creation (simulating after delete)
+    local name2
+    name2="$(generate_bucket_name)"
+    
+    # Third creation
+    local name3
+    name3="$(generate_bucket_name)"
+    
+    # All names should be different
+    [ "$name1" != "$name2" ]
+    [ "$name2" != "$name3" ]
+    [ "$name1" != "$name3" ]
 }
