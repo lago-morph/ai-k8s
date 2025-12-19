@@ -6,6 +6,7 @@ from typing import Dict, Any, Optional
 class Version:
     """Version information using semantic versioning."""
 
+    #C This should read from project.version of /pyproject.toml, and should not be hard-coded
     MAJOR: int = 0
     MINOR: int = 1
     PATCH: int = 0

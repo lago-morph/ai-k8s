@@ -1,3 +1,4 @@
+#C this file has too broad a scope.  There should be one general file for checking things about the CLI that aren't related to subcommands.  Then there should be a different file for each subcommand, for example bootstrap, crossplane, config, etc.  A comment should be left at the top of this file instructing future AI agents to break up this file by subcommand.
 """Integration tests for end-to-end CLI execution."""
 
 import pytest
@@ -22,6 +23,7 @@ class TestCLIExecution:
 
         assert result.exit_code == 0
         assert "mk8 - Manage Kubernetes infrastructure on AWS" in result.output
+        #C This should check against the value "description" in the [project] section of /pyproject.toml
 
     def test_version_command_end_to_end(self, runner):
         """Test version command execution from start to finish."""
@@ -30,6 +32,7 @@ class TestCLIExecution:
         assert result.exit_code == 0
         assert "mk8 version" in result.output
         assert Version.get_version() in result.output
+        #C This should check against the value project.version in /pyproject.toml
 
     def test_version_flag_end_to_end(self, runner):
         """Test --version flag execution from start to finish."""
@@ -38,6 +41,7 @@ class TestCLIExecution:
         assert result.exit_code == 0
         assert "mk8 version" in result.output
         assert Version.get_version() in result.output
+        #C This should check against the value project.version in /pyproject.toml
 
     @patch("mk8.cli.commands.config.AWSClient")
     @patch("mk8.cli.commands.config.KubectlClient")

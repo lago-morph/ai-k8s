@@ -18,6 +18,7 @@ class TestVersionCommand:
             output = fake_out.getvalue()
             assert "mk8 version" in output
             assert "0.1.0" in output
+            #C this should use the version value from /pyproject.toml, not hard coded
 
     def test_execute_format(self) -> None:
         """Test that version output follows expected format."""
@@ -30,3 +31,4 @@ class TestVersionCommand:
             version_part = output.replace("mk8 version ", "")
             # Basic version format check
             assert len(version_part) > 0
+            #C this should check that the first two parts (X and Y) are numeric, that there exists a third part, and that the third part does not contain a dot.  So 1.2.aldk is ok (X and Y numeric, Z exists and does not contain a dot), a.b.c.d is not (X is not numeric, Y is not numeric, Z contains a dot).  Also .1.2 is also an error (no "X" part)
