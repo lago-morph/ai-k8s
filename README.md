@@ -1,3 +1,5 @@
+# This project got too complex before basic functionality was developed and was never finished.  -JM 2026-03-20
+
 # mk8 - Manage Kubernetes Infrastructure on AWS
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/downloads/)
